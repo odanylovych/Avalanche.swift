@@ -2,6 +2,7 @@
 
 import BigInt
 import Foundation
+import UncommonCrypto
 
 /// A static utility class which provides Base58 encoding and decoding functionality.
 public enum Base58 {
@@ -85,8 +86,8 @@ public enum Base58 {
   /// - Parameter input: The input bytes.
   /// - Returns: A byte array representing the checksum of the input bytes.
   private static func calculateChecksum(_ input: [UInt8]) -> [UInt8] {
-    let hashedData = sha256(input)
-    let doubleHashedData = sha256(hashedData)
+    let hashedData = SHA2.hash(type: .sha256, bytes: input)
+    let doubleHashedData = SHA2.hash(type: .sha256, bytes: hashedData)
     let doubleHashedArray = Array(doubleHashedData)
     return Array(doubleHashedArray.prefix(checksumLength))
   }

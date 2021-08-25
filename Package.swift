@@ -30,10 +30,10 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
         .package(url: "https://github.com/tesseract-one/WebSocket.swift.git", from: "0.0.7"),
+        .package(url: "https://github.com/tesseract-one/UncommonCrypto.swift.git", from: "0.1.0"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.0"),
         .package(url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0"),
-        .package(url: "https://github.com/Boilertalk/secp256k1.swift.git", from: "0.1.0"),
-        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .exact("1.3.1")),
+        .package(url: "https://github.com/tesseract-one/CSecp256k1.swift.git", from: "0.1.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -43,7 +43,7 @@ let package = Package(
             dependencies: ["RPC", "Serializable", "BigInt", "AvalancheAlgos"]),
         .target(
             name: "AvalancheAlgos",
-            dependencies: ["secp256k1", "CryptoSwift", "Bech32"],
+            dependencies: ["CSecp256k1", "UncommonCrypto", "Bech32"],
             path: "Sources/Algos"),
         .target(
             name: "AvalancheKeychain",
@@ -54,7 +54,7 @@ let package = Package(
             dependencies: []),
         .target(
             name: "Base58",
-            dependencies: ["CryptoSwift", "BigInt"]),
+            dependencies: ["UncommonCrypto", "BigInt"]),
         .target(
             name: "RPC",
             dependencies: ["WebSocket"]),

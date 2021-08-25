@@ -6,12 +6,11 @@
 //
 
 import Foundation
-
-import CryptoSwift
+import UncommonCrypto
 
 public enum Ethereum {
     public static func sign(data: Data, with key: Data) -> Data? {
-        let hash = SHA3(variant: .keccak256).calculate(for: data.bytes)
+        let hash = SHA3.hash(type: .keccak256, data: data)
         
         guard hash.count == 32 else {
             return nil
@@ -24,7 +23,7 @@ public enum Ethereum {
         guard var parsed = SECP256K1.parsePublicKey(serializedKey: pub) else { return nil }
         guard var mPubKey = SECP256K1.serializePublicKey(publicKey: &parsed, compressed: false)?.bytes else { return nil }
         mPubKey.remove(at: 0)
-        let hash = SHA3(variant: .keccak256).calculate(for: mPubKey)
+        let hash = SHA3.hash(type: .keccak256, bytes: mPubKey)
         guard hash.count == 32 else {
             return nil
         }
@@ -49,7 +48,7 @@ public enum Ethereum {
             for b in rawAddress {
                 address += String(format: "%02x", b)
             }
-            let hash = SHA3(variant: .keccak256).calculate(for: Array(address.utf8))
+            let hash = SHA3.hash(type: .keccak256, bytes: Array(address.utf8))
             
             for i in 0..<address.count {
                 let charString = String(address[address.index(address.startIndex, offsetBy: i)])

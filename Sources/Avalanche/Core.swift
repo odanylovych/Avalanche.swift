@@ -14,7 +14,7 @@ public enum AvalancheApiSearchError: Error {
     case apiInfoNotFound(net: AvalancheNetwork, apiId: String)
 }
 
-public protocol AvalancheCore: class {
+public protocol AvalancheCore: AnyObject {
     var keychain: Keychain { get }
     var networkInfo: AvalancheNetworkInfoProvider { get }
     var settings: AvalancheSettings { get }
