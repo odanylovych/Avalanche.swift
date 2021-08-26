@@ -27,7 +27,7 @@ extension Data {
         guard let hData = hex.data(using: .ascii) else {
             return nil
         }
-        let parsed: Data? = hData.withUnsafeBytes { hex in
+        let oParsed: Data? = hData.withUnsafeBytes { hex in
             var result = Data()
             result.reserveCapacity((hex.count - prefix) / 2)
             var current: UInt8? = nil
@@ -49,7 +49,7 @@ extension Data {
             }
             return result
         }
-        guard let parsed = parsed else {
+        guard let parsed = oParsed else {
             return nil
         }
         self = parsed
