@@ -15,45 +15,94 @@ private extension AvalancheBip44Keychain {
         tx: EthereumTransactionExt,
         _ cb: @escaping (AvalancheSignatureProviderResult<EthereumTransactionExt.Signed>) -> Void
     ) {
-        let data = try! tx.serialized()
-        let account = try! tx.signingAddresses()[0]
+        let data: Data
+        do {
+            data = try tx.serialized()
+        } catch let error {
+            cb(.failure(.serializationFailed(error: error)))
+            return
+        }
+        let accounts: [EthereumTransactionExt.Addr.Extended]
+        do {
+            accounts = try tx.signingAddresses()
+        } catch let error {
+            cb(.failure(.signingAddressesListFailed(error: error)))
+            return
+        }
+        guard accounts.count > 0 else {
+            cb(.failure(.signingAddressesListIsEmpty))
+            return
+        }
+        let account = accounts[0]
         guard let kp = _ethCache[account.accountIndex] else {
+            cb(.failure(.accountNotFound(account: account.path)))
             return
         }
         guard let signature = kp.signEthereum(serialized: data) else {
+            cb(.failure(.signingFailed(address: account.path, reason: "")))
             return
         }
-        let signed = try! tx.toSigned(signatures: [account.address: signature])
-        cb(.success(signed))
+        do {
+            let signed = try tx.toSigned(signatures: [account.address: signature])
+            cb(.success(signed))
+        } catch let error {
+            cb(.failure(.signedTransactionInitFailed(error: error)))
+        }
     }
     
     private func signAvaTx<T: ExtendedUnsignedTransaction>(
         tx: T,
         _ cb: @escaping (AvalancheSignatureProviderResult<T.Signed>) -> Void
     ) {
-        let data = try! tx.serialized()
-        let accounts = try! tx.signingAddresses()
-        let keypairs: [(T.Addr, KeyPair)] = accounts.compactMap { address in
-            try? _ethCache[address.accountIndex].map { kp in
-                let derived = try kp
-                    .derive(index: address.isChange ? 1 : 0, hard: false)
-                    .derive(index: address.index, hard: false)
-                return (address.address, derived)
+        let data: Data
+        do {
+            data = try tx.serialized()
+        } catch let error {
+            cb(.failure(.serializationFailed(error: error)))
+            return
+        }
+        let addresses: [T.Addr.Extended]
+        do {
+            addresses = try tx.signingAddresses()
+        } catch let error {
+            cb(.failure(.signingAddressesListFailed(error: error)))
+            return
+        }
+        guard addresses.count > 0 else {
+            cb(.failure(.signingAddressesListIsEmpty))
+            return
+        }
+        var keypairs: [(T.Addr.Extended, KeyPair)] = []
+        keypairs.reserveCapacity(addresses.count)
+        for address in addresses {
+            guard let kp = _ethCache[address.accountIndex] else {
+                cb(.failure(.accountNotFound(account: address.path.account!)))
+                return
             }
+            let derived = try? kp
+                .derive(index: address.isChange ? 1 : 0, hard: false)
+                .derive(index: address.index, hard: false)
+            guard let der = derived else {
+                cb(.failure(.derivationFailed(address: address.path)))
+                return
+            }
+            keypairs.append((address, der))
         }
-        guard keypairs.count == accounts.count else {
-            return
+        var signatures: Dictionary<T.Addr, Signature> = [:]
+        signatures.reserveCapacity(addresses.count)
+        for (addr, kp) in keypairs {
+            guard let sig = kp.signAvalanche(serialized: data) else {
+                cb(.failure(.signingFailed(address: addr.path, reason: "")))
+                return
+            }
+            signatures[addr.address] = sig
         }
-        let signatures = keypairs.compactMap { (addr, kp) in
-            kp.signAvalanche(serialized: data).map { (addr, $0) }
+        do {
+            let signed = try tx.toSigned(signatures: signatures)
+            cb(.success(signed))
+        } catch let error {
+            cb(.failure(.signedTransactionInitFailed(error: error)))
         }
-        guard signatures.count == keypairs.count else {
-            return
-        }
-        let signed = try! tx.toSigned(
-            signatures: Dictionary(uniqueKeysWithValues: signatures)
-        )
-        cb(.success(signed))
     }
 }
 

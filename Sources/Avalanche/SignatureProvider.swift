@@ -9,7 +9,12 @@ import Foundation
 
 public enum AvalancheSignatureProviderError: Error {
     case accountNotFound(account: Bip32Path)
+    case serializationFailed(error: Error)
+    case signingAddressesListFailed(error: Error)
+    case signingAddressesListIsEmpty
+    case derivationFailed(address: Bip32Path)
     case signingFailed(address: Bip32Path, reason: String)
+    case signedTransactionInitFailed(error: Error)
     case transport(error: Error)
     case rejected
 }
