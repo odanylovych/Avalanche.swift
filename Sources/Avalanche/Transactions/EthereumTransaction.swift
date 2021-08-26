@@ -28,7 +28,6 @@ public struct SignedEthereumTransaction: SignedTransaction {
 public struct EthereumTransactionExt: ExtendedUnsignedTransaction {
     public typealias Addr = EthAddress
     public typealias Signed = SignedEthereumTransaction
-    public typealias AdditionalSigningData = UInt64
     
     public let transaction: UnsignedEthereumTransaction
     public let pathes: Dictionary<Addr, Bip32Path>
@@ -51,6 +50,4 @@ public struct EthereumTransactionExt: ExtendedUnsignedTransaction {
     public func signingAddresses() throws -> [Addr.Extended] {
         fatalError("Not implemented")
     }
-    
-    public func additionalSigningData() throws -> AdditionalSigningData { chainId }
 }
