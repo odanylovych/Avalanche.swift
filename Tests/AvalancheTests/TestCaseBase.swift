@@ -30,6 +30,7 @@ class AvalancheTestCase: XCTestCase {
          test(IPCTests.self, enabled: false), //reenable with the node that supports the API
          test(KeystoreTests.self, enabled: true),
          test(MetricsTests.self, enabled: false), //reenable with the node that supports the API
+         test(TransactionsTests.self, enabled: true),
         ]
     }
     
