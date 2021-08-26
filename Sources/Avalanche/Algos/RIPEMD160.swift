@@ -316,7 +316,7 @@ struct RIPEMD160 {
                 let amount = 64 - buffer.count
                 buffer.append(ptr, count: amount)
                 buffer.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) in
-                    _ = memcpy(&X, ptr.baseAddress, 64)
+                    _ = memcpy(&X, ptr.baseAddress!, 64)
                 }
                 compress(X)
                 ptr += amount
@@ -340,7 +340,7 @@ struct RIPEMD160 {
         /* append the bit m_n == 1 */
         buffer.append(0x80)
         buffer.withUnsafeBytes { (ptr: UnsafeRawBufferPointer) in
-            _ = memcpy(&X, ptr.baseAddress, buffer.count)
+            _ = memcpy(&X, ptr.baseAddress!, buffer.count)
         }
         
         if (count & 63) > 55 {

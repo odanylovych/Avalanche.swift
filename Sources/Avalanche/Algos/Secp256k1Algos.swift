@@ -70,7 +70,7 @@ public struct Secp256k1Algos {
         var rcaller: (([secp256k1_pubkey], [UnsafePointer<secp256k1_pubkey>?]) -> Int32)? = nil
         rcaller = { (keys: [secp256k1_pubkey], pointers: [UnsafePointer<secp256k1_pubkey>?]) -> Int32 in
             if keys.count == 0 {
-                return secp256k1_ec_pubkey_combine(context, &publicKey, pointers, pointers.count)
+                return secp256k1_ec_pubkey_combine(self.context, &publicKey, pointers, pointers.count)
             }
             return withUnsafePointer(to: keys.first!) { ptr in
                 rcaller!(Array(keys.dropFirst()), pointers + [ptr])
