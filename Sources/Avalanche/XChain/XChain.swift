@@ -32,12 +32,12 @@ public class AvalancheXChainApi: AvalancheApi {
     
     //FIX: private let network: AvalancheRpcConnection
     //FIX: private let vmNetwork: AvalancheRpcConnection
-    public let keychain: Keychain
+    public let signer: AvalancheSignatureProvider?
     
     public required init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: Info) {
         //FIX: self.network = avalanche.connections.httpRpcConnection(for: info.apiPath)
         //FIX: self.vmNetwork = avalanche.connections.httpRpcConnection(for: info.vmApiPath)
-        self.keychain = avalanche.keychain
+        self.signer = avalanche.signer
     }
 }
 

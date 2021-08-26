@@ -11,9 +11,6 @@ let package = Package(
             name: "Avalanche",
             targets: ["Avalanche"]),
         .library(
-            name: "AvalancheAlgos",
-            targets: ["AvalancheAlgos"]),
-        .library(
             name: "AvalancheKeychain",
             targets: ["AvalancheKeychain"]),
         .library(
@@ -40,14 +37,12 @@ let package = Package(
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "Avalanche",
-            dependencies: ["RPC", "Serializable", "BigInt", "AvalancheAlgos"]),
-        .target(
-            name: "AvalancheAlgos",
-            dependencies: ["CSecp256k1", "UncommonCrypto", "Bech32"],
-            path: "Sources/Algos"),
+            dependencies: [
+                "RPC", "Serializable", "BigInt", "CSecp256k1",
+                "UncommonCrypto", "Bech32"]),
         .target(
             name: "AvalancheKeychain",
-            dependencies: ["AvalancheAlgos", "Base58", "Avalanche"],
+            dependencies: ["Base58", "Avalanche"],
             path: "Sources/Keychain"),
         .target(
             name: "Bech32",
@@ -64,9 +59,6 @@ let package = Package(
         .testTarget(
             name: "KeychainTests",
             dependencies: ["AvalancheKeychain"]),
-        .testTarget(
-            name: "AlgosTests",
-            dependencies: ["AvalancheAlgos"]),
         .testTarget(
             name: "Bech32Tests",
             dependencies: ["Bech32"]),
