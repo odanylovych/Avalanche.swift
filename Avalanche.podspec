@@ -19,15 +19,17 @@ The library allows one to issue commands to the Avalanche node APIs.
   s.tvos.deployment_target = '10.0'
   s.watchos.deployment_target = '6.0'
   
-  s.swift_versions = ['5', '5.1', '5.2']
+  s.swift_versions = ['5', '5.1', '5.2', '5.3']
 
   s.module_name = 'Avalanche'
   
   s.subspec 'Avalanche' do |ss|
     ss.source_files = 'Sources/Avalanche/**/*.swift'
 
-    ss.dependency 'Avalanche/Algos'
     ss.dependency 'Avalanche/RPC'
+    ss.dependency 'Avalanche/Bech32'
+    ss.dependency 'UncommonCrypto' '~> 0.1.0'
+    ss.dependency 'СSecp256k1', '~> 0.1.0'
     ss.dependency 'BigInt', '~> 5.2'
     ss.dependency 'Serializable.swift', '~> 0.2'
     
@@ -37,18 +39,9 @@ The library allows one to issue commands to the Avalanche node APIs.
     end
   end
   
-  s.subspec 'Algos' do |ss|
-    ss.source_files = 'Sources/Algos/**/*.swift'
-
-    ss.dependency 'Avalanche/Bech32'
-    ss.dependency 'CryptoSwift', '1.3.1'
-    ss.dependency 'secp256k1.swift', '~> 0.1.4'
-  end
-  
   s.subspec 'Keychain' do |ss|
     ss.source_files = 'Sources/Keychain/**/*.swift'
 
-    ss.dependency 'Avalanche/Algos'
     ss.dependency 'Avalanche/Base58'
     ss.dependency 'Avalanche/Avalanche'
     
@@ -62,7 +55,7 @@ The library allows one to issue commands to the Avalanche node APIs.
     ss.source_files = 'Sources/Base58/**/*.swift'
 
     ss.dependency 'BigInt', '~> 5.2'
-    ss.dependency 'CryptoSwift', '1.3.1'
+    ss.dependency 'UncommonCrypto' '~> 0.1.0'
     
     ss.test_spec 'Base58Tests' do |test_spec|
       test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
