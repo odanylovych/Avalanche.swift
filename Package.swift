@@ -5,15 +5,11 @@ import PackageDescription
 
 let package = Package(
     name: "Avalanche",
-    platforms: [.iOS(.v11), .macOS(.v10_12)],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
             name: "Avalanche",
             targets: ["Avalanche"]),
-        .library(
-            name: "AvalancheAlgos",
-            targets: ["AvalancheAlgos"]),
         .library(
             name: "AvalancheKeychain",
             targets: ["AvalancheKeychain"]),
@@ -31,31 +27,29 @@ let package = Package(
         // Dependencies declare other packages that this package depends on.
         // .package(url: /* package url */, from: "1.0.0"),
         .package(url: "https://github.com/tesseract-one/WebSocket.swift.git", from: "0.0.7"),
+        .package(url: "https://github.com/tesseract-one/UncommonCrypto.swift.git", from: "0.1.0"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.0"),
         .package(url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0"),
-        .package(url: "https://github.com/Boilertalk/secp256k1.swift.git", from: "0.1.0"),
-        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .exact("1.4.1")),
+        .package(url: "https://github.com/tesseract-one/CSecp256k1.swift.git", from: "0.1.0")
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "Avalanche",
-            dependencies: ["RPC", "Serializable", "BigInt", "AvalancheAlgos"]),
-        .target(
-            name: "AvalancheAlgos",
-            dependencies: ["secp256k1", "CryptoSwift", "Bech32"],
-            path: "Sources/Algos"),
+            dependencies: [
+                "RPC", "Serializable", "BigInt", "CSecp256k1",
+                "UncommonCrypto", "Bech32"]),
         .target(
             name: "AvalancheKeychain",
-            dependencies: ["AvalancheAlgos", "Base58", "Avalanche"],
+            dependencies: ["Base58", "Avalanche"],
             path: "Sources/Keychain"),
         .target(
             name: "Bech32",
             dependencies: []),
         .target(
             name: "Base58",
-            dependencies: ["CryptoSwift", "BigInt"]),
+            dependencies: ["UncommonCrypto", "BigInt"]),
         .target(
             name: "RPC",
             dependencies: ["WebSocket"]),
@@ -65,9 +59,6 @@ let package = Package(
         .testTarget(
             name: "KeychainTests",
             dependencies: ["AvalancheKeychain"]),
-        .testTarget(
-            name: "AlgosTests",
-            dependencies: ["AvalancheAlgos"]),
         .testTarget(
             name: "Bech32Tests",
             dependencies: ["Bech32"]),

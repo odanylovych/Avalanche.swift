@@ -45,12 +45,12 @@ public class AvalanchePChainApiInfo: AvalancheBaseApiInfo {
 public struct AvalanchePChainApi: AvalancheApi {
     public typealias Info = AvalanchePChainApiInfo
     
-    public let keychain: Keychain
+    public let signer: AvalancheSignatureProvider?
     //FIX: private let network: AvalancheRpcConnection
     
     public init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: Info) {
         //FIX: self.network = avalanche.connections.httpRpcConnection(for: info.apiPath)
-        self.keychain = avalanche.keychain
+        self.signer = avalanche.signer
     }
 }
 

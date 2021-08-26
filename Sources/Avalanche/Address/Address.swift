@@ -1,50 +1,45 @@
 //
-//  File.swift
+//  Address.swift
 //  
 //
 //  Created by Daniel Leping on 08/01/2021.
 //
 
 import Foundation
-#if !COCOAPODS
-import AvalancheAlgos
-#endif
 
 public enum AddressError: Error {
-    case bech(error: Bech32Error)
-    case malformed(address: String, description: String)
+    case badPublicKey(key: Data)
+    case badBip32Path(path: Bip32Path)
+    case badAddressString(address: String)
+    case badRawAddressLength(length: Int)
 }
 
-public protocol BechAddress {
-    var bech: String {get}
+public enum AccountError: Error {
+    case badBip32Path(path: Bip32Path)
+    case badPublicKey(key: Data)
+    case badChainCodeLength(length: Int)
+    case badDerivationIndex(index: UInt32)
+    case derivationFailed
 }
 
-public protocol EthAddress {
-    var eth: String {get}
+public protocol AccountProtocol: Hashable {
+    var path: Bip32Path { get }
+    var index: UInt32 { get }
 }
 
-public struct Address {
-    public let pub: Data
+public protocol AddressProtocol: Hashable where Extended.Base == Self {
+    associatedtype Extended: ExtendedAddressProtocol
     
-    public init(pub: Data) {
-        self.pub = pub
-    }
+    func verify(message: Data, signature: Signature) -> Bool
+    func extended(path: Bip32Path) throws -> Extended
 }
 
-extension Address: Hashable {
-    public func hash(into hasher: inout Hasher) {
-        pub.hash(into: &hasher)
-    }
+public protocol ExtendedAddressProtocol: Hashable where Base.Extended == Self {
+    associatedtype Base: AddressProtocol
     
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        return lhs.pub == rhs.pub
-    }
+    var address: Base { get }
+    var path: Bip32Path { get }
+    var isChange: Bool { get }
+    var accountIndex: UInt32 { get }
+    var index: UInt32 { get }
 }
-
-extension Address: EthAddress {
-    public var eth: String {
-        Ethereum.hexAddress(pub: pub, eip55: false) ?? "internal error" //eip55 is false for AVA, I guess. Internal error should never happen at this point, uless it's an improper key
-    }
-}
-
-

@@ -14,7 +14,7 @@ public class Avalanche: AvalancheCore {
     private let _url: URL
     public let settings: AvalancheSettings
     
-    public var keychain: Keychain {
+    public var signer: AvalancheSignatureProvider? {
         willSet { lock.lock() }
         didSet { lock.unlock(); clearApis() }
     }
@@ -29,11 +29,11 @@ public class Avalanche: AvalancheCore {
         didSet { lock.unlock(); clearApis() }
     }
     
-    public required init(url: URL, keychain: Keychain, network: AvalancheNetwork, networkInfo: AvalancheNetworkInfoProvider = AvalancheDefaultNetworkInfoProvider.default, settings: AvalancheSettings = .default) {
+    public required init(url: URL, network: AvalancheNetwork, networkInfo: AvalancheNetworkInfoProvider = AvalancheDefaultNetworkInfoProvider.default, settings: AvalancheSettings = .default) {
         self._url = url
         self.apis = [:]
         self.network = network
-        self.keychain = keychain
+        self.signer = nil
         self.networkInfo = networkInfo
         self.settings = settings
         self.lock = NSRecursiveLock()

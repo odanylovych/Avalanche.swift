@@ -8,64 +8,102 @@
 import Foundation
 #if !COCOAPODS
 import Avalanche
-import AvalancheAlgos
 import Base58
 #endif
 
 public struct KeyPair {
-    public let priv: Data
-    public let pub: Data
+    public enum Error: Swift.Error {
+        case badPrivateKey
+        case badSeed(seed: Data)
+        case badChainCodeLength(length: Int)
+        case badStringPartsCount(count: Int)
+        case badStringPrefix(prefix: String)
+        case badBase58(b58: String)
+        case deriveFailed
+    }
+    
+    public let publicKey: Data
+    public let chainCode: Data?
+    private let _sk: Data
+    
+    public init(sk: Data, chainCode: Data?) throws {
+        guard let pub = Algos.Secp256k1.privateToPublic(privateKey: sk) else {
+            throw Error.badPrivateKey
+        }
+        guard chainCode?.count ?? 32 == 32 else {
+            throw Error.badChainCodeLength(length: chainCode!.count)
+        }
+        self._sk = sk
+        self.chainCode = chainCode
+        self.publicKey = pub
+    }
 }
 
 public extension KeyPair {
-    init?(priv: Data) {
-        guard let pub = SECP256K1.privateToPublic(privateKey: priv) else {
-            return nil
-        }
-        
-        self.init(priv: priv, pub: pub)
-    }
-    
     /// import from string
-    init?(key: String) {
+    init(key: String) throws {
         let parts = key.split(separator: "-")
-        
         guard parts.count == 2 else {
-            return nil
+            throw Error.badStringPartsCount(count: parts.count)
         }
-        
         guard parts[0] == "PrivateKey" else {
-            return nil
+            throw Error.badStringPrefix(prefix: String(parts[0]))
         }
-        
         guard let pk = Base58.base58CheckDecode(String(parts[1])) else {
-            return nil
+            throw Error.badBase58(b58: String(parts[1]))
         }
-        
-        self.init(priv: Data(pk))
+        try self.init(sk: Data(pk), chainCode: nil)
     }
     
-    var address: Address {
-        Address(pub: pub)
+    init(seed: Data) throws {
+        guard let gen = Algos.Secp256k1.privateFromSeed(seed: seed) else {
+            throw Error.badSeed(seed: seed)
+        }
+        try self.init(sk: gen.pk, chainCode: gen.cc)
     }
     
-    func signAva(data: Data) -> Data? {
-        Avalanche.sign(data: data, with: priv)
+    func derive(index: UInt32, hard: Bool) throws -> KeyPair {
+        guard let cc = chainCode else {
+            throw Error.badChainCodeLength(length: 0)
+        }
+        guard let der = Algos.Secp256k1.derivePrivate(pk: _sk, cc: cc, index: index, hard: hard) else {
+            throw Error.deriveFailed
+        }
+        return try KeyPair(sk: der.pk, chainCode: der.cc)
     }
     
-    func signEth(data: Data) -> Data? {
-        Ethereum.sign(data: data, with: priv)
+    func address(hrp: String, chainId: String) -> Address {
+        try! Address(pubKey: publicKey, hrp: hrp, chainId: chainId)
+    }
+    
+    var ethAddress: EthAddress {
+        try! EthAddress(pubKey: publicKey)
+    }
+    
+    func signAvalanche(serialized tx: Data) -> Data? {
+        Algos.Avalanche.sign(data: tx, with: _sk)
+    }
+    
+    func signEthereum(message data: Data) -> Data? {
+        let prefixed = Data("\u{19}Ethereum Signed Message:\n".utf8) + Data(String(data.count, radix: 10).utf8) + data
+        return Algos.Ethereum.sign(data: prefixed, with: _sk)
+    }
+    
+    func signEthereum(serialized tx: Data) -> Data? {
+        Algos.Ethereum.sign(data: tx, with: _sk)
     }
     
     var privateString: String {
-        "PrivateKey-" + Base58.base58CheckEncode(priv.bytes)
+        "PrivateKey-" + Base58.base58CheckEncode(_sk.bytes)
     }
     
     var publicString: String {
-        Base58.base58CheckEncode(pub.bytes)
+        Base58.base58CheckEncode(publicKey.bytes)
     }
     
     static func generate() -> KeyPair? {
-        SECP256K1.generateKey().flatMap(KeyPair.init)
+        try? Algos.Secp256k1.generateKey().flatMap {
+            try KeyPair(sk: $0.pk, chainCode: $0.cc)
+        }
     }
 }

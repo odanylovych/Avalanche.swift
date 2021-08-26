@@ -14,15 +14,14 @@ public enum AvalancheApiSearchError: Error {
     case apiInfoNotFound(net: AvalancheNetwork, apiId: String)
 }
 
-public protocol AvalancheCore: class {
-    var keychain: Keychain { get }
+public protocol AvalancheCore: AnyObject {
+    var signer: AvalancheSignatureProvider? { get set }
     var networkInfo: AvalancheNetworkInfoProvider { get }
     var settings: AvalancheSettings { get }
     var network: AvalancheNetwork { get set }
     
     init(
         url: URL,
-        keychain: Keychain,
         network: AvalancheNetwork,
         networkInfo: AvalancheNetworkInfoProvider,
         settings: AvalancheSettings
@@ -38,7 +37,6 @@ public protocol AvalancheCore: class {
 extension AvalancheCore {
     public init(
         url: URL,
-        keychain: Keychain,
         network: AvalancheNetwork,
         hrp: String,
         apiInfo: AvalancheApiInfoProvider,
@@ -47,7 +45,7 @@ extension AvalancheCore {
         let provider = AvalancheDefaultNetworkInfoProvider()
         let netInfo = AvalancheDefaultNetworkInfo(hrp: hrp, apiInfo: apiInfo)
         provider.setInfo(info: netInfo, for: network)
-        self.init(url: url, keychain: keychain, network: network, networkInfo: provider, settings: settings)
+        self.init(url: url, network: network, networkInfo: provider, settings: settings)
         self.network = network
     }
     

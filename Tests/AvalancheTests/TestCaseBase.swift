@@ -33,7 +33,6 @@ class AvalancheTestCase: XCTestCase {
         ]
     }
     
-    let keychain = EmptyKeychain.empty
     var ava:Avalanche!
     
     override func setUpWithError() throws {
@@ -41,6 +40,6 @@ class AvalancheTestCase: XCTestCase {
         
         try XCTSkipUnless(Self.testEnabled, "Test disabled in config")
         
-        self.ava = Avalanche(url: URL(string: "https://api.avax-test.network")!, keychain: keychain, network: .test)
+        self.ava = Avalanche(url: URL(string: "https://api.avax-test.network")!, network: .test)
     }
 }

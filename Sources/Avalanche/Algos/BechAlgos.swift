@@ -18,11 +18,16 @@ public enum Bech32Error: Error {
     case segwitEncode(data: Data, hrp: String, chainId: String, cause: Error)
 }
 
-private let bech32 = Bech32()
-private let segWit = SegwitAddrCoder()
-
-public enum Bech {
-    public static func parse(address: String) -> Result<(Data, String, String), Bech32Error> { //data, hrp, chainid
+public struct BechAlgos {
+    private let bech32: Bech32
+    private let segWit: SegwitAddrCoder
+    
+    internal init() {
+        self.bech32 = Bech32()
+        self.segWit = SegwitAddrCoder()
+    }
+    
+    public func parse(address: String) -> Result<(Data, String, String), Bech32Error> { //data, hrp, chainid
         let parts = address.split(separator: "-")
         guard let chainId = parts.count > 0 ? String(parts[0]) : nil else {
             return .failure(.chainIdEmpty(address: address))
@@ -45,7 +50,7 @@ public enum Bech {
         }
     }
 
-    public static func address(from data: Data, hrp: String, chainId: String) -> Result<String, Bech32Error> {
+    public func address(from data: Data, hrp: String, chainId: String) -> Result<String, Bech32Error> {
         Result {
             let bytes = try segWit.convertBits(from: 8, to: 5, pad: true, idata: data)
             let b32 = bech32.encode(hrp, values: bytes)
