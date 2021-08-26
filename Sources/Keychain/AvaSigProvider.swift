@@ -11,47 +11,9 @@ import Avalanche
 #endif
 
 private extension AvalancheBip44Keychain {
-    private func signEthereumTx(
-        tx: EthereumTransactionExt,
-        _ cb: @escaping (AvalancheSignatureProviderResult<EthereumTransactionExt.Signed>) -> Void
-    ) {
-        let data: Data
-        do {
-            data = try tx.serialized()
-        } catch let error {
-            cb(.failure(.serializationFailed(error: error)))
-            return
-        }
-        let accounts: [EthereumTransactionExt.Addr.Extended]
-        do {
-            accounts = try tx.signingAddresses()
-        } catch let error {
-            cb(.failure(.signingAddressesListFailed(error: error)))
-            return
-        }
-        guard accounts.count > 0 else {
-            cb(.failure(.signingAddressesListIsEmpty))
-            return
-        }
-        let account = accounts[0]
-        guard let kp = _ethCache[account.accountIndex] else {
-            cb(.failure(.accountNotFound(account: account.path)))
-            return
-        }
-        guard let signature = kp.signEthereum(serialized: data) else {
-            cb(.failure(.signingFailed(address: account.path, reason: "")))
-            return
-        }
-        do {
-            let signed = try tx.toSigned(signatures: [account.address: signature])
-            cb(.success(signed))
-        } catch let error {
-            cb(.failure(.signedTransactionInitFailed(error: error)))
-        }
-    }
-    
-    private func signAvaTx<T: ExtendedUnsignedTransaction>(
+    private func signTx<T: ExtendedUnsignedTransaction>(
         tx: T,
+        isEthereum: Bool,
         _ cb: @escaping (AvalancheSignatureProviderResult<T.Signed>) -> Void
     ) {
         let data: Data
@@ -75,23 +37,34 @@ private extension AvalancheBip44Keychain {
         var keypairs: [(T.Addr.Extended, KeyPair)] = []
         keypairs.reserveCapacity(addresses.count)
         for address in addresses {
-            guard let kp = _ethCache[address.accountIndex] else {
-                cb(.failure(.accountNotFound(account: address.path.account!)))
-                return
+            if isEthereum {
+                guard let kp = _ethCache[address.accountIndex] else {
+                    cb(.failure(.accountNotFound(account: address.path.account!)))
+                    return
+                }
+                keypairs.append((address, kp))
+            } else {
+                guard let kp = _avaCache[address.accountIndex] else {
+                    cb(.failure(.accountNotFound(account: address.path.account!)))
+                    return
+                }
+                let derived = try? kp
+                    .derive(index: address.isChange ? 1 : 0, hard: false)
+                    .derive(index: address.index, hard: false)
+                guard let der = derived else {
+                    cb(.failure(.derivationFailed(address: address.path)))
+                    return
+                }
+                keypairs.append((address, der))
             }
-            let derived = try? kp
-                .derive(index: address.isChange ? 1 : 0, hard: false)
-                .derive(index: address.index, hard: false)
-            guard let der = derived else {
-                cb(.failure(.derivationFailed(address: address.path)))
-                return
-            }
-            keypairs.append((address, der))
         }
         var signatures: Dictionary<T.Addr, Signature> = [:]
         signatures.reserveCapacity(addresses.count)
         for (addr, kp) in keypairs {
-            guard let sig = kp.signAvalanche(serialized: data) else {
+            let sign = isEthereum
+                ? kp.signEthereum(serialized: data)
+                : kp.signAvalanche(serialized: data)
+            guard let sig = sign else {
                 cb(.failure(.signingFailed(address: addr.path, reason: "")))
                 return
             }
@@ -128,13 +101,9 @@ extension AvalancheBip44Keychain: AvalancheSignatureProvider {
         _ cb: @escaping (AvalancheSignatureProviderResult<T.Signed>) -> Void
     ) where T : ExtendedUnsignedTransaction {
         DispatchQueue.global().async {
-            if let transaction = transaction as? EthereumTransactionExt {
-                self.signEthereumTx(tx: transaction) { res in
-                    cb(res.map { $0 as! T.Signed })
-                }
-            } else {
-                self.signAvaTx(tx: transaction, cb)
-            }
+            self.signTx(tx: transaction,
+                        isEthereum: transaction is EthereumTransactionExt,
+                        cb)
         }
     }
     
