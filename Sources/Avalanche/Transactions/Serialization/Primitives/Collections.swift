@@ -1,5 +1,5 @@
 //
-//  Array.swift
+//  Collections.swift
 //  
 //
 //  Created by Ostap Danylovych on 26.08.2021.
@@ -27,5 +27,5 @@ extension Collection where Element: AvalancheEncodable {
     }
 }
 
-extension Array: AvalancheFixedEncodable where Element: AvalancheEncodable {}
-extension Array: AvalancheEncodable where Element: AvalancheEncodable {}
+extension Array: AvalancheFixedEncodable, AvalancheEncodable where Element: AvalancheEncodable {}
+extension Data: AvalancheFixedEncodable, AvalancheEncodable {}
