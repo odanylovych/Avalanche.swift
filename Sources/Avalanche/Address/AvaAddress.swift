@@ -61,12 +61,14 @@ public struct Account: AccountProtocol, Equatable, Hashable {
 public struct Address: AddressProtocol, Equatable, Hashable {
     public typealias Extended = ExtendedAddress
     
+    static let rawAddressSize = 20
+    
     public let rawAddress: Data
     public let hrp: String
     public let chainId: String
     
-    private init(raw: Data, hrp: String, chainId: String) throws {
-        guard raw.count == 20 else {
+    init(raw: Data, hrp: String, chainId: String) throws {
+        guard raw.count == Self.rawAddressSize else {
             throw AddressError.badRawAddressLength(length: raw.count)
         }
         self.rawAddress = raw
@@ -110,6 +112,12 @@ public struct Address: AddressProtocol, Equatable, Hashable {
     
     public func extended(path: Bip32Path) throws -> Extended {
         return try ExtendedAddress(address: self, path: path)
+    }
+}
+
+extension Address: AvalancheEncodable {
+    public func encode(in encoder: AvalancheEncoder) throws {
+        try encoder.encode(rawAddress, size: Self.rawAddressSize)
     }
 }
 
