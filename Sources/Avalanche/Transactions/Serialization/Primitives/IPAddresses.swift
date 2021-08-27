@@ -8,8 +8,8 @@
 import Foundation
 
 public struct IPv4Address {
-    public private(set) var host: (UInt8, UInt8, UInt8, UInt8)
-    public private(set) var port: UInt16
+    public let host: (UInt8, UInt8, UInt8, UInt8)
+    public let port: UInt16
     
     public init(host: (UInt8, UInt8, UInt8, UInt8), port: UInt16) {
         self.host = host
@@ -29,10 +29,10 @@ extension IPv4Address: AvalancheEncodable {
 }
 
 public struct IPv6Address {
-    public private(set) var host: [String]
-    public private(set) var port: UInt16
+    public let host: [UInt16]
+    public let port: UInt16
     
-    public init(host: [String], port: UInt16) {
+    public init(host: [UInt16], port: UInt16) {
         self.host = host
         self.port = port
     }
@@ -40,16 +40,6 @@ public struct IPv6Address {
 
 extension IPv6Address: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        for i in 0...7 {
-            if i < host.count {
-                guard let data = Data(hex: host[i]) else {
-                    throw AvalancheEncoderError.invalidValue(host[i])
-                }
-                try encoder.encode(data, data.count)
-            } else {
-                encoder.write(Data(count: 2))
-            }
-        }
-        try encoder.encode(port)
+        try encoder.encode(host, size: 8).encode(port)
     }
 }

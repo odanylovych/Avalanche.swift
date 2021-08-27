@@ -16,7 +16,7 @@ final class TransactionsTests: AvalancheTestCase {
     }
     
     private func encodeFixedTest(actual: AvalancheFixedEncodable, expected: [UInt8], size: Int) throws {
-        let encoded = try AEncoder().encode(actual, size).output.map { $0 }
+        let encoded = try AEncoder().encode(actual, size: size).output.map { $0 }
         XCTAssertEqual(encoded, expected)
     }
 
@@ -58,7 +58,7 @@ final class TransactionsTests: AvalancheTestCase {
             ]
         )
         try encodeTest(
-            actual: IPv6Address(host: ["2001", "0db8", "ac10", "fe01"], port: 12345),
+            actual: IPv6Address(host: [0x2001, 0x0db8, 0xac10, 0xfe01, 0, 0, 0, 0], port: 12345),
             expected: [
                 0x20, 0x01, 0x0d, 0xb8, 0xac, 0x10, 0xfe, 0x01,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,

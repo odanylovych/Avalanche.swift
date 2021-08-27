@@ -19,7 +19,7 @@ public protocol AvalancheEncoder {
     var output: Data { get }
     
     @discardableResult func encode(_ value: AvalancheEncodable) throws -> Self
-    @discardableResult func encode(_ value: AvalancheFixedEncodable, _ size: Int) throws -> Self
+    @discardableResult func encode(_ value: AvalancheFixedEncodable, size: Int) throws -> Self
     func write(_ data: Data)
 }
 
@@ -35,7 +35,7 @@ class AEncoder: AvalancheEncoder {
         return self
     }
     
-    func encode(_ value: AvalancheFixedEncodable, _ size: Int) throws -> Self {
+    func encode(_ value: AvalancheFixedEncodable, size: Int) throws -> Self {
         try value.encode(in: self, size: size)
         return self
     }
