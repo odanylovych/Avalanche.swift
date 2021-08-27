@@ -18,15 +18,13 @@ public struct IPv4Address {
 }
 
 extension IPv4Address: AvalancheEncodable {
-    private static let _encoder_prefix = Data(count: 12)
-    
-    public func encode(in encoder: AvalancheEncoder) {
-        encoder.write(Self._encoder_prefix)
-        host.0.encode(in: encoder)
-        host.1.encode(in: encoder)
-        host.2.encode(in: encoder)
-        host.3.encode(in: encoder)
-        port.encode(in: encoder)
+    public func encode(in encoder: AvalancheEncoder) throws {
+        encoder.write(Data(count: 12))
+        try encoder.encode(host.0)
+            .encode(host.1)
+            .encode(host.2)
+            .encode(host.3)
+            .encode(port)
     }
 }
 
@@ -47,11 +45,11 @@ extension IPv6Address: AvalancheEncodable {
                 guard let data = Data(hex: host[i]) else {
                     throw AvalancheEncoderError.invalidValue(host[i])
                 }
-                data.encode(in: encoder)
+                try encoder.encode(data, data.count)
             } else {
                 encoder.write(Data(count: 2))
             }
         }
-        port.encode(in: encoder)
+        try encoder.encode(port)
     }
 }

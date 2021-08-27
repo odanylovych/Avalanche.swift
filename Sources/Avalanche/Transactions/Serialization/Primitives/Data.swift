@@ -7,8 +7,5 @@
 
 import Foundation
 
-extension Data: AvalancheEncodable {
-    public func encode(in encoder: AvalancheEncoder) {
-        encoder.write(self)
-    }
-}
+extension Data: AvalancheFixedEncodable {}
+extension Data: AvalancheEncodable {}

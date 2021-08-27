@@ -11,39 +11,43 @@ import XCTest
 
 final class TransactionsTests: AvalancheTestCase {
     private func encodeTest(actual: AvalancheEncodable, expected: [UInt8]) throws {
-        let encoder = AEncoder()
-        let encoded = try encoder.encode(actual).output.map { $0 }
+        let encoded = try AEncoder().encode(actual).output.map { $0 }
         XCTAssertEqual(encoded, expected)
     }
     
+    private func encodeFixedTest(actual: AvalancheFixedEncodable, expected: [UInt8], size: Int) throws {
+        let encoded = try AEncoder().encode(actual, size).output.map { $0 }
+        XCTAssertEqual(encoded, expected)
+    }
+
     func testEncodeByte() throws {
         try encodeTest(
-            actual: UInt8(1),
+            actual: UInt8(0x01),
             expected: [0x01]
         )
     }
-    
+
     func testEncodeShort() throws {
         try encodeTest(
-            actual: UInt16(258),
+            actual: UInt16(0x0102),
             expected: [0x01, 0x02]
         )
     }
-    
+
     func testEncodeInteger() throws {
         try encodeTest(
-            actual: UInt32(16909060),
+            actual: UInt32(0x01020304),
             expected: [0x01, 0x02, 0x03, 0x04]
         )
     }
-    
+
     func testEncodeLongInteger() throws {
         try encodeTest(
-            actual: UInt64(72623859790382856),
+            actual: UInt64(0x0102030405060708),
             expected: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
         )
     }
-    
+
     func testEncodeIPAddresses() throws {
         try encodeTest(
             actual: IPv4Address(host: (127, 0, 0, 1), port: 9650),
@@ -62,55 +66,31 @@ final class TransactionsTests: AvalancheTestCase {
             ]
         )
     }
-    
+
     func testEncodeFixedLengthArray() throws {
-        struct FixedArrayUInt8: FixedArray {
-            typealias E = UInt8
-            
-            static var count: UInt32 = 2
-            var array: [UInt8]
-            
-            init?(array: [UInt8]) {
-                guard array.count == Self.count else {
-                    return nil
-                }
-                self.array = array
-            }
-        }
-        struct FixedArrayUInt32: FixedArray {
-            typealias E = UInt32
-            
-            static var count: UInt32 = 1
-            var array: [UInt32]
-            
-            init?(array: [UInt32]) {
-                guard array.count == Self.count else {
-                    return nil
-                }
-                self.array = array
-            }
-        }
-        try encodeTest(
-            actual: FixedArrayUInt8(array: [UInt8(1), UInt8(2)])!,
-            expected: [0x01, 0x02]
+        try encodeFixedTest(
+            actual: [UInt8(0x01), UInt8(0x02)],
+            expected: [0x01, 0x02],
+            size: 2
         )
-        try encodeTest(
-            actual: FixedArrayUInt32(array: [UInt32(50595078)])!,
-            expected: [0x03, 0x04, 0x05, 0x06]
+        try encodeFixedTest(
+            actual: [UInt32(0x03040506)],
+            expected: [0x03, 0x04, 0x05, 0x06],
+            size: 1
         )
     }
-    
+
     func testEncodeVariableLengthArray() throws {
         try encodeTest(
-            actual: [UInt8(1), UInt8(2)],
+            actual: [UInt8(0x01), UInt8(0x02)],
             expected: [0x00, 0x00, 0x00, 0x02, 0x01, 0x02]
         )
         try encodeTest(
-            actual: [UInt32(50595078)],
+            actual: [UInt32(0x03040506)],
             expected: [0x00, 0x00, 0x00, 0x01, 0x03, 0x04, 0x05, 0x06]
         )
     }
-    
+
     func testEncodeString() throws {
         try encodeTest(
             actual: "Avax",

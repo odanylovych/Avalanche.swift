@@ -9,27 +9,23 @@ import Foundation
 
 // Fixed-Length Array
 
-public protocol FixedArray: AvalancheEncodable {
-    associatedtype E: AvalancheEncodable
-    
-    static var count: UInt32 { get }
-    
-    var array: [E] { get }
-    
-    init?(array: [E])
-}
-
-extension FixedArray {
-    public func encode(in encoder: AvalancheEncoder) throws {
-        try array.forEach { try $0.encode(in: encoder) }
+extension Collection where Element: AvalancheEncodable {
+    public func encode(in encoder: AvalancheEncoder, size: Int) throws {
+        guard count == size else {
+            throw AvalancheEncoderError.wrongFixedArraySize(self, actual: count, expected: size)
+        }
+        try forEach { try encoder.encode($0) }
     }
 }
 
 // Variable-Length Array
 
-extension Array: AvalancheEncodable where Element: AvalancheEncodable {
+extension Collection where Element: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        UInt32(count).encode(in: encoder)
-        try forEach { try $0.encode(in: encoder) }
+        try encoder.encode(UInt32(count))
+        try forEach { try encoder.encode($0) }
     }
 }
+
+extension Array: AvalancheFixedEncodable where Element: AvalancheEncodable {}
+extension Array: AvalancheEncodable where Element: AvalancheEncodable {}

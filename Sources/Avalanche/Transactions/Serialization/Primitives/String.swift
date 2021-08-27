@@ -12,7 +12,6 @@ extension String: AvalancheEncodable {
         guard let data = data(using: .utf8) else {
             throw AvalancheEncoderError.invalidValue(self)
         }
-        UInt16(count).encode(in: encoder)
-        data.encode(in: encoder)
+        try encoder.encode(UInt16(count)).encode(data, count)
     }
 }

@@ -9,4 +9,5 @@ import Foundation
 
 public enum AvalancheEncoderError: Error {
     case invalidValue(Any)
+    case wrongFixedArraySize(Any, actual: Int, expected: Int)
 }
