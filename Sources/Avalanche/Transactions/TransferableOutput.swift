@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct AssetId {
+public struct AssetID {
     public static let size = 32
     
     public let data: Data
@@ -20,24 +20,24 @@ public struct AssetId {
     }
 }
 
-extension AssetId: AvalancheEncodable {
+extension AssetID: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(data, size: Self.size)
     }
 }
 
 public struct TransferableOutput {
-    public let assetId: AssetId
+    public let assetID: AssetID
     public let output: Output
     
-    public init(assetId: AssetId, output: Output) {
-        self.assetId = assetId
+    public init(assetId: AssetID, output: Output) {
+        self.assetID = assetId
         self.output = output
     }
 }
 
 extension TransferableOutput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(assetId).encode(output)
+        try encoder.encode(assetID).encode(output)
     }
 }

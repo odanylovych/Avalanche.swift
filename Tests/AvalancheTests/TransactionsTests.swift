@@ -166,7 +166,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeNFTTransferOutput() throws {
         try encodeTest(
             actual: NFTTransferOutput(
-                groupId: 12345,
+                groupID: 12345,
                 payload: Data(hex: "0x431100")!,
                 locktime: 54321,
                 threshold: 1,
@@ -205,7 +205,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeNFTMintOutput() throws {
         try encodeTest(
             actual: NFTMintOutput(
-                groupId: 12345,
+                groupID: 12345,
                 locktime: 54321,
                 threshold: 1,
                 addresses: [

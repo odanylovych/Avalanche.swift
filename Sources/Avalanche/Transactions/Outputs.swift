@@ -32,7 +32,18 @@ public struct SECP256K1TransferOutput: Output {
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(amount: UInt64, locktime: UInt64, threshold: UInt32, addresses: [Address]) {
+    public init(amount: UInt64, locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+        guard amount > 0 else {
+            throw MalformedTransactionError.wrongValue(amount, name: "Amount", message: "Must be positive")
+        }
+        guard threshold <= addresses.count else {
+            throw MalformedTransactionError.outOfRange(
+                threshold,
+                expected: 0...addresses.count,
+                name: "Threshold",
+                description: "Must be less than or equal to the length of Addresses"
+            )
+        }
         self.amount = amount
         self.locktime = locktime
         self.threshold = threshold
@@ -57,7 +68,15 @@ public struct SECP256K1MintOutput: Output {
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(locktime: UInt64, threshold: UInt32, addresses: [Address]) {
+    public init(locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+        guard threshold <= addresses.count else {
+            throw MalformedTransactionError.outOfRange(
+                threshold,
+                expected: 0...addresses.count,
+                name: "Threshold",
+                description: "Must be less than or equal to the length of Addresses"
+            )
+        }
         self.locktime = locktime
         self.threshold = threshold
         self.addresses = addresses
@@ -76,14 +95,29 @@ extension SECP256K1MintOutput {
 public struct NFTTransferOutput: Output {
     public static let typeID = OutputTypeID.nftTransfer
     
-    public let groupId: UInt32
+    public let groupID: UInt32
     public let payload: Data
     public let locktime: UInt64
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(groupId: UInt32, payload: Data, locktime: UInt64, threshold: UInt32, addresses: [Address]) {
-        self.groupId = groupId
+    public init(groupID: UInt32, payload: Data, locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+        guard payload.count <= 1024 else {
+            throw MalformedTransactionError.outOfRange(
+                payload.count,
+                expected: 0...1024,
+                name: "Payload length"
+            )
+        }
+        guard threshold <= addresses.count else {
+            throw MalformedTransactionError.outOfRange(
+                threshold,
+                expected: 0...addresses.count,
+                name: "Threshold",
+                description: "Must be less than or equal to the length of Addresses"
+            )
+        }
+        self.groupID = groupID
         self.payload = payload
         self.locktime = locktime
         self.threshold = threshold
@@ -94,7 +128,7 @@ public struct NFTTransferOutput: Output {
 extension NFTTransferOutput {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
-            .encode(groupId)
+            .encode(groupID)
             .encode(payload)
             .encode(locktime)
             .encode(threshold)
@@ -105,13 +139,21 @@ extension NFTTransferOutput {
 public struct NFTMintOutput: Output {
     public static let typeID = OutputTypeID.nftMint
     
-    public let groupId: UInt32
+    public let groupID: UInt32
     public let locktime: UInt64
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(groupId: UInt32, locktime: UInt64, threshold: UInt32, addresses: [Address]) {
-        self.groupId = groupId
+    public init(groupID: UInt32, locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+        guard threshold <= addresses.count else {
+            throw MalformedTransactionError.outOfRange(
+                threshold,
+                expected: 0...addresses.count,
+                name: "Threshold",
+                description: "Must be less than or equal to the length of Addresses"
+            )
+        }
+        self.groupID = groupID
         self.locktime = locktime
         self.threshold = threshold
         self.addresses = addresses
@@ -121,7 +163,7 @@ public struct NFTMintOutput: Output {
 extension NFTMintOutput {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
-            .encode(groupId)
+            .encode(groupID)
             .encode(locktime)
             .encode(threshold)
             .encode(addresses)
