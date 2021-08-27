@@ -18,7 +18,7 @@ public struct IPv4Address {
 }
 
 extension IPv4Address: AvalancheEncodable {
-    private static let _encoder_prefix = Data([0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xff])
+    private static let _encoder_prefix = Data(count: 12)
     
     public func encode(in encoder: AvalancheEncoder) {
         encoder.write(Self._encoder_prefix)
