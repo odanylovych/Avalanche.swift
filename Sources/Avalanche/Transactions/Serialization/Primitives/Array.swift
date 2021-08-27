@@ -27,7 +27,7 @@ extension FixedArray {
 
 // Variable-Length Array
 
-extension Array: AvalancheEncodable where Element == AvalancheEncodable {
+extension Array: AvalancheEncodable where Element: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
         UInt32(count).encode(in: encoder)
         try forEach { try $0.encode(in: encoder) }
