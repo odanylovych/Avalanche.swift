@@ -7,6 +7,12 @@
 
 import Foundation
 
-public typealias CodecID = UInt16
+public enum CodecID: UInt16 {
+    case latest = 0
+}
 
-public let avalancheCodecId: CodecID = 0
+extension CodecID: AvalancheEncodable {
+    public func encode(in encoder: AvalancheEncoder) throws {
+        try encoder.encode(rawValue)
+    }
+}
