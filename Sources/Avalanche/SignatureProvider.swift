@@ -36,7 +36,8 @@ public protocol AvalancheSignatureProvider {
         transaction: T,
         _ cb: @escaping (AvalancheSignatureProviderResult<T.Signed>) -> Void)
     
-    func sign(ethereum message: Data,
-              account: EthAccount,
-              _ cb: @escaping (AvalancheSignatureProviderResult<Signature>) -> Void)
+    func sign<A: ExtendedAddressProtocol>(
+        message: Data,
+        address: A,
+        _ cb: @escaping (AvalancheSignatureProviderResult<Signature>) -> Void)
 }

@@ -84,6 +84,12 @@ public extension KeyPair {
         Algos.Avalanche.sign(data: tx, with: _sk)
     }
     
+    func signAvalanche(message data: Data) -> Data? {
+        let prefixed = Data("\u{1A}Avalanche Signed Message:\n".utf8) +
+            UInt32(data.count).bigEndianBytes + data
+        return Algos.Avalanche.sign(data: prefixed, with: _sk)
+    }
+    
     func signEthereum(message data: Data) -> Data? {
         let prefixed = Data("\u{19}Ethereum Signed Message:\n".utf8) + Data(String(data.count, radix: 10).utf8) + data
         return Algos.Ethereum.sign(data: prefixed, with: _sk)

@@ -13,7 +13,7 @@ public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, H
     
     public var index: UInt32 { accountIndex }
     public var isChange: Bool { false }
-    public var accountIndex: UInt32 { path.path[2] - Bip32Path.hard }
+    public var accountIndex: UInt32 { path.accountIndex! }
     
     public init(pubKey: Data, path: Bip32Path) throws {
         let addr: EthAddress
