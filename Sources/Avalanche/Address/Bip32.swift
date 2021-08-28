@@ -41,6 +41,21 @@ public struct Bip32Path: Equatable, Hashable {
         return Bip32Path(path: Array(path.prefix(3)))
     }
     
+    public var accountIndex: UInt32? {
+        guard path.count > 2 else { return nil }
+        return path[2] - Self.hard
+    }
+    
+    public var isChange: Bool? {
+        guard path.count > 3 else { return nil }
+        return path[3] == 1
+    }
+    
+    public var addressIndex: UInt32? {
+        guard path.count > 4 else { return nil }
+        return path[4]
+    }
+    
     public static let prefixEthereum = Bip32Path(path: [Self.hard + 44, Self.hard + 60])
     public static let prefixAvalanche = Bip32Path(path: [Self.hard + 44, Self.hard + 9000])
     

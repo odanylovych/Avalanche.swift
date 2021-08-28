@@ -127,7 +127,7 @@ public struct ExtendedAddress: ExtendedAddressProtocol {
         self.path = path
     }
     
-    public var isChange: Bool { path.path[3] == 1 }
-    public var accountIndex: UInt32 { path.path[2] - Bip32Path.hard }
-    public var index: UInt32 { path.path[4] }
+    public var isChange: Bool { path.isChange! }
+    public var accountIndex: UInt32 { path.accountIndex! }
+    public var index: UInt32 { path.addressIndex! }
 }

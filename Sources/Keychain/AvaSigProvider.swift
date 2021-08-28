@@ -37,25 +37,12 @@ private extension AvalancheBip44Keychain {
         var keypairs: [(T.Addr.Extended, KeyPair)] = []
         keypairs.reserveCapacity(addresses.count)
         for address in addresses {
-            if isEthereum {
-                guard let kp = _ethCache[address.accountIndex] else {
-                    cb(.failure(.accountNotFound(account: address.path.account!)))
-                    return
-                }
+            switch deriveKeyPair(for: address.path, isEthereum: isEthereum) {
+            case .failure(let err):
+                cb(.failure(err))
+                return
+            case .success(let kp):
                 keypairs.append((address, kp))
-            } else {
-                guard let kp = _avaCache[address.accountIndex] else {
-                    cb(.failure(.accountNotFound(account: address.path.account!)))
-                    return
-                }
-                let derived = try? kp
-                    .derive(index: address.isChange ? 1 : 0, hard: false)
-                    .derive(index: address.index, hard: false)
-                guard let der = derived else {
-                    cb(.failure(.derivationFailed(address: address.path)))
-                    return
-                }
-                keypairs.append((address, der))
             }
         }
         var signatures: Dictionary<T.Addr, Signature> = [:]
@@ -75,6 +62,28 @@ private extension AvalancheBip44Keychain {
             cb(.success(signed))
         } catch let error {
             cb(.failure(.signedTransactionInitFailed(error: error)))
+        }
+    }
+    
+    private func deriveKeyPair(
+        for path: Bip32Path, isEthereum: Bool
+    ) -> AvalancheSignatureProviderResult<KeyPair> {
+        if isEthereum {
+            guard let kp = _ethCache[path.accountIndex!] else {
+                return .failure(.accountNotFound(account: path.account!))
+            }
+            return .success(kp)
+        } else {
+            guard let kp = _avaCache[path.accountIndex!] else {
+                return .failure(.accountNotFound(account: path.account!))
+            }
+            let derived = try? kp
+                .derive(index: path.isChange! ? 1 : 0, hard: false)
+                .derive(index: path.addressIndex!, hard: false)
+            guard let der = derived else {
+                return .failure(.derivationFailed(address: path))
+            }
+            return .success(der)
         }
     }
 }
@@ -107,19 +116,27 @@ extension AvalancheBip44Keychain: AvalancheSignatureProvider {
         }
     }
     
-    public func sign(
-        ethereum message: Data,
-        account: EthAccount,
-        _ cb: @escaping (AvalancheSignatureProviderResult<Signature>) -> Void
-    ) {
+    public func sign<A: ExtendedAddressProtocol>(
+        message: Data,
+        address: A,
+        _ cb: @escaping (AvalancheSignatureProviderResult<Signature>) -> Void) {
         DispatchQueue.global().async {
-            guard let kp = self._ethCache[account.accountIndex] else {
-                return
+            let isEthereum = address is EthAccount
+            switch self.deriveKeyPair(for: address.path,
+                                      isEthereum: isEthereum
+            ) {
+            case .failure(let err):
+                cb(.failure(err))
+            case .success(let kp):
+                let sig = isEthereum
+                    ? kp.signEthereum(message: message)
+                    : kp.signAvalanche(message: message)
+                guard let signature = sig else {
+                    cb(.failure(.signingFailed(address: address.path, reason: "")))
+                    return
+                }
+                cb(.success(signature))
             }
-            guard let signature = kp.signEthereum(message: message) else {
-                return
-            }
-            cb(.success(signature))
         }
     }
 }
