@@ -36,7 +36,7 @@ public struct SECP256K1TransferInput: Input {
     }
 }
 
-extension SECP256K1TransferInput: AvalancheEncodable {
+extension SECP256K1TransferInput {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(amount)
