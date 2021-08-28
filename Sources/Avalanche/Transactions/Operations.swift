@@ -7,24 +7,12 @@
 
 import Foundation
 
-public enum OpTypeID: UInt32 {
-    case secp256K1MintOp = 0x00000008
-    case nftMintOp = 0x0000000c
-    case nftTransferOp = 0x0000000d
-}
-
-extension OpTypeID: AvalancheEncodable {
-    public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(rawValue)
-    }
-}
-
 public protocol Operation: AvalancheEncodable {
-    static var typeID: OpTypeID { get }
+    static var typeID: TypeID { get }
 }
 
 public struct SECP256K1MintOperation: Operation {
-    public static let typeID = OpTypeID.secp256K1MintOp
+    public static let typeID: TypeID = .secp256K1MintOperation
     
     public let addressIndices: [UInt32]
     public let mintOutput: SECP256K1MintOutput
@@ -46,7 +34,7 @@ extension SECP256K1MintOperation {
     }
 }
 
-public struct NFTMintOpOutput {
+public struct NFTMintOperationOutput {
     public let locktime: UInt64
     public let threshold: UInt32
     public let addresses: [Address]
@@ -66,7 +54,7 @@ public struct NFTMintOpOutput {
     }
 }
 
-extension NFTMintOpOutput: AvalancheEncodable {
+extension NFTMintOperationOutput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(locktime)
             .encode(threshold)
@@ -74,15 +62,15 @@ extension NFTMintOpOutput: AvalancheEncodable {
     }
 }
 
-public struct NFTMintOp: Operation {
-    public static let typeID = OpTypeID.nftMintOp
+public struct NFTMintOperation: Operation {
+    public static let typeID: TypeID = .nftMintOperation
     
     public let addressIndices: [UInt32]
     public let groupID: UInt32
     public let payload: Data
-    public let outputs: [NFTMintOpOutput]
+    public let outputs: [NFTMintOperationOutput]
     
-    public init(addressIndices: [UInt32], groupID: UInt32, payload: Data, outputs: [NFTMintOpOutput]) throws {
+    public init(addressIndices: [UInt32], groupID: UInt32, payload: Data, outputs: [NFTMintOperationOutput]) throws {
         guard payload.count <= 1024 else {
             throw MalformedTransactionError.outOfRange(
                 payload.count,
@@ -97,7 +85,7 @@ public struct NFTMintOp: Operation {
     }
 }
 
-extension NFTMintOp {
+extension NFTMintOperation {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(addressIndices)
@@ -107,7 +95,7 @@ extension NFTMintOp {
     }
 }
 
-public struct NFTTransferOpOutput {
+public struct NFTTransferOperationOutput {
     public let groupID: UInt32
     public let payload: Data
     public let locktime: UInt64
@@ -138,7 +126,7 @@ public struct NFTTransferOpOutput {
     }
 }
 
-extension NFTTransferOpOutput: AvalancheEncodable {
+extension NFTTransferOperationOutput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(groupID)
             .encode(payload)
@@ -148,19 +136,19 @@ extension NFTTransferOpOutput: AvalancheEncodable {
     }
 }
 
-public struct NFTTransferOp: Operation {
-    public static let typeID = OpTypeID.nftTransferOp
+public struct NFTTransferOperation: Operation {
+    public static let typeID: TypeID = .nftTransferOperation
     
     public let addressIndices: [UInt32]
-    public let nftTransferOutput: NFTTransferOpOutput
+    public let nftTransferOutput: NFTTransferOperationOutput
     
-    public init(addressIndices: [UInt32], nftTransferOutput: NFTTransferOpOutput) {
+    public init(addressIndices: [UInt32], nftTransferOutput: NFTTransferOperationOutput) {
         self.addressIndices = addressIndices
         self.nftTransferOutput = nftTransferOutput
     }
 }
 
-extension NFTTransferOp {
+extension NFTTransferOperation {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(addressIndices)

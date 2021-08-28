@@ -7,25 +7,12 @@
 
 import Foundation
 
-public enum OutputTypeID: UInt32 {
-    case secp256K1Transfer = 0x00000007
-    case secp256K1Mint = 0x00000006
-    case nftTransfer = 0x0000000b
-    case nftMint = 0x0000000a
-}
-
-extension OutputTypeID: AvalancheEncodable {
-    public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(rawValue)
-    }
-}
-
 public protocol Output: AvalancheEncodable {
-    static var typeID: OutputTypeID { get }
+    static var typeID: TypeID { get }
 }
 
 public struct SECP256K1TransferOutput: Output {
-    public static let typeID = OutputTypeID.secp256K1Transfer
+    public static let typeID: TypeID = .secp256K1TransferOutput
     
     public let amount: UInt64
     public let locktime: UInt64
@@ -62,7 +49,7 @@ extension SECP256K1TransferOutput {
 }
 
 public struct SECP256K1MintOutput: Output {
-    public static let typeID = OutputTypeID.secp256K1Mint
+    public static let typeID: TypeID = .secp256K1MintOutput
     
     public let locktime: UInt64
     public let threshold: UInt32
@@ -93,7 +80,7 @@ extension SECP256K1MintOutput {
 }
 
 public struct NFTTransferOutput: Output {
-    public static let typeID = OutputTypeID.nftTransfer
+    public static let typeID: TypeID = .nftTransferOutput
     
     public let groupID: UInt32
     public let payload: Data
@@ -137,7 +124,7 @@ extension NFTTransferOutput {
 }
 
 public struct NFTMintOutput: Output {
-    public static let typeID = OutputTypeID.nftMint
+    public static let typeID: TypeID = .nftMintOutput
     
     public let groupID: UInt32
     public let locktime: UInt64

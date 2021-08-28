@@ -1,5 +1,5 @@
 //
-//  TransferableOp.swift
+//  TransferableOperation.swift
 //  
 //
 //  Created by Ostap Danylovych on 28.08.2021.
@@ -8,37 +8,37 @@
 import Foundation
 
 public struct UTXOID {
-    public let txID: TxID
+    public let transactionID: TransactionID
     public let utxoIndex: UInt32
     
-    public init(txID: TxID, utxoIndex: UInt32) {
-        self.txID = txID
+    public init(transactionID: TransactionID, utxoIndex: UInt32) {
+        self.transactionID = transactionID
         self.utxoIndex = utxoIndex
     }
 }
 
 extension UTXOID: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(txID).encode(utxoIndex)
+        try encoder.encode(transactionID).encode(utxoIndex)
     }
 }
 
-public struct TransferableOp {
+public struct TransferableOperation {
     public let assetID: AssetID
     public let utxoIDs: [UTXOID]
-    public let transferOp: Operation
+    public let transferOperation: Operation
     
-    public init(assetID: AssetID, utxoIDs: [UTXOID], transferOp: Operation) {
+    public init(assetID: AssetID, utxoIDs: [UTXOID], transferOperation: Operation) {
         self.assetID = assetID
         self.utxoIDs = utxoIDs
-        self.transferOp = transferOp
+        self.transferOperation = transferOperation
     }
 }
 
-extension TransferableOp: AvalancheEncodable {
+extension TransferableOperation: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(assetID)
             .encode(utxoIDs)
-            .encode(transferOp)
+            .encode(transferOperation)
     }
 }

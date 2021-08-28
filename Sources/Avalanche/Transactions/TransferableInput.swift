@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct TxID {
+public struct TransactionID {
     public static let size = 32
 
     public let data: Data
@@ -20,20 +20,20 @@ public struct TxID {
     }
 }
 
-extension TxID: AvalancheEncodable {
+extension TransactionID: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(data, size: Self.size)
     }
 }
 
 public struct TransferableInput {
-    public let txID: TxID
+    public let transactionID: TransactionID
     public let utxoIndex: UInt32
     public let assetID: AssetID
     public let input: Input
     
-    public init(txID: TxID, utxoIndex: UInt32, assetID: AssetID, input: Input) {
-        self.txID = txID
+    public init(transactionID: TransactionID, utxoIndex: UInt32, assetID: AssetID, input: Input) {
+        self.transactionID = transactionID
         self.utxoIndex = utxoIndex
         self.assetID = assetID
         self.input = input
@@ -42,7 +42,7 @@ public struct TransferableInput {
 
 extension TransferableInput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(txID)
+        try encoder.encode(transactionID)
             .encode(utxoIndex)
             .encode(assetID)
             .encode(input)

@@ -273,7 +273,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeTransferableInput() throws {
         try encodeTest(
             actual: TransferableInput(
-                txID: TxID(data: Data(hex: "0xf1e1d1c1b1a191817161514131211101f0e0d0c0b0a090807060504030201000")!)!,
+                transactionID: TransactionID(data: Data(hex: "0xf1e1d1c1b1a191817161514131211101f0e0d0c0b0a090807060504030201000")!)!,
                 utxoIndex: 5,
                 assetID: AssetID(data: Data(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!)!,
                 input: SECP256K1TransferInput(
@@ -379,12 +379,12 @@ final class TransactionsTests: AvalancheTestCase {
     
     func testEncodeNFTMintOp() throws {
         try encodeTest(
-            actual: NFTMintOp(
+            actual: NFTMintOperation(
                 addressIndices: [0x00000003, 0x00000007],
                 groupID: 12345,
                 payload: Data(hex: "0x431100")!,
                 outputs: [
-                    NFTMintOpOutput(
+                    NFTMintOperationOutput(
                         locktime: 54321,
                         threshold: 1,
                         addresses: [
@@ -431,9 +431,9 @@ final class TransactionsTests: AvalancheTestCase {
     
     func testEncodeNFTTransferOp() throws {
         try encodeTest(
-            actual: NFTTransferOp(
+            actual: NFTTransferOperation(
                 addressIndices: [0x00000007, 0x00000003],
-                nftTransferOutput: NFTTransferOpOutput(
+                nftTransferOutput: NFTTransferOperationOutput(
                     groupID: 12345,
                     payload: Data(hex: "0x431100")!,
                     locktime: 54321,
@@ -487,19 +487,19 @@ final class TransactionsTests: AvalancheTestCase {
     
     func testEncodeTransferableOp() throws {
         try encodeTest(
-            actual: TransferableOp(
+            actual: TransferableOperation(
                 assetID: AssetID(data: Data(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!)!,
                 utxoIDs: [
                     UTXOID(
-                        txID: TxID(
+                        transactionID: TransactionID(
                             data: Data(hex: "0xf1e1d1c1b1a191817161514131211101f0e0d0c0b0a090807060504030201000")!
                         )!,
                         utxoIndex: 5
                     )
                 ],
-                transferOp: NFTTransferOp(
+                transferOperation: NFTTransferOperation(
                     addressIndices: [0x00000007, 0x00000003],
-                    nftTransferOutput: NFTTransferOpOutput(
+                    nftTransferOutput: NFTTransferOperationOutput(
                         groupID: 12345,
                         payload: Data(hex: "0x431100")!,
                         locktime: 54321,

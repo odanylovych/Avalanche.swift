@@ -7,22 +7,12 @@
 
 import Foundation
 
-public enum InputTypeID: UInt32 {
-    case secp256K1Transfer = 0x00000005
-}
-
-extension InputTypeID: AvalancheEncodable {
-    public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(rawValue)
-    }
-}
-
 public protocol Input: AvalancheEncodable {
-    static var typeID: InputTypeID { get }
+    static var typeID: TypeID { get }
 }
 
 public struct SECP256K1TransferInput: Input {
-    public static let typeID = InputTypeID.secp256K1Transfer
+    public static let typeID: TypeID = .secp256K1TransferInput
     
     public let amount: UInt64
     public let addressIndices: [UInt32]
