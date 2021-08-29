@@ -7,12 +7,16 @@
 
 import Foundation
 
-public protocol Operation: AvalancheEncodable {
-    static var typeID: TypeID { get }
+public class Operation: AvalancheEncodable {
+    public class var typeID: TypeID { fatalError("Not supported") }
+    
+    public func encode(in encoder: AvalancheEncoder) throws {
+        fatalError("Not supported")
+    }
 }
 
-public struct SECP256K1MintOperation: Operation {
-    public static let typeID: TypeID = .secp256K1MintOperation
+public class SECP256K1MintOperation: Operation {
+    override public class var typeID: TypeID { .secp256K1MintOperation }
     
     public let addressIndices: [UInt32]
     public let mintOutput: SECP256K1MintOutput
@@ -23,10 +27,8 @@ public struct SECP256K1MintOperation: Operation {
         self.mintOutput = mintOutput
         self.transferOutput = transferOutput
     }
-}
-
-extension SECP256K1MintOperation {
-    public func encode(in encoder: AvalancheEncoder) throws {
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(addressIndices)
             .encode(mintOutput)
@@ -62,8 +64,8 @@ extension NFTMintOperationOutput: AvalancheEncodable {
     }
 }
 
-public struct NFTMintOperation: Operation {
-    public static let typeID: TypeID = .nftMintOperation
+public class NFTMintOperation: Operation {
+    override public class var typeID: TypeID { .nftMintOperation }
     
     public let addressIndices: [UInt32]
     public let groupID: UInt32
@@ -83,10 +85,8 @@ public struct NFTMintOperation: Operation {
         self.payload = payload
         self.outputs = outputs
     }
-}
-
-extension NFTMintOperation {
-    public func encode(in encoder: AvalancheEncoder) throws {
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(addressIndices)
             .encode(groupID)
@@ -136,8 +136,8 @@ extension NFTTransferOperationOutput: AvalancheEncodable {
     }
 }
 
-public struct NFTTransferOperation: Operation {
-    public static let typeID: TypeID = .nftTransferOperation
+public class NFTTransferOperation: Operation {
+    override public class var typeID: TypeID { .nftTransferOperation }
     
     public let addressIndices: [UInt32]
     public let nftTransferOutput: NFTTransferOperationOutput
@@ -146,10 +146,8 @@ public struct NFTTransferOperation: Operation {
         self.addressIndices = addressIndices
         self.nftTransferOutput = nftTransferOutput
     }
-}
-
-extension NFTTransferOperation {
-    public func encode(in encoder: AvalancheEncoder) throws {
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(addressIndices)
             .encode(nftTransferOutput)

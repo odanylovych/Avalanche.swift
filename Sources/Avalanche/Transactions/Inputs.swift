@@ -7,12 +7,16 @@
 
 import Foundation
 
-public protocol Input: AvalancheEncodable {
-    static var typeID: TypeID { get }
+public class Input: AvalancheEncodable {
+    public class var typeID: TypeID { fatalError("Not supported") }
+    
+    public func encode(in encoder: AvalancheEncoder) throws {
+        fatalError("Not supported")
+    }
 }
 
-public struct SECP256K1TransferInput: Input {
-    public static let typeID: TypeID = .secp256K1TransferInput
+public class SECP256K1TransferInput: Input {
+    override public class var typeID: TypeID { .secp256K1TransferInput }
     
     public let amount: UInt64
     public let addressIndices: [UInt32]
@@ -24,10 +28,8 @@ public struct SECP256K1TransferInput: Input {
         self.amount = amount
         self.addressIndices = addressIndices
     }
-}
-
-extension SECP256K1TransferInput {
-    public func encode(in encoder: AvalancheEncoder) throws {
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(amount)
             .encode(addressIndices)

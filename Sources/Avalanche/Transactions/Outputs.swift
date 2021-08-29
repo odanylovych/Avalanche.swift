@@ -7,12 +7,16 @@
 
 import Foundation
 
-public protocol Output: AvalancheEncodable {
-    static var typeID: TypeID { get }
+public class Output: AvalancheEncodable {
+    public class var typeID: TypeID { fatalError("Not supported") }
+    
+    public func encode(in encoder: AvalancheEncoder) throws {
+        fatalError("Not supported")
+    }
 }
 
-public struct SECP256K1TransferOutput: Output {
-    public static let typeID: TypeID = .secp256K1TransferOutput
+public class SECP256K1TransferOutput: Output {
+    override public class var typeID: TypeID { .secp256K1TransferOutput }
     
     public let amount: UInt64
     public let locktime: UInt64
@@ -36,10 +40,8 @@ public struct SECP256K1TransferOutput: Output {
         self.threshold = threshold
         self.addresses = addresses
     }
-}
-
-extension SECP256K1TransferOutput {
-    public func encode(in encoder: AvalancheEncoder) throws {
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(amount)
             .encode(locktime)
@@ -48,8 +50,8 @@ extension SECP256K1TransferOutput {
     }
 }
 
-public struct SECP256K1MintOutput: Output {
-    public static let typeID: TypeID = .secp256K1MintOutput
+public class SECP256K1MintOutput: Output {
+    override public class var typeID: TypeID { .secp256K1MintOutput }
     
     public let locktime: UInt64
     public let threshold: UInt32
@@ -68,10 +70,8 @@ public struct SECP256K1MintOutput: Output {
         self.threshold = threshold
         self.addresses = addresses
     }
-}
-
-extension SECP256K1MintOutput {
-    public func encode(in encoder: AvalancheEncoder) throws {
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(locktime)
             .encode(threshold)
@@ -79,8 +79,8 @@ extension SECP256K1MintOutput {
     }
 }
 
-public struct NFTTransferOutput: Output {
-    public static let typeID: TypeID = .nftTransferOutput
+public class NFTTransferOutput: Output {
+    override public class var typeID: TypeID { .nftTransferOutput }
     
     public let groupID: UInt32
     public let payload: Data
@@ -110,10 +110,8 @@ public struct NFTTransferOutput: Output {
         self.threshold = threshold
         self.addresses = addresses
     }
-}
-
-extension NFTTransferOutput {
-    public func encode(in encoder: AvalancheEncoder) throws {
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(groupID)
             .encode(payload)
@@ -123,8 +121,8 @@ extension NFTTransferOutput {
     }
 }
 
-public struct NFTMintOutput: Output {
-    public static let typeID: TypeID = .nftMintOutput
+public class NFTMintOutput: Output {
+    override public class var typeID: TypeID { .nftMintOutput }
     
     public let groupID: UInt32
     public let locktime: UInt64
@@ -145,10 +143,8 @@ public struct NFTMintOutput: Output {
         self.threshold = threshold
         self.addresses = addresses
     }
-}
-
-extension NFTMintOutput {
-    public func encode(in encoder: AvalancheEncoder) throws {
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID)
             .encode(groupID)
             .encode(locktime)
