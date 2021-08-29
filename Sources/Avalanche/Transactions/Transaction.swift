@@ -7,8 +7,6 @@
 
 import Foundation
 
-public typealias Signature = Data
-
 public protocol UnsignedTransaction {
     associatedtype Addr: AddressProtocol
     associatedtype Signed: SignedTransaction

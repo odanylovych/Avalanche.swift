@@ -104,7 +104,7 @@ public struct Address: AddressProtocol, Equatable, Hashable {
         do {
             return try Algos.Avalanche.verify(address: rawAddress,
                                               message: message,
-                                              signature: signature)
+                                              signature: signature.data)
         } catch {
             return false
         }
