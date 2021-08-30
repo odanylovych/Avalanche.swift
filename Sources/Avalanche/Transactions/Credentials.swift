@@ -7,22 +7,13 @@
 
 import Foundation
 
-public struct Signature {
+public struct Signature: ID {
     public static let size = 65
-
+    
     public let data: Data
-
-    public init?(data: Data) {
-        guard data.count == Self.size else {
-            return nil
-        }
-        self.data = data
-    }
-}
-
-extension Signature: AvalancheEncodable {
-    public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(data, size: Self.size)
+    
+    public init(_data: Data) {
+        self.data = _data
     }
 }
 

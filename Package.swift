@@ -39,10 +39,10 @@ let package = Package(
             name: "Avalanche",
             dependencies: [
                 "RPC", "Serializable", "BigInt", "CSecp256k1",
-                "UncommonCrypto", "Bech32"]),
+                "UncommonCrypto", "Bech32", "Base58"]),
         .target(
             name: "AvalancheKeychain",
-            dependencies: ["Base58", "Avalanche"],
+            dependencies: ["Avalanche"],
             path: "Sources/Keychain"),
         .target(
             name: "Bech32",

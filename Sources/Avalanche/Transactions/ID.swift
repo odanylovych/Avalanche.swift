@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Base58
 
 public protocol ID: AvalancheEncodable {
     static var size: Int { get }
@@ -31,7 +32,10 @@ extension ID {
     }
     
     public init?(cb58: String) {
-        fatalError("Not implemented")
+        guard let data = Base58.base58CheckDecode(cb58) else {
+            return nil
+        }
+        self.init(data: Data(data))
     }
 }
 
