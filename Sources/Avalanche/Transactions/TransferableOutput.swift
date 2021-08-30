@@ -7,22 +7,13 @@
 
 import Foundation
 
-public struct AssetID {
-    public static let size = 32
+public struct AssetID: ID {
+    public static var size = 32
     
-    public let data: Data
+    public var data: Data
     
-    public init?(data: Data) {
-        guard data.count == Self.size else {
-            return nil
-        }
-        self.data = data
-    }
-}
-
-extension AssetID: AvalancheEncodable {
-    public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(data, size: Self.size)
+    public init(_data: Data) {
+        self.data = _data
     }
 }
 
