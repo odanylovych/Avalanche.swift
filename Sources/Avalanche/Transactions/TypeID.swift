@@ -25,6 +25,13 @@ public enum TypeID: UInt32, CaseIterable {
     // Credentials
     case secp256K1Credential = 0x00000009
     case nftCredential = 0x0000000e
+    
+    // Transactions
+    case baseTransaction = 0x00000000
+    case createAssetTransaction = 0x00000001
+    case operationTransaction = 0x00000002
+    case importTransaction = 0x00000003
+    case exportTransaction = 0x00000004
 }
 
 extension TypeID: AvalancheEncodable {
