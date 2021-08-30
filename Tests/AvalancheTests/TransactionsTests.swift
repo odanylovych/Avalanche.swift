@@ -13,11 +13,11 @@ final class TransactionsTests: AvalancheTestCase {
     private func exampleTransferableOutput() throws -> TransferableOutput {
         try TransferableOutput(
             assetId: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
-            output: exampleSecpTransferOutput()
+            output: exampleSECP256K1TransferOutput()
         )
     }
     
-    private func exampleSecpTransferOutput() throws -> SECP256K1TransferOutput {
+    private func exampleSECP256K1TransferOutput() throws -> SECP256K1TransferOutput {
         try SECP256K1TransferOutput(
             amount: 12345,
             locktime: 54321,
@@ -45,11 +45,11 @@ final class TransactionsTests: AvalancheTestCase {
             transactionID: TransactionID(hex: "0xf1e1d1c1b1a191817161514131211101f0e0d0c0b0a090807060504030201000")!,
             utxoIndex: 5,
             assetID: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
-            input: exampleSecpTransferInput()
+            input: exampleSECP256K1TransferInput()
         )
     }
     
-    private func exampleSecpTransferInput() throws -> SECP256K1TransferInput {
+    private func exampleSECP256K1TransferInput() throws -> SECP256K1TransferInput {
         try SECP256K1TransferInput(
             amount: 123456789,
             addressIndices: [3, 7]
@@ -98,7 +98,7 @@ final class TransactionsTests: AvalancheTestCase {
     private func exampleInitialState() throws -> InitialState {
         try InitialState(
             featureExtensionID: FeatureExtensionID.secp256K1,
-            outputs: [exampleSecpTransferOutput()]
+            outputs: [exampleSECP256K1TransferOutput()]
         )
     }
     
@@ -234,7 +234,7 @@ final class TransactionsTests: AvalancheTestCase {
     
     func testEncodeSECP256K1TransferOutput() throws {
         try encodeTest(
-            actual: exampleSecpTransferOutput(),
+            actual: exampleSECP256K1TransferOutput(),
             expected: [
                 // typeID:
                 0x00, 0x00, 0x00, 0x07,
@@ -381,7 +381,7 @@ final class TransactionsTests: AvalancheTestCase {
     
     func testEncodeSECP256K1TransferInput() throws {
         try encodeTest(
-            actual: exampleSecpTransferInput(),
+            actual: exampleSECP256K1TransferInput(),
             expected: [
                 // type id:
                 0x00, 0x00, 0x00, 0x05,
@@ -402,7 +402,7 @@ final class TransactionsTests: AvalancheTestCase {
             actual: SECP256K1MintOperation(
                 addressIndices: [0x00000003, 0x00000007],
                 mintOutput: exampleSECP256K1MintOutput(),
-                transferOutput: exampleSecpTransferOutput()
+                transferOutput: exampleSECP256K1TransferOutput()
             ),
             expected: [
                 // typeID
@@ -1057,6 +1057,43 @@ final class TransactionsTests: AvalancheTestCase {
                 0x6f, 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76,
                 0x77, 0x78, 0x79, 0x7a, 0x7b, 0x7c, 0x7d, 0x7e,
                 0x7f, 0x00,
+            ]
+        )
+    }
+    
+    func testEncodeUTXO() throws {
+        try encodeTest(
+            actual: UTXO(
+                transactionId: TransactionID(hex: "0xf966750f438867c3c9828ddcdbe660e21ccdbb36a9276958f011ba472f75d4e7")!,
+                outputIndex: 0,
+                assetID: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
+                output: exampleSECP256K1TransferOutput()
+            ),
+            expected: [
+                // Codec ID:
+                0x00, 0x00,
+                // txID:
+                0xf9, 0x66, 0x75, 0x0f, 0x43, 0x88, 0x67, 0xc3,
+                0xc9, 0x82, 0x8d, 0xdc, 0xdb, 0xe6, 0x60, 0xe2,
+                0x1c, 0xcd, 0xbb, 0x36, 0xa9, 0x27, 0x69, 0x58,
+                0xf0, 0x11, 0xba, 0x47, 0x2f, 0x75, 0xd4, 0xe7,
+                // utxo index:
+                0x00, 0x00, 0x00, 0x00,
+                // assetID:
+                0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+                0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+                0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17,
+                0x18, 0x19, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x1f,
+                // output:
+                0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x30, 0x39, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0xd4, 0x31, 0x00, 0x00, 0x00, 0x01,
+                0x00, 0x00, 0x00, 0x02, 0x51, 0x02, 0x5c, 0x61,
+                0xfb, 0xcf, 0xc0, 0x78, 0xf6, 0x93, 0x34, 0xf8,
+                0x34, 0xbe, 0x6d, 0xd2, 0x6d, 0x55, 0xa9, 0x55,
+                0xc3, 0x34, 0x41, 0x28, 0xe0, 0x60, 0x12, 0x8e,
+                0xde, 0x35, 0x23, 0xa2, 0x4a, 0x46, 0x1c, 0x89,
+                0x43, 0xab, 0x08, 0x59,
             ]
         )
     }
