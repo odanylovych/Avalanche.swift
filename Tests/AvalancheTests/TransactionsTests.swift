@@ -10,6 +10,60 @@ import XCTest
 @testable import Avalanche
 
 final class TransactionsTests: AvalancheTestCase {
+    private func exampleSecpTransferOutput() throws -> SECP256K1TransferOutput {
+        try SECP256K1TransferOutput(
+            amount: 12345,
+            locktime: 54321,
+            threshold: 1,
+            addresses: [
+                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
+                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+            ]
+        )
+    }
+    
+    private func exampleSECP256K1MintOutput() throws -> SECP256K1MintOutput {
+        try SECP256K1MintOutput(
+            locktime: 54321,
+            threshold: 1,
+            addresses: [
+                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
+                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+            ]
+        )
+    }
+    
+    private func exampleSecpTransferInput() throws -> SECP256K1TransferInput {
+        try SECP256K1TransferInput(
+            amount: 123456789,
+            addressIndices: [3, 7]
+        )
+    }
+    
+    private func exampleNFTTransferOperation() throws -> NFTTransferOperation {
+        try NFTTransferOperation(
+            addressIndices: [0x00000007, 0x00000003],
+            nftTransferOutput: NFTTransferOperationOutput(
+                groupID: 12345,
+                payload: Data(hex: "0x431100")!,
+                locktime: 54321,
+                threshold: 1,
+                addresses: [
+                    Address(
+                        raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!,
+                        hrp: "avax",
+                        chainId: "X"
+                    ),
+                    Address(
+                        raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!,
+                        hrp: "avax",
+                        chainId: "X"
+                    ),
+                ]
+            )
+        )
+    }
+    
     private func encodeTest(actual: AvalancheEncodable, expected: [UInt8]) throws {
         let encoded = Array(try AEncoder().encode(actual).output)
         XCTAssertEqual(encoded, expected)
@@ -101,16 +155,8 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeTransferableOutput() throws {
         try encodeTest(
             actual: TransferableOutput(
-                assetId: AssetID(data: Data(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!)!,
-                output: SECP256K1TransferOutput(
-                    amount: 12345,
-                    locktime: 54321,
-                    threshold: 1,
-                    addresses: [
-                        Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                        Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
-                    ]
-                )
+                assetId: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
+                output: exampleSecpTransferOutput()
             ),
             expected: [
                 // assetID:
@@ -134,15 +180,7 @@ final class TransactionsTests: AvalancheTestCase {
     
     func testEncodeSECP256K1TransferOutput() throws {
         try encodeTest(
-            actual: SECP256K1TransferOutput(
-                amount: 12345,
-                locktime: 54321,
-                threshold: 1,
-                addresses: [
-                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
-                ]
-            ),
+            actual: exampleSecpTransferOutput(),
             expected: [
                 // typeID:
                 0x00, 0x00, 0x00, 0x07,
@@ -168,14 +206,7 @@ final class TransactionsTests: AvalancheTestCase {
     
     func testEncodeSECP256K1MintOutput() throws {
         try encodeTest(
-            actual: SECP256K1MintOutput(
-                locktime: 54321,
-                threshold: 1,
-                addresses: [
-                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
-                ]
-            ),
+            actual: exampleSECP256K1MintOutput(),
             expected: [
                 // typeID:
                 0x00, 0x00, 0x00, 0x06,
@@ -273,13 +304,10 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeTransferableInput() throws {
         try encodeTest(
             actual: TransferableInput(
-                transactionID: TransactionID(data: Data(hex: "0xf1e1d1c1b1a191817161514131211101f0e0d0c0b0a090807060504030201000")!)!,
+                transactionID: TransactionID(hex: "0xf1e1d1c1b1a191817161514131211101f0e0d0c0b0a090807060504030201000")!,
                 utxoIndex: 5,
-                assetID: AssetID(data: Data(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!)!,
-                input: SECP256K1TransferInput(
-                    amount: 123456789,
-                    addressIndices: [3, 7]
-                )
+                assetID: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
+                input: exampleSecpTransferInput()
             ),
             expected: [
                 // txID:
@@ -304,10 +332,7 @@ final class TransactionsTests: AvalancheTestCase {
     
     func testEncodeSECP256K1TransferInput() throws {
         try encodeTest(
-            actual: SECP256K1TransferInput(
-                amount: 123456789,
-                addressIndices: [3, 7]
-            ),
+            actual: exampleSecpTransferInput(),
             expected: [
                 // type id:
                 0x00, 0x00, 0x00, 0x05,
@@ -327,23 +352,8 @@ final class TransactionsTests: AvalancheTestCase {
         try encodeTest(
             actual: SECP256K1MintOperation(
                 addressIndices: [0x00000003, 0x00000007],
-                mintOutput: SECP256K1MintOutput(
-                    locktime: 54321,
-                    threshold: 1,
-                    addresses: [
-                        Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                        Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
-                    ]
-                ),
-                transferOutput: SECP256K1TransferOutput(
-                    amount: 12345,
-                    locktime: 54321,
-                    threshold: 1,
-                    addresses: [
-                        Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                        Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
-                    ]
-                )
+                mintOutput: exampleSECP256K1MintOutput(),
+                transferOutput: exampleSecpTransferOutput()
             ),
             expected: [
                 // typeID
@@ -377,7 +387,7 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeNFTMintOp() throws {
+    func testEncodeNFTMintOperation() throws {
         try encodeTest(
             actual: NFTMintOperation(
                 addressIndices: [0x00000003, 0x00000007],
@@ -429,29 +439,9 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeNFTTransferOp() throws {
+    func testEncodeNFTTransferOperation() throws {
         try encodeTest(
-            actual: NFTTransferOperation(
-                addressIndices: [0x00000007, 0x00000003],
-                nftTransferOutput: NFTTransferOperationOutput(
-                    groupID: 12345,
-                    payload: Data(hex: "0x431100")!,
-                    locktime: 54321,
-                    threshold: 1,
-                    addresses: [
-                        Address(
-                            raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!,
-                            hrp: "avax",
-                            chainId: "X"
-                        ),
-                        Address(
-                            raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!,
-                            hrp: "avax",
-                            chainId: "X"
-                        ),
-                    ]
-                )
-            ),
+            actual: exampleNFTTransferOperation(),
             expected: [
                 // Type ID
                 0x00, 0x00, 0x00, 0x0d,
@@ -485,39 +475,19 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeTransferableOp() throws {
+    func testEncodeTransferableOperation() throws {
         try encodeTest(
             actual: TransferableOperation(
-                assetID: AssetID(data: Data(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!)!,
+                assetID: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
                 utxoIDs: [
                     UTXOID(
                         transactionID: TransactionID(
-                            data: Data(hex: "0xf1e1d1c1b1a191817161514131211101f0e0d0c0b0a090807060504030201000")!
+                            hex: "0xf1e1d1c1b1a191817161514131211101f0e0d0c0b0a090807060504030201000"
                         )!,
                         utxoIndex: 5
                     )
                 ],
-                transferOperation: NFTTransferOperation(
-                    addressIndices: [0x00000007, 0x00000003],
-                    nftTransferOutput: NFTTransferOperationOutput(
-                        groupID: 12345,
-                        payload: Data(hex: "0x431100")!,
-                        locktime: 54321,
-                        threshold: 1,
-                        addresses: [
-                            Address(
-                                raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!,
-                                hrp: "avax",
-                                chainId: "X"
-                            ),
-                            Address(
-                                raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!,
-                                hrp: "avax",
-                                chainId: "X"
-                            ),
-                        ]
-                    )
-                )
+                transferOperation: exampleNFTTransferOperation()
             ),
             expected: [
                 // assetID:
@@ -554,25 +524,7 @@ final class TransactionsTests: AvalancheTestCase {
         try encodeTest(
             actual: InitialState(
                 featureExtensionID: FeatureExtensionID.secp256K1,
-                outputs: [
-                    SECP256K1TransferOutput(
-                        amount: 12345,
-                        locktime: 54321,
-                        threshold: 1,
-                        addresses: [
-                            Address(
-                                raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!,
-                                hrp: "avax",
-                                chainId: "X"
-                            ),
-                            Address(
-                                raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!,
-                                hrp: "avax",
-                                chainId: "X"
-                            ),
-                        ]
-                    )
-                ]
+                outputs: [exampleSecpTransferOutput()]
             ),
             expected: [
                 // fxID:
