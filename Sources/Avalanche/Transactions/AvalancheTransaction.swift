@@ -15,6 +15,32 @@ public class UnsignedAvalancheTransaction: AvalancheEncodable {
     }
 }
 
+public struct SignedAvalancheTransaction {
+    public static let codecID: CodecID = .latest
+
+    public let unsignedTransaction: UnsignedAvalancheTransaction
+    public let credentials: [Credential]
+
+    public init(unsignedTransaction: UnsignedAvalancheTransaction, credentials: [Credential]) {
+        self.unsignedTransaction = unsignedTransaction
+        self.credentials = credentials
+    }
+}
+
+extension SignedAvalancheTransaction: SignedTransaction {
+    public func serialized() throws -> Data {
+        try AEncoder().encode(self).output
+    }
+}
+
+extension SignedAvalancheTransaction: AvalancheEncodable {
+    public func encode(in encoder: AvalancheEncoder) throws {
+        try encoder.encode(Self.codecID)
+            .encode(unsignedTransaction)
+            .encode(credentials)
+    }
+}
+
 public struct BlockchainID: ID {
     public static var size = 32
     
