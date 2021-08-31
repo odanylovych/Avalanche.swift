@@ -97,7 +97,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheXChainApi.Info(
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "2vrXWHgGxh5n3YsLHMV16YVVJTpT4z45Fmb4y3bL6si8kLCyg9",
+                bId: BlockchainID(cb58: "2vrXWHgGxh5n3YsLHMV16YVVJTpT4z45Fmb4y3bL6si8kLCyg9")!,
                 alias: "X"
             ),
             for: AvalancheXChainApi.self
@@ -106,7 +106,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheCChainApi.Info(
                 gasPrice: 470.gwei,
                 chainId: 43111,
-                bId: "2fFZQibQXcd6LTE4rpBPBAkLVXFE91Kit8pgxaBG1mRnh5xqbb",
+                bId: BlockchainID(cb58: "2fFZQibQXcd6LTE4rpBPBAkLVXFE91Kit8pgxaBG1mRnh5xqbb")!,
                 alias: "C"
             ),
             for: AvalancheCChainApi.self
@@ -124,7 +124,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
                 minDelegationFee: 2.AVAX,
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "11111111111111111111111111111111LpoYY",
+                bId: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
                 alias: "P"
             ),
             for: AvalanchePChainApi.self
@@ -140,7 +140,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheXChainApi.Info(
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "2oYMBNV4eNHyqk2fjjV5nVQLDbtmNJzq5s3qs3Lo6ftnC6FByM",
+                bId: BlockchainID(cb58: "2oYMBNV4eNHyqk2fjjV5nVQLDbtmNJzq5s3qs3Lo6ftnC6FByM")!,
                 alias: "X"
             ),
             for: AvalancheXChainApi.self
@@ -149,7 +149,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheCChainApi.Info(
                 gasPrice: 470.gwei,
                 chainId: 43114,
-                bId: "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5",
+                bId: BlockchainID(cb58: "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5")!,
                 alias: "C"
             ),
             for: AvalancheCChainApi.self
@@ -167,7 +167,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
                 minDelegationFee: 2.AVAX,
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "11111111111111111111111111111111LpoYY",
+                bId: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
                 alias: "P"
             ),
             for: AvalanchePChainApi.self
@@ -183,7 +183,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheXChainApi.Info(
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm",
+                bId: BlockchainID(cb58: "2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm")!,
                 alias: "X"
             ),
             for: AvalancheXChainApi.self
@@ -192,7 +192,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheCChainApi.Info(
                 gasPrice: 470.gwei,
                 chainId: 43113,
-                bId: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp",
+                bId: BlockchainID(cb58: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")!,
                 alias: "C"
             ),
             for: AvalancheCChainApi.self
@@ -210,7 +210,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
                 minDelegationFee: 2.AVAX,
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "11111111111111111111111111111111LpoYY",
+                bId: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
                 alias: "P"
             ),
             for: AvalanchePChainApi.self

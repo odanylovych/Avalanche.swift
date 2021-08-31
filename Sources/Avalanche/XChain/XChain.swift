@@ -14,7 +14,7 @@ public class AvalancheXChainApiInfo: AvalancheBaseApiInfo {
     public let creationTxFee: BigUInt
     
     public init(
-        txFee: BigUInt, creationTxFee: BigUInt, bId: String,
+        txFee: BigUInt, creationTxFee: BigUInt, bId: BlockchainID,
         alias: String? = nil, vm: String = "avm"
     ) {
         self.txFee = txFee

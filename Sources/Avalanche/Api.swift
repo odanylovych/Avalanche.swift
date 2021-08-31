@@ -26,23 +26,23 @@ public protocol AvalancheApiInfo {
 }
 
 public protocol AvalancheVMApiInfo: AvalancheApiInfo {
-    var blockchainId: String { get }
+    var blockchainId: BlockchainID { get }
     var alias: String? { get }
     var vm: String { get }
 }
 
 public class AvalancheBaseApiInfo: AvalancheVMApiInfo {
-    public let blockchainId: String
+    public let blockchainId: BlockchainID
     public let alias: String?
     public let vm: String
     
-    public init(bId: String, alias: String?, vm: String) {
+    public init(bId: BlockchainID, alias: String?, vm: String) {
         self.blockchainId = bId
         self.alias = alias
         self.vm = vm
     }
     
     public var apiPath: String {
-        return "/ext/bc/\(alias ?? blockchainId)"
+        return "/ext/bc/\(alias ?? blockchainId.cb58())"
     }
 }

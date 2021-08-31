@@ -26,7 +26,7 @@ public class AvalanchePChainApiInfo: AvalancheBaseApiInfo {
         minConsumption: Double, maxConsumption: Double, maxStakingDuration: BigUInt,
         maxSupply: BigUInt, minStake: BigUInt, minStakeDuration: UInt,
         maxStakeDuration: UInt, minDelegationStake: BigUInt, minDelegationFee: BigUInt,
-        txFee: BigUInt, creationTxFee: BigUInt, bId: String,
+        txFee: BigUInt, creationTxFee: BigUInt, bId: BlockchainID,
         alias: String? = nil, vm: String = "platformvm"
     ) {
         self.minConsumption = minConsumption; self.maxConsumption = maxConsumption
@@ -38,7 +38,7 @@ public class AvalanchePChainApiInfo: AvalancheBaseApiInfo {
     }
     
     override public var apiPath: String {
-        return "/ext/\(alias ?? blockchainId)"
+        return "/ext/\(alias ?? blockchainId.cb58())"
     }
 }
 

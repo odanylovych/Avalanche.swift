@@ -14,7 +14,7 @@ public class AvalancheCChainApiInfo: AvalancheBaseApiInfo {
     public let chainId: UInt32
     
     public init(
-        gasPrice: BigUInt, chainId: UInt32, bId: String,
+        gasPrice: BigUInt, chainId: UInt32, bId: BlockchainID,
         alias: String? = nil, vm: String = "evm"
     ) {
         self.gasPrice = gasPrice

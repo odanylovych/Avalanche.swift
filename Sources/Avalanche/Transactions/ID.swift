@@ -37,6 +37,14 @@ extension ID {
         }
         self.init(data: Data(data))
     }
+    
+    public func hex() -> String {
+        raw.hex()
+    }
+    
+    public func cb58() -> String {
+        Base58.base58CheckEncode(Array(raw))
+    }
 }
 
 extension ID {
