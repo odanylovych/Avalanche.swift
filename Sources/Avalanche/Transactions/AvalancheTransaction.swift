@@ -42,9 +42,9 @@ extension SignedAvalancheTransaction: AvalancheEncodable {
 }
 
 public struct BlockchainID: ID {
-    public static var size = 32
+    public static let size = 32
     
-    public var data: Data
+    public let data: Data
     
     public init(_data: Data) {
         self.data = _data
