@@ -60,7 +60,7 @@ public struct EthAddress: AddressProtocol, Equatable, Hashable {
     public func verify(message: Data, signature: Signature) -> Bool {
         return Algos.Ethereum.verify(address: rawAddress,
                                      message: message,
-                                     signature: signature.data) ?? false
+                                     signature: signature.raw) ?? false
     }
     
     public func extended(path: Bip32Path) throws -> Extended {

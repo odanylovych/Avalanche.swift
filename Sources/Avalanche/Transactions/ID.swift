@@ -11,9 +11,9 @@ import Base58
 public protocol ID: AvalancheEncodable {
     static var size: Int { get }
 
-    var data: Data { get }
+    var raw: Data { get }
     
-    init(_data: Data)
+    init(raw: Data)
 }
 
 extension ID {
@@ -21,7 +21,7 @@ extension ID {
         guard data.count == Self.size else {
             return nil
         }
-        self.init(_data: data)
+        self.init(raw: data)
     }
     
     public init?(hex: String) {
@@ -41,6 +41,6 @@ extension ID {
 
 extension ID {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(data, size: Self.size)
+        try encoder.encode(raw, size: Self.size)
     }
 }

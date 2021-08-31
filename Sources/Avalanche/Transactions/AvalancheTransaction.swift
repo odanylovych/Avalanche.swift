@@ -44,10 +44,10 @@ extension SignedAvalancheTransaction: AvalancheEncodable {
 public struct BlockchainID: ID {
     public static let size = 32
     
-    public let data: Data
+    public let raw: Data
     
-    public init(_data: Data) {
-        self.data = _data
+    public init(raw: Data) {
+        self.raw = raw
     }
 }
 
