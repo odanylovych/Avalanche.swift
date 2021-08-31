@@ -52,7 +52,7 @@ public struct BlockchainID: ID {
 }
 
 public class BaseTransaction: UnsignedAvalancheTransaction {
-    override public class var typeID: TypeID { .baseTransaction }
+    override public class var typeID: TypeID { CommonTypeID.baseTransaction }
     
     public let networkID: UInt32
     public let blockchainID: BlockchainID
@@ -92,7 +92,7 @@ public class BaseTransaction: UnsignedAvalancheTransaction {
 }
 
 public class CreateAssetTransaction: BaseTransaction {
-    override public class var typeID: TypeID { .createAssetTransaction }
+    override public class var typeID: TypeID { CommonTypeID.createAssetTransaction }
     
     public let name: String
     public let symbol: String
@@ -133,7 +133,7 @@ public class CreateAssetTransaction: BaseTransaction {
 }
 
 public class OperationTransaction: BaseTransaction {
-    override public class var typeID: TypeID { .operationTransaction }
+    override public class var typeID: TypeID { CommonTypeID.operationTransaction }
     
     public let operations: [TransferableOperation]
     
@@ -162,7 +162,7 @@ public class OperationTransaction: BaseTransaction {
 }
 
 public class ImportTransaction: BaseTransaction {
-    override public class var typeID: TypeID { .importTransaction }
+    override public class var typeID: TypeID { CommonTypeID.importTransaction }
     
     public let sourceChain: BlockchainID
     public let transferableInputs: [TransferableInput]
@@ -194,7 +194,7 @@ public class ImportTransaction: BaseTransaction {
 }
 
 public class ExportTransaction: BaseTransaction {
-    override public class var typeID: TypeID { .exportTransaction }
+    override public class var typeID: TypeID { CommonTypeID.exportTransaction }
     
     public let destinationChain: BlockchainID
     public let transferableOutputs: [TransferableOutput]

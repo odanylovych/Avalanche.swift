@@ -7,14 +7,23 @@
 
 import Foundation
 
-public enum TypeID: UInt32, CaseIterable {
+public protocol TypeID: AvalancheEncodable {
+    var rawValue: UInt32 { get }
+}
+
+extension TypeID {
+    public func encode(in encoder: AvalancheEncoder) throws {
+        try encoder.encode(rawValue)
+    }
+}
+
+public enum CommonTypeID: UInt32, TypeID, CaseIterable {
     // Inputs
     case secp256K1TransferInput = 0x00000005
     
     // Outputs
     case secp256K1TransferOutput = 0x00000007
     case secp256K1MintOutput = 0x00000006
-    case nftTransferOutput = 0x0000000b
     case nftMintOutput = 0x0000000a
     
     // Operations
@@ -34,8 +43,12 @@ public enum TypeID: UInt32, CaseIterable {
     case exportTransaction = 0x00000004
 }
 
-extension TypeID: AvalancheEncodable {
-    public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(rawValue)
-    }
+public enum XChainTypeID: UInt32, TypeID, CaseIterable {
+    // Outputs
+    case nftTransferOutput = 0x0000000b
+}
+
+public enum PChainTypeID: UInt32, TypeID, CaseIterable {
+    // Outputs
+    case secp256K1OutputOwners = 0x0000000b
 }

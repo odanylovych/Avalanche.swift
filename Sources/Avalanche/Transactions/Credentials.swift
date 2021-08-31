@@ -32,9 +32,9 @@ public class Credential: AvalancheEncodable {
 }
 
 public class SECP256K1Credential: Credential {
-    override public class var typeID: TypeID { .secp256K1Credential }
+    override public class var typeID: TypeID { CommonTypeID.secp256K1Credential }
 }
 
 public class NFTCredential: Credential {
-    override public class var typeID: TypeID { .nftCredential }
+    override public class var typeID: TypeID { CommonTypeID.nftCredential }
 }

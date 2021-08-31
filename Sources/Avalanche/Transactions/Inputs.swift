@@ -16,7 +16,7 @@ public class Input: AvalancheEncodable {
 }
 
 public class SECP256K1TransferInput: Input {
-    override public class var typeID: TypeID { .secp256K1TransferInput }
+    override public class var typeID: TypeID { CommonTypeID.secp256K1TransferInput }
     
     public let amount: UInt64
     public let addressIndices: [UInt32]

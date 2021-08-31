@@ -16,7 +16,7 @@ public class Operation: AvalancheEncodable {
 }
 
 public class SECP256K1MintOperation: Operation {
-    override public class var typeID: TypeID { .secp256K1MintOperation }
+    override public class var typeID: TypeID { CommonTypeID.secp256K1MintOperation }
     
     public let addressIndices: [UInt32]
     public let mintOutput: SECP256K1MintOutput
@@ -65,7 +65,7 @@ extension NFTMintOperationOutput: AvalancheEncodable {
 }
 
 public class NFTMintOperation: Operation {
-    override public class var typeID: TypeID { .nftMintOperation }
+    override public class var typeID: TypeID { CommonTypeID.nftMintOperation }
     
     public let addressIndices: [UInt32]
     public let groupID: UInt32
@@ -137,7 +137,7 @@ extension NFTTransferOperationOutput: AvalancheEncodable {
 }
 
 public class NFTTransferOperation: Operation {
-    override public class var typeID: TypeID { .nftTransferOperation }
+    override public class var typeID: TypeID { CommonTypeID.nftTransferOperation }
     
     public let addressIndices: [UInt32]
     public let nftTransferOutput: NFTTransferOperationOutput
