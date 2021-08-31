@@ -12,4 +12,5 @@ public enum Algos {
     public static let Avalanche: AvalancheAlgos = AvalancheAlgos()
     public static let Secp256k1: Secp256k1Algos = Secp256k1Algos()
     public static let Ethereum: EthereumAlgos = EthereumAlgos()
+    public static let Base58: Base58Algos = Base58Algos()
 }

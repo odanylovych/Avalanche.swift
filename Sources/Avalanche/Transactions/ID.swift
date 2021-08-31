@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import Base58
 
 public protocol ID: AvalancheEncodable {
     static var size: Int { get }
@@ -32,7 +31,7 @@ extension ID {
     }
     
     public init?(cb58: String) {
-        guard let data = Base58.base58CheckDecode(cb58) else {
+        guard let data = Algos.Base58.from(cb58: cb58) else {
             return nil
         }
         self.init(data: Data(data))
@@ -43,7 +42,7 @@ extension ID {
     }
     
     public func cb58() -> String {
-        Base58.base58CheckEncode(Array(raw))
+        Algos.Base58.cb58(data: raw)
     }
 }
 
