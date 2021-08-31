@@ -19,11 +19,11 @@ public class SECP256K1TransferOutput: Output {
     override public class var typeID: TypeID { .secp256K1TransferOutput }
     
     public let amount: UInt64
-    public let locktime: UInt64
+    public let locktime: Date
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(amount: UInt64, locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+    public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard amount > 0 else {
             throw MalformedTransactionError.wrongValue(amount, name: "Amount", message: "Must be positive")
         }
@@ -53,11 +53,11 @@ public class SECP256K1TransferOutput: Output {
 public class SECP256K1MintOutput: Output {
     override public class var typeID: TypeID { .secp256K1MintOutput }
     
-    public let locktime: UInt64
+    public let locktime: Date
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+    public init(locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard threshold <= addresses.count else {
             throw MalformedTransactionError.outOfRange(
                 threshold,
@@ -84,11 +84,11 @@ public class NFTTransferOutput: Output {
     
     public let groupID: UInt32
     public let payload: Data
-    public let locktime: UInt64
+    public let locktime: Date
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(groupID: UInt32, payload: Data, locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+    public init(groupID: UInt32, payload: Data, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard payload.count <= 1024 else {
             throw MalformedTransactionError.outOfRange(
                 payload.count,
@@ -125,11 +125,11 @@ public class NFTMintOutput: Output {
     override public class var typeID: TypeID { .nftMintOutput }
     
     public let groupID: UInt32
-    public let locktime: UInt64
+    public let locktime: Date
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(groupID: UInt32, locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+    public init(groupID: UInt32, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard threshold <= addresses.count else {
             throw MalformedTransactionError.outOfRange(
                 threshold,

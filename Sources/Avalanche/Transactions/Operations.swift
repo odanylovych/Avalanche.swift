@@ -37,11 +37,11 @@ public class SECP256K1MintOperation: Operation {
 }
 
 public struct NFTMintOperationOutput {
-    public let locktime: UInt64
+    public let locktime: Date
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+    public init(locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard threshold <= addresses.count else {
             throw MalformedTransactionError.outOfRange(
                 threshold,
@@ -98,11 +98,11 @@ public class NFTMintOperation: Operation {
 public struct NFTTransferOperationOutput {
     public let groupID: UInt32
     public let payload: Data
-    public let locktime: UInt64
+    public let locktime: Date
     public let threshold: UInt32
     public let addresses: [Address]
     
-    public init(groupID: UInt32, payload: Data, locktime: UInt64, threshold: UInt32, addresses: [Address]) throws {
+    public init(groupID: UInt32, payload: Data, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard payload.count <= 1024 else {
             throw MalformedTransactionError.outOfRange(
                 payload.count,

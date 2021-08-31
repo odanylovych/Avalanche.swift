@@ -20,7 +20,7 @@ final class TransactionsTests: AvalancheTestCase {
     private func exampleSECP256K1TransferOutput() throws -> SECP256K1TransferOutput {
         try SECP256K1TransferOutput(
             amount: 12345,
-            locktime: 54321,
+            locktime: Date(timeIntervalSince1970: 54321),
             threshold: 1,
             addresses: [
                 Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
@@ -31,7 +31,7 @@ final class TransactionsTests: AvalancheTestCase {
     
     private func exampleSECP256K1MintOutput() throws -> SECP256K1MintOutput {
         try SECP256K1MintOutput(
-            locktime: 54321,
+            locktime: Date(timeIntervalSince1970: 54321),
             threshold: 1,
             addresses: [
                 Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
@@ -77,7 +77,7 @@ final class TransactionsTests: AvalancheTestCase {
             nftTransferOutput: NFTTransferOperationOutput(
                 groupID: 12345,
                 payload: Data(hex: "0x431100")!,
-                locktime: 54321,
+                locktime: Date(timeIntervalSince1970: 54321),
                 threshold: 1,
                 addresses: [
                     Address(
@@ -287,7 +287,7 @@ final class TransactionsTests: AvalancheTestCase {
             actual: NFTTransferOutput(
                 groupID: 12345,
                 payload: Data(hex: "0x431100")!,
-                locktime: 54321,
+                locktime: Date(timeIntervalSince1970: 54321),
                 threshold: 1,
                 addresses: [
                     Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
@@ -325,7 +325,7 @@ final class TransactionsTests: AvalancheTestCase {
         try encodeTest(
             actual: NFTMintOutput(
                 groupID: 12345,
-                locktime: 54321,
+                locktime: Date(timeIntervalSince1970: 54321),
                 threshold: 1,
                 addresses: [
                     Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
@@ -444,7 +444,7 @@ final class TransactionsTests: AvalancheTestCase {
                 payload: Data(hex: "0x431100")!,
                 outputs: [
                     NFTMintOperationOutput(
-                        locktime: 54321,
+                        locktime: Date(timeIntervalSince1970: 54321),
                         threshold: 1,
                         addresses: [
                             Address(
