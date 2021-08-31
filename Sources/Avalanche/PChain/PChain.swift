@@ -7,7 +7,10 @@
 
 import Foundation
 import BigInt
-//import RPC
+#if !COCOAPODS
+import RPC
+#endif
+
 
 public class AvalanchePChainApiInfo: AvalancheBaseApiInfo {
     public let txFee: BigUInt
@@ -46,12 +49,18 @@ public struct AvalanchePChainApi: AvalancheApi {
     public typealias Info = AvalanchePChainApiInfo
     
     public let signer: AvalancheSignatureProvider?
-    //FIX: private let network: AvalancheRpcConnection
+    private let service: Client
     
     public init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: Info) {
-        //FIX: self.network = avalanche.connections.httpRpcConnection(for: info.apiPath)
         self.signer = avalanche.signer
+        
+        let settings = avalanche.settings
+        let url = avalanche.url(path: info.apiPath)
+        
+        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
     }
+    
+    
 }
 
 extension AvalancheCore {
