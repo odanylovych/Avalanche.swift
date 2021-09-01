@@ -65,7 +65,7 @@ extension NFTMintOperationOutput: AvalancheEncodable {
 }
 
 public class NFTMintOperation: Operation {
-    override public class var typeID: TypeID { CommonTypeID.nftMintOperation }
+    override public class var typeID: TypeID { XChainTypeID.nftMintOperation }
     
     public let addressIndices: [UInt32]
     public let groupID: UInt32

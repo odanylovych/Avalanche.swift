@@ -224,3 +224,93 @@ public class ExportTransaction: BaseTransaction {
         try encoder.encode(destinationChain).encode(transferableOutputs)
     }
 }
+
+// P-Chain
+
+public struct NodeID: ID {
+    public static let size = 20
+    
+    public let raw: Data
+    
+    public init(raw: Data) {
+        self.raw = raw
+    }
+}
+
+public struct Validator {
+    public let nodeID: NodeID
+    public let startTime: Date
+    public let endTime: Date
+    public let weight: UInt64
+    
+    public init(nodeID: NodeID, startTime: Date, endTime: Date, weight: UInt64) {
+        self.nodeID = nodeID
+        self.startTime = startTime
+        self.endTime = endTime
+        self.weight = weight
+    }
+}
+
+extension Validator: AvalancheEncodable {
+    public func encode(in encoder: AvalancheEncoder) throws {
+        try encoder.encode(nodeID)
+            .encode(startTime)
+            .encode(endTime)
+            .encode(weight)
+    }
+}
+
+public struct Stake {
+    public let lockedOuts: [TransferableOutput]
+    
+    public init(lockedOuts: [TransferableOutput]) {
+        self.lockedOuts = lockedOuts
+    }
+}
+
+extension Stake: AvalancheEncodable {
+    public func encode(in encoder: AvalancheEncoder) throws {
+        try encoder.encode(lockedOuts)
+    }
+}
+
+public class AddValidatorTransaction: BaseTransaction {
+    override public class var typeID: TypeID { PChainTypeID.addValidatorTransaction }
+    
+    public let validator: Validator
+    public let stake: Stake
+    public let rewardsOwner: SECP256K1OutputOwners
+    public let shares: UInt32
+    
+    public init(
+        networkID: UInt32,
+        blockchainID: BlockchainID,
+        outputs: [TransferableOutput],
+        inputs: [TransferableInput],
+        memo: Data,
+        validator: Validator,
+        stake: Stake,
+        rewardsOwner: SECP256K1OutputOwners,
+        shares: UInt32
+    ) throws {
+        self.validator = validator
+        self.stake = stake
+        self.rewardsOwner = rewardsOwner
+        self.shares = shares
+        try super.init(
+            networkID: networkID,
+            blockchainID: blockchainID,
+            outputs: outputs,
+            inputs: inputs,
+            memo: memo
+        )
+    }
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
+        try super.encode(in: encoder)
+        try encoder.encode(validator)
+            .encode(stake)
+            .encode(rewardsOwner)
+            .encode(shares)
+    }
+}
