@@ -41,11 +41,11 @@ public class AvalancheCChainApi: AvalancheApi {
     private var subscriptions: Dictionary<String, (Data) -> Void>
     private var subscriptionId: UInt?
     //FIX: public let network: AvalancheSubscribableRpcConnection
-    public let signer: AvalancheSignatureProvider?
+    public let keychain: AvalancheAddressManager?
     
     public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         //FIX: self.network = avalanche.connections.wsRpcConnection(for: info.wsApiPath)
-        self.signer = avalanche.signer
+        self.keychain = avalanche.addressManager
         self.subscriptions = [:]
         self.subscriptionId = nil
     }
@@ -99,11 +99,11 @@ public class AvalancheCChainApi: AvalancheApi {
 }
 
 extension AvalancheCore {
-    public var CChain: AvalancheCChainApi {
+    public var cChain: AvalancheCChainApi {
         return try! self.getAPI()
     }
     
-    public func CChain(networkID: NetworkID, hrp: String, info: AvalancheCChainApi.Info) -> AvalancheCChainApi {
+    public func cChain(networkID: NetworkID, hrp: String, info: AvalancheCChainApi.Info) -> AvalancheCChainApi {
         return self.createAPI(networkID: networkID, hrp: hrp, info: info)
     }
 }

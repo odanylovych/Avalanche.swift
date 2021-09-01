@@ -9,6 +9,8 @@ import Foundation
 import UncommonCrypto
 
 public struct Account: AccountProtocol, Equatable, Hashable {
+    public typealias Addr = Address
+    
     public let pubKey: Data
     public let path: Bip32Path
     private let chainCode: Data

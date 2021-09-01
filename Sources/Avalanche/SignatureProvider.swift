@@ -28,7 +28,7 @@ public enum AvalancheSignatureProviderAccountRequestType: Hashable, Equatable {
 public typealias AvalancheSignatureProviderResult<T> = Result<T, AvalancheSignatureProviderError>
 public typealias AvalancheSignatureProviderAccounts = (avalanche: [Account], ethereum: [EthAccount])
 
-public protocol AvalancheSignatureProvider {
+public protocol AvalancheSignatureProvider: AnyObject {
     func accounts(type: AvalancheSignatureProviderAccountRequestType,
         _ cb: @escaping (AvalancheSignatureProviderResult<AvalancheSignatureProviderAccounts>) -> Void)
     

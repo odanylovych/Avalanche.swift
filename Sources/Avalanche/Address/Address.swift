@@ -23,6 +23,8 @@ public enum AccountError: Error {
 }
 
 public protocol AccountProtocol: Hashable {
+    associatedtype Addr: AddressProtocol
+    
     var path: Bip32Path { get }
     var index: UInt32 { get }
 }

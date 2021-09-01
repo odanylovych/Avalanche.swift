@@ -32,13 +32,14 @@ public class AvalancheXChainApiInfo: AvalancheBaseApiInfo {
 public class AvalancheXChainApi: AvalancheApi {
     public typealias Info = AvalancheXChainApiInfo
     
-    public let signer: AvalancheSignatureProvider?
+    public let keychain: AvalancheAddressManager?
+    
     private let service: Client
     private let vmService: Client
     
+
     public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
-        self.signer = avalanche.signer
-        
+        self.keychain = avalanche.addressManager
         let settings = avalanche.settings
         
         self.service = JsonRpc(.http(url: avalanche.url(path: info.apiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
@@ -48,11 +49,11 @@ public class AvalancheXChainApi: AvalancheApi {
 }
 
 extension AvalancheCore {
-    public var XChain: AvalancheXChainApi {
+    public var xChain: AvalancheXChainApi {
         return try! self.getAPI()
     }
     
-    public func XChain(networkID: NetworkID, hrp: String, info: AvalancheXChainApi.Info) -> AvalancheXChainApi {
+    public func xChain(networkID: NetworkID, hrp: String, info: AvalancheXChainApi.Info) -> AvalancheXChainApi {
         return self.createAPI(networkID: networkID, hrp: hrp, info: info)
     }
 }

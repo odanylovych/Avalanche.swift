@@ -8,6 +8,9 @@
 import Foundation
 
 public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, Hashable {
+    public typealias Addr = EthAddress
+    public typealias Base = EthAddress
+    
     public let address: EthAddress
     public let path: Bip32Path
     

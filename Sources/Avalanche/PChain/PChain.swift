@@ -7,68 +7,151 @@
 
 import Foundation
 import BigInt
+import Serializable
 #if !COCOAPODS
 import RPC
 #endif
 
+public struct AvalanchePChainApi: AvalancheVMApi {
 
-public class AvalanchePChainApiInfo: AvalancheBaseApiInfo {
-    public let txFee: BigUInt
-    public let creationTxFee: BigUInt
-    public let minConsumption: Double
-    public let maxConsumption: Double
-    public let maxStakingDuration: BigUInt
-    public let maxSupply: BigUInt
-    public let minStake: BigUInt
-    public let minStakeDuration: UInt
-    public let maxStakeDuration: UInt
-    public let minDelegationStake: BigUInt
-    public let minDelegationFee: BigUInt
-    
-    public init(
-        minConsumption: Double, maxConsumption: Double, maxStakingDuration: BigUInt,
-        maxSupply: BigUInt, minStake: BigUInt, minStakeDuration: UInt,
-        maxStakeDuration: UInt, minDelegationStake: BigUInt, minDelegationFee: BigUInt,
-        txFee: BigUInt, creationTxFee: BigUInt, blockchainID: BlockchainID,
-        alias: String? = nil, vm: String = "platformvm"
-    ) {
-        self.minConsumption = minConsumption; self.maxConsumption = maxConsumption
-        self.maxStakingDuration = maxStakingDuration; self.maxSupply = maxSupply
-        self.minStake = minStake; self.minStakeDuration = minStakeDuration
-        self.maxStakeDuration = maxStakeDuration; self.minDelegationStake = minDelegationStake
-        self.minDelegationFee = minDelegationFee; self.txFee = txFee; self.creationTxFee = creationTxFee
-        super.init(blockchainID: blockchainID, alias: alias, vm: vm)
-    }
-    
-    override public var apiPath: String {
-        return "/ext/\(alias ?? blockchainID.cb58())"
-    }
-}
-
-public struct AvalanchePChainApi: AvalancheApi {
     public typealias Info = AvalanchePChainApiInfo
+    public typealias Keychain = AvalanchePChainApiAddressManager
     
-    public let signer: AvalancheSignatureProvider?
+    public typealias Callback<P: Encodable, R, E: Decodable> = (Result<R, RequestError<P, E>>) -> Void
+    
     private let service: Client
+    private let addressManager: AvalancheAddressManager?
+    private let queue: DispatchQueue
     
-    public init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
-        self.signer = avalanche.signer
-        
+    public let info: Info
+    public let hrp: String
+    
+    public var keychain: AvalanchePChainApiAddressManager? {
+        addressManager.map {
+            AvalanchePChainApiAddressManager(manager: $0, api: self)
+        }
+    }
+    
+    public init(avalanche: AvalancheCore, networkID: NetworkID,
+                hrp: String, info: Info)
+    {
         let settings = avalanche.settings
+        
+        self.addressManager = avalanche.addressManager
+        self.info = info
+        self.hrp = hrp
+        self.queue = settings.queue
+        
         let url = avalanche.url(path: info.apiPath)
         
         self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
     }
     
+    public struct AddDelegatorParams: Encodable {
+        public let nodeID: String
+        public let startTime: Int64
+        public let endTime: Int64
+        public let stakeAmount: UInt64
+        public let rewardAddress: String
+        public let from: Array<String>?
+        public let changeAddr: String?
+        public let username: String
+        public let password: String
+    }
     
+    public struct AddDelegatorResponse: Decodable {
+        public let txID: String
+        public let changeAddr: String
+    }
+    
+    public func addDelegator(
+        nodeID: NodeID, startTime: Date, endTime: Date, stakeAmount: UInt64,
+        reward: Address, from: Array<Address>? = nil, change: Address? = nil,
+        credentials: ApiCredentials,
+        _ cb: @escaping Callback<AddDelegatorParams,
+                                 (txID: TransactionID, change: Address),
+                                 SerializableValue>
+    ) {
+        switch credentials {
+        case .password(username: let user, password: let pass):
+            let params = AddDelegatorParams(
+                nodeID: nodeID.cb58(),
+                startTime: Int64(startTime.timeIntervalSince1970),
+                endTime: Int64(endTime.timeIntervalSince1970),
+                stakeAmount: stakeAmount, rewardAddress: reward.bech,
+                from: from.map { $0.map { $0.bech } },
+                changeAddr: change?.bech, username: user, password: pass)
+            service.call(method: "platform.addDelegator",
+                         params: params,
+                         AddDelegatorResponse.self,
+                         SerializableValue.self) { res in
+                cb(res.map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
+            }
+        case .account(let account):
+            // TODO: Build and execute TX.
+            // Extended Addresses can be obtained from self.keychain
+            fatalError("Not implemented")
+        }
+    }
+    
+    public struct CreateAddressParams: Encodable {
+        public let username: String
+        public let password: String
+    }
+    
+    public struct CreateAddressResponse: Decodable {
+        public let address: String
+    }
+    
+    public func createAddress(
+        credentials: ApiCredentials,
+        _ cb: @escaping Callback<CreateAddressParams, Address, SerializableValue>) {
+        switch credentials {
+        case .password(username: let user, password: let pass):
+            service.call(method: "platform.createAddress",
+                         params: CreateAddressParams(username: user, password: pass),
+                         CreateAddressResponse.self,
+                         SerializableValue.self) { res in
+                cb(res.map { try! Address(bech: $0.address) }) // TODO: error handling
+            }
+        case .account(let account):
+            self.queue.async {
+                guard let kc = keychain else {
+                    cb(.failure(.empty)) // TODO: Proper error handling
+                    return
+                }
+                cb(.success(kc.newAddress(for: account)))
+            }
+        }
+    }
+    
+    public struct GetUTXOParams: Encodable {
+        public struct Index {
+            public let address: String
+            public let utxo: String
+        }
+        
+        public let addresses: [String]
+        public let limit: UInt32?
+        public let sourceChain: String
+        public let encoding: String
+    }
+    
+    public struct GetUTXOResponse {
+        public let address: String
+    }
+    
+    public func getUTXOs() {
+        
+    }
 }
 
 extension AvalancheCore {
-    public var PChain: AvalanchePChainApi {
+    public var pChain: AvalanchePChainApi {
         return try! self.getAPI()
     }
     
-    public func PChain(networkID: NetworkID, hrp: String, info: AvalanchePChainApi.Info) -> AvalanchePChainApi {
+    public func pChain(networkID: NetworkID, hrp: String, info: AvalanchePChainApi.Info) -> AvalanchePChainApi {
         return self.createAPI(networkID: networkID, hrp: hrp, info: info)
     }
 }

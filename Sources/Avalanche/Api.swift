@@ -21,6 +21,12 @@ extension AvalancheApi {
     }
 }
 
+public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
+    associatedtype Keychain: AvalancheApiAddressManager
+    
+    var keychain: Keychain? { get }
+}
+
 public protocol AvalancheApiInfo {
     var apiPath: String { get }
 }
@@ -29,6 +35,14 @@ public protocol AvalancheVMApiInfo: AvalancheApiInfo {
     var blockchainID: BlockchainID { get }
     var alias: String? { get }
     var vm: String { get }
+    
+    var chainId: String { get }
+}
+
+extension AvalancheVMApiInfo {
+    public var chainId: String {
+        alias ?? blockchainID.cb58()
+    }
 }
 
 public class AvalancheBaseApiInfo: AvalancheVMApiInfo {
@@ -43,6 +57,34 @@ public class AvalancheBaseApiInfo: AvalancheVMApiInfo {
     }
     
     public var apiPath: String {
-        return "/ext/bc/\(alias ?? blockchainID.cb58())"
+        return "/ext/bc/\(chainId)"
+    }
+}
+
+
+public enum ApiCredentials: Equatable, Hashable {
+    case password(username: String, password: String)
+    case account(Account)
+    
+    public init(_ account: Account) {
+        self = .account(account)
+    }
+    
+    public init(_ username: String, _ password: String) {
+        self = .password(username: username, password: password)
+    }
+    
+    public var account: Account? {
+        guard case .account(let acc) = self else {
+            return nil
+        }
+        return acc
+    }
+    
+    public var password: (username: String, password: String)? {
+        guard case .password(username: let user, password: let pwd) = self else {
+            return nil
+        }
+        return (user, pwd)
     }
 }

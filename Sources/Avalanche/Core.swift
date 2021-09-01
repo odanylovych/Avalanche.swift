@@ -15,38 +15,15 @@ public enum AvalancheApiSearchError: Error {
 }
 
 public protocol AvalancheCore: AnyObject {
-    var signer: AvalancheSignatureProvider? { get set }
-    var networkInfo: AvalancheNetworkInfoProvider { get }
-    var settings: AvalancheSettings { get }
     var networkID: NetworkID { get set }
+    var networkInfo: AvalancheNetworkInfoProvider { get set }
+    var settings: AvalancheSettings { get set }
     
-    init(
-        url: URL,
-        networkID: NetworkID,
-        networkInfo: AvalancheNetworkInfoProvider,
-        settings: AvalancheSettings
-    )
+    var addressManager: AvalancheAddressManager? { get set }
+    var utxoCache: AvalancheUtxoCache? { get set }
     
     func getAPI<A: AvalancheApi>() throws -> A
     func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A
     
     func url(path: String) -> URL
-}
-
-
-extension AvalancheCore {
-    public init(
-        url: URL,
-        networkID: NetworkID,
-        hrp: String,
-        apiInfo: AvalancheApiInfoProvider,
-        settings: AvalancheSettings
-    ) {
-        let provider = AvalancheDefaultNetworkInfoProvider()
-        let netInfo = AvalancheDefaultNetworkInfo(hrp: hrp, apiInfo: apiInfo)
-        provider.setInfo(info: netInfo, for: networkID)
-        self.init(url: url, networkID: networkID, networkInfo: provider, settings: settings)
-        self.networkID = networkID
-    }
-    
 }
