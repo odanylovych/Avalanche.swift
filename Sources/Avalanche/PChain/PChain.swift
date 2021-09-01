@@ -29,7 +29,7 @@ public class AvalanchePChainApiInfo: AvalancheBaseApiInfo {
         minConsumption: Double, maxConsumption: Double, maxStakingDuration: BigUInt,
         maxSupply: BigUInt, minStake: BigUInt, minStakeDuration: UInt,
         maxStakeDuration: UInt, minDelegationStake: BigUInt, minDelegationFee: BigUInt,
-        txFee: BigUInt, creationTxFee: BigUInt, bId: String,
+        txFee: BigUInt, creationTxFee: BigUInt, blockchainID: BlockchainID,
         alias: String? = nil, vm: String = "platformvm"
     ) {
         self.minConsumption = minConsumption; self.maxConsumption = maxConsumption
@@ -37,11 +37,11 @@ public class AvalanchePChainApiInfo: AvalancheBaseApiInfo {
         self.minStake = minStake; self.minStakeDuration = minStakeDuration
         self.maxStakeDuration = maxStakeDuration; self.minDelegationStake = minDelegationStake
         self.minDelegationFee = minDelegationFee; self.txFee = txFee; self.creationTxFee = creationTxFee
-        super.init(bId: bId, alias: alias, vm: vm)
+        super.init(blockchainID: blockchainID, alias: alias, vm: vm)
     }
     
     override public var apiPath: String {
-        return "/ext/\(alias ?? blockchainId)"
+        return "/ext/\(alias ?? blockchainID.cb58())"
     }
 }
 
@@ -51,7 +51,7 @@ public struct AvalanchePChainApi: AvalancheApi {
     public let signer: AvalancheSignatureProvider?
     private let service: Client
     
-    public init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: Info) {
+    public init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         self.signer = avalanche.signer
         
         let settings = avalanche.settings
@@ -68,7 +68,7 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func PChain(network: AvalancheNetwork, hrp: String, info: AvalanchePChainApi.Info) -> AvalanchePChainApi {
-        return self.createAPI(network: network, hrp: hrp, info: info)
+    public func PChain(networkID: NetworkID, hrp: String, info: AvalanchePChainApi.Info) -> AvalanchePChainApi {
+        return self.createAPI(networkID: networkID, hrp: hrp, info: info)
     }
 }

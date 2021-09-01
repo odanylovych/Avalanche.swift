@@ -18,8 +18,8 @@ public protocol AvalancheNetworkInfo {
 }
 
 public protocol AvalancheNetworkInfoProvider {
-    func info(for net: AvalancheNetwork) -> AvalancheNetworkInfo?
-    func setInfo(info: AvalancheNetworkInfo, for net: AvalancheNetwork)
+    func info(for net: NetworkID) -> AvalancheNetworkInfo?
+    func setInfo(info: AvalancheNetworkInfo, for net: NetworkID)
 }
 
 public class AvalancheDefaultApiInfoProvider: AvalancheApiInfoProvider {
@@ -49,17 +49,17 @@ public class AvalancheDefaultNetworkInfo: AvalancheNetworkInfo {
 }
 
 public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
-    private var infos: Dictionary<AvalancheNetwork, AvalancheNetworkInfo>
+    private var infos: Dictionary<NetworkID, AvalancheNetworkInfo>
     
-    public init(infos: Dictionary<AvalancheNetwork, AvalancheNetworkInfo> = [:]) {
+    public init(infos: Dictionary<NetworkID, AvalancheNetworkInfo> = [:]) {
         self.infos = infos
     }
     
-    public func info(for net: AvalancheNetwork) -> AvalancheNetworkInfo? {
+    public func info(for net: NetworkID) -> AvalancheNetworkInfo? {
         return infos[net]
     }
     
-    public func setInfo(info: AvalancheNetworkInfo, for net: AvalancheNetwork) {
+    public func setInfo(info: AvalancheNetworkInfo, for net: NetworkID) {
         infos[net] = info
     }
     
@@ -69,11 +69,11 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         // https://github.com/ava-labs/avalanchejs/blob/master/src/utils/constants.ts
         let provider = AvalancheDefaultNetworkInfoProvider()
         
-        // AvalancheNetwork.manhattan
+        // NetworkID.manhattan
         provider.setInfo(info: manhattanNetInfo(), for: .manhattan)
-        // AvalancheNetwork.main || AvalancheNetwork.avalanche
+        // NetworkID.main || NetworkID.avalanche
         provider.setInfo(info: avalancheNetInfo(), for: .avalanche)
-        // AvalancheNetwork.test || AvalancheNetwork.fuji
+        // NetworkID.test || NetworkID.fuji
         provider.setInfo(info: fujiNetInfo(), for: .fuji)
         
         return provider
@@ -89,7 +89,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         info.setInfo(info: AvalancheKeystoreApiInfo(), for: AvalancheKeystoreApi.self)
     }
     
-    // AvalancheNetwork.manhattan
+    // NetworkID.manhattan
     private static func manhattanNetInfo() -> AvalancheDefaultNetworkInfo {
         let netApis = AvalancheDefaultApiInfoProvider()
         addNonVmApis(to: netApis)
@@ -97,7 +97,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheXChainApi.Info(
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "2vrXWHgGxh5n3YsLHMV16YVVJTpT4z45Fmb4y3bL6si8kLCyg9",
+                blockchainID: BlockchainID(cb58: "2vrXWHgGxh5n3YsLHMV16YVVJTpT4z45Fmb4y3bL6si8kLCyg9")!,
                 alias: "X"
             ),
             for: AvalancheXChainApi.self
@@ -106,7 +106,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheCChainApi.Info(
                 gasPrice: 470.gwei,
                 chainId: 43111,
-                bId: "2fFZQibQXcd6LTE4rpBPBAkLVXFE91Kit8pgxaBG1mRnh5xqbb",
+                blockchainID: BlockchainID(cb58: "2fFZQibQXcd6LTE4rpBPBAkLVXFE91Kit8pgxaBG1mRnh5xqbb")!,
                 alias: "C"
             ),
             for: AvalancheCChainApi.self
@@ -124,7 +124,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
                 minDelegationFee: 2.AVAX,
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "11111111111111111111111111111111LpoYY",
+                blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
                 alias: "P"
             ),
             for: AvalanchePChainApi.self
@@ -132,7 +132,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         return AvalancheDefaultNetworkInfo(hrp: "custom", apiInfo: netApis)
     }
     
-    // AvalancheNetwork.main || AvalancheNetwork.avalanche
+    // NetworkID.main || NetworkID.avalanche
     private static func avalancheNetInfo() -> AvalancheDefaultNetworkInfo {
         let netApis = AvalancheDefaultApiInfoProvider()
         addNonVmApis(to: netApis)
@@ -140,7 +140,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheXChainApi.Info(
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "2oYMBNV4eNHyqk2fjjV5nVQLDbtmNJzq5s3qs3Lo6ftnC6FByM",
+                blockchainID: BlockchainID(cb58: "2oYMBNV4eNHyqk2fjjV5nVQLDbtmNJzq5s3qs3Lo6ftnC6FByM")!,
                 alias: "X"
             ),
             for: AvalancheXChainApi.self
@@ -149,7 +149,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheCChainApi.Info(
                 gasPrice: 470.gwei,
                 chainId: 43114,
-                bId: "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5",
+                blockchainID: BlockchainID(cb58: "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5")!,
                 alias: "C"
             ),
             for: AvalancheCChainApi.self
@@ -167,7 +167,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
                 minDelegationFee: 2.AVAX,
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "11111111111111111111111111111111LpoYY",
+                blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
                 alias: "P"
             ),
             for: AvalanchePChainApi.self
@@ -175,7 +175,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         return AvalancheDefaultNetworkInfo(hrp: "avax", apiInfo: netApis)
     }
     
-    // AvalancheNetwork.test || AvalancheNetwork.fuji
+    // NetworkID.test || NetworkID.fuji
     private static func fujiNetInfo() -> AvalancheDefaultNetworkInfo {
         let netApis = AvalancheDefaultApiInfoProvider()
         addNonVmApis(to: netApis)
@@ -183,7 +183,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheXChainApi.Info(
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm",
+                blockchainID: BlockchainID(cb58: "2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm")!,
                 alias: "X"
             ),
             for: AvalancheXChainApi.self
@@ -192,7 +192,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
             info: AvalancheCChainApi.Info(
                 gasPrice: 470.gwei,
                 chainId: 43113,
-                bId: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp",
+                blockchainID: BlockchainID(cb58: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")!,
                 alias: "C"
             ),
             for: AvalancheCChainApi.self
@@ -210,7 +210,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
                 minDelegationFee: 2.AVAX,
                 txFee: .milliAVAX,
                 creationTxFee: .centiAVAX,
-                bId: "11111111111111111111111111111111LpoYY",
+                blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
                 alias: "P"
             ),
             for: AvalanchePChainApi.self

@@ -20,7 +20,7 @@ public class AvalancheKeystoreApi: AvalancheApi {
 
     private let service: Client
 
-    public required init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: AvalancheKeystoreApiInfo) {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheKeystoreApiInfo) {
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
             

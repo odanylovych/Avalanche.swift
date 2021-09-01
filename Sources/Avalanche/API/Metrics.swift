@@ -21,7 +21,7 @@ public class AvalancheMetricsApi: AvalancheApi {
     private let connection: SingleShotConnection
     private let decoder: ContentDecoder
     
-    public required init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: AvalancheMetricsApiInfo) {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheMetricsApiInfo) {
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
         

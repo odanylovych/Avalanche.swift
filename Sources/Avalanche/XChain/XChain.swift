@@ -16,12 +16,12 @@ public class AvalancheXChainApiInfo: AvalancheBaseApiInfo {
     public let creationTxFee: BigUInt
     
     public init(
-        txFee: BigUInt, creationTxFee: BigUInt, bId: String,
+        txFee: BigUInt, creationTxFee: BigUInt, blockchainID: BlockchainID,
         alias: String? = nil, vm: String = "avm"
     ) {
         self.txFee = txFee
         self.creationTxFee = creationTxFee
-        super.init(bId: bId, alias: alias, vm: vm)
+        super.init(blockchainID: blockchainID, alias: alias, vm: vm)
     }
     
     public var vmApiPath: String {
@@ -36,7 +36,7 @@ public class AvalancheXChainApi: AvalancheApi {
     private let service: Client
     private let vmService: Client
     
-    public required init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: Info) {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         self.signer = avalanche.signer
         
         let settings = avalanche.settings
@@ -52,7 +52,7 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func XChain(network: AvalancheNetwork, hrp: String, info: AvalancheXChainApi.Info) -> AvalancheXChainApi {
-        return self.createAPI(network: network, hrp: hrp, info: info)
+    public func XChain(networkID: NetworkID, hrp: String, info: AvalancheXChainApi.Info) -> AvalancheXChainApi {
+        return self.createAPI(networkID: networkID, hrp: hrp, info: info)
     }
 }

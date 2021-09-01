@@ -17,9 +17,6 @@ let package = Package(
             name: "Bech32",
             targets: ["Bech32"]),
         .library(
-            name: "Base58",
-            targets: ["Base58"]),
-        .library(
             name: "RPC",
             targets: ["RPC"]),
     ],
@@ -42,14 +39,11 @@ let package = Package(
                 "UncommonCrypto", "Bech32"]),
         .target(
             name: "AvalancheKeychain",
-            dependencies: ["Base58", "Avalanche"],
+            dependencies: ["Avalanche"],
             path: "Sources/Keychain"),
         .target(
             name: "Bech32",
             dependencies: []),
-        .target(
-            name: "Base58",
-            dependencies: ["UncommonCrypto", "BigInt"]),
         .target(
             name: "RPC",
             dependencies: ["WebSocket"]),
@@ -62,9 +56,6 @@ let package = Package(
         .testTarget(
             name: "Bech32Tests",
             dependencies: ["Bech32"]),
-        .testTarget(
-            name: "Base58Tests",
-            dependencies: ["Base58"]),
         .testTarget(
             name: "RPCTests",
             dependencies: ["RPC", "Serializable"]),
