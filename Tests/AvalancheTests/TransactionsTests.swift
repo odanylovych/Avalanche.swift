@@ -1322,7 +1322,7 @@ final class TransactionsTests: AvalancheTestCase {
                 inputs: [examplePChainTransferableInput()],
                 memo: Data(),
                 validator: exampleValidator(),
-                subnetID: SubnetID(hex: "0x58b1092871db85bc752742054e2e8be0adf8166ec1f0f0769f4779f14c71d7eb")!,
+                subnetID: BlockchainID(hex: "0x58b1092871db85bc752742054e2e8be0adf8166ec1f0f0769f4779f14c71d7eb")!,
                 subnetAuth: SubnetAuth(signatureIndices: [0])
             ),
             expected: [

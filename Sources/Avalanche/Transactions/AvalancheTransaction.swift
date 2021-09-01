@@ -315,16 +315,6 @@ public class AddValidatorTransaction: BaseTransaction {
     }
 }
 
-public struct SubnetID: ID {
-    public static let size = 32
-    
-    public let raw: Data
-    
-    public init(raw: Data) {
-        self.raw = raw
-    }
-}
-
 public struct SubnetAuth {
     public static let typeID: TypeID = PChainTypeID.subnetAuth
     
@@ -345,7 +335,7 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
     override public class var typeID: TypeID { PChainTypeID.addSubnetValidatorTransaction }
     
     public let validator: Validator
-    public let subnetID: SubnetID
+    public let subnetID: BlockchainID
     public let subnetAuth: SubnetAuth
     
     public init(
@@ -355,7 +345,7 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
         inputs: [TransferableInput],
         memo: Data,
         validator: Validator,
-        subnetID: SubnetID,
+        subnetID: BlockchainID,
         subnetAuth: SubnetAuth
     ) throws {
         self.validator = validator
