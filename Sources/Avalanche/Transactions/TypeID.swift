@@ -67,4 +67,7 @@ public enum PChainTypeID: UInt32, TypeID, CaseIterable {
     case exportTransaction = 0x00000012
     
     case subnetAuth = 0x0000000a
+    
+    case stakeableLockedInput = 0x00000015
+    case stakeableLockedOutput = 0x00000016
 }
