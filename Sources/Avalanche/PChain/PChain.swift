@@ -13,11 +13,8 @@ import RPC
 #endif
 
 public struct AvalanchePChainApi: AvalancheVMApi {
-
     public typealias Info = AvalanchePChainApiInfo
     public typealias Keychain = AvalanchePChainApiAddressManager
-    
-    public typealias Callback<P: Encodable, R, E: Decodable> = (Result<R, RequestError<P, E>>) -> Void
     
     private let service: Client
     private let addressManager: AvalancheAddressManager?
@@ -32,8 +29,10 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         }
     }
     
-    public init(avalanche: AvalancheCore, networkID: NetworkID,
-                hrp: String, info: Info)
+    public init(avalanche: AvalancheCore,
+                networkID: NetworkID,
+                hrp: String,
+                info: Info)
     {
         let settings = avalanche.settings
         
@@ -68,9 +67,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         nodeID: NodeID, startTime: Date, endTime: Date, stakeAmount: UInt64,
         reward: Address, from: Array<Address>? = nil, change: Address? = nil,
         credentials: VmApiCredentials,
-        _ cb: @escaping Callback<AddDelegatorParams,
-                                 (txID: TransactionID, change: Address),
-                                 SerializableValue>
+        _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
     ) {
         switch credentials {
         case .password(username: let user, password: let pass):
@@ -85,7 +82,9 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                          params: params,
                          AddDelegatorResponse.self,
                          SerializableValue.self) { res in
-                cb(res.map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
+                cb(res
+                    .mapError(AvalancheApiError.init)
+                    .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
             }
         case .account(let account):
             // TODO: Build and execute TX.
@@ -105,19 +104,19 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     
     public func createAddress(
         credentials: VmApiCredentials,
-        _ cb: @escaping Callback<CreateAddressParams, Address, SerializableValue>) {
+        _ cb: @escaping ApiCallback<Address>) {
         switch credentials {
         case .password(username: let user, password: let pass):
             service.call(method: "platform.createAddress",
                          params: CreateAddressParams(username: user, password: pass),
                          CreateAddressResponse.self,
                          SerializableValue.self) { res in
-                cb(res.map { try! Address(bech: $0.address) }) // TODO: error handling
+                cb(res.mapError(AvalancheApiError.init).map { try! Address(bech: $0.address) }) // TODO: error handling
             }
         case .account(let account):
             self.queue.async {
                 guard let kc = keychain else {
-                    cb(.failure(.empty)) // TODO: Proper error handling
+                    cb(.failure(.emptyAddressManager))
                     return
                 }
                 cb(.success(kc.newAddress(for: account)))

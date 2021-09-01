@@ -56,7 +56,7 @@ public struct AvalanchePChainApiAddressManager: AvalancheApiUTXOAddressManager {
     
     public func fetchMoreAddresses(
         for account: Acct, change: Bool, maxCount: Int,
-        result: @escaping (Result<[Acct.Addr], Error>) -> Void
+        result: @escaping ApiCallback<[Acct.Addr]>
     ) {
         //TODO: Implement
     }

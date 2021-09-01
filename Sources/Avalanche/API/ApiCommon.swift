@@ -20,6 +20,7 @@ public enum AvalancheApiError: Error {
     case malformed(field: String, description: String)
     case cb58DecodingFailed(field: String)
     case addressNotFound(address: String)
+    case emptyAddressManager
     
     public init<P: Encodable>(request: RequestError<P, SerializableValue>) {
         switch request {

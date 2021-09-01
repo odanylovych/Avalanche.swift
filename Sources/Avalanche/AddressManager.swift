@@ -12,7 +12,7 @@ public enum AvalancheAddressManagerError: Error {
 }
 
 public typealias AddressUsedFilterCallback<A: AddressProtocol> =
-    ([A], (Result<[A], Error>) -> Void) -> Void
+    ([A], @escaping ApiCallback<[A]>) -> Void
 
 public protocol AvalancheAddressManager: AnyObject {
     func accounts(
@@ -222,9 +222,9 @@ public protocol AvalancheApiUTXOAddressManager: AvalancheApiAddressManager {
     func newAddresses(for account: Acct, change: Bool, count: Int) -> [Acct.Addr]
     
     func fetchMoreAddresses(for account: Acct, change: Bool, maxCount: Int,
-                            result: @escaping (Result<[Acct.Addr], Error>) -> Void)
+                            result: @escaping ApiCallback<[Acct.Addr]>)
     func fetchMoreAddresses(for account: Acct, maxCount: Int,
-                            result: @escaping (Result<[Acct.Addr], Error>) -> Void)
+                            result: @escaping ApiCallback<[Acct.Addr]>)
 }
 
 public extension AvalancheApiUTXOAddressManager {
@@ -236,7 +236,7 @@ public extension AvalancheApiUTXOAddressManager {
     }
     
     func fetchMoreAddresses(for account: Acct, maxCount: Int,
-                            result: @escaping (Result<[Acct.Addr], Error>) -> Void) {
+                            result: @escaping ApiCallback<[Acct.Addr]>) {
         fetchMoreAddresses(for: account, change: false, maxCount: maxCount) {
             switch $0 {
             case .failure(let err): result(.failure(err))
