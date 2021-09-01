@@ -34,21 +34,25 @@ public class AvalancheHealthApi: AvalancheApi {
     
     private let service: Client
     
-    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheHealthApiInfo) {
+    public required init(avalanche: AvalancheCore,
+                         networkID: NetworkID,
+                         hrp: String,
+                         info: AvalancheHealthApiInfo) {
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
         
         self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
     }
     
-    public func getLiveness(cb: @escaping RequestCallback<Nil, AvalancheLivenessResponse, SerializableValue>) {
+    public func getLiveness(cb: @escaping ApiCallback<AvalancheLivenessResponse>) {
         service.call(
             method: "health.getLiveness",
-            params: nil,
+            params: Nil.nil,
             AvalancheLivenessResponse.self,
-            SerializableValue.self,
-            response: cb
-        )
+            SerializableValue.self
+        ) {
+            cb($0.mapError(AvalancheApiError.init))
+        }
     }
 }
 
@@ -57,5 +61,3 @@ extension AvalancheCore {
         try! self.getAPI()
     }
 }
-
-//let Service: protocol<ClientService, ServerService> = Service(

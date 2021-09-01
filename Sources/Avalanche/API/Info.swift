@@ -20,7 +20,11 @@ public class AvalancheInfoApi: AvalancheApi {
     
     private let service: Client
     
-    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheInfoApiInfo) {
+    public required init(avalanche: AvalancheCore,
+                         networkID: NetworkID,
+                         hrp: String,
+                         info: AvalancheInfoApiInfo)
+    {
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
         
@@ -28,113 +32,120 @@ public class AvalancheInfoApi: AvalancheApi {
     }
     
     /// methods
-    
-    public struct GetBlockchainIDParams: Encodable {
-        let alias: String
-    }
-    
-    public func getBlockchainID(alias: String, cb: @escaping RequestCallback<GetBlockchainIDParams, String, SerializableValue>) {
+    public func getBlockchainID(alias: String,
+                                cb: @escaping ApiCallback<BlockchainID>) {
+        struct GetBlockchainIDParams: Encodable {
+            let alias: String
+        }
         struct GetBlockchainIDResponse: Decodable {
             let blockchainID: String
         }
-        
         service.call(
             method: "info.getBlockchainID",
             params: GetBlockchainIDParams(alias: alias),
             GetBlockchainIDResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.map {$0.blockchainID})
+            cb(response
+                .mapError(AvalancheApiError.init)
+                .flatMap {
+                    guard let id = BlockchainID(cb58: $0.blockchainID) else {
+                        return .failure(.cb58DecodingFailed(field: "blockchainID"))
+                    }
+                    return .success(id)
+                })
         }
     }
-
     
-    
-    public func getNetworkID(cb: @escaping RequestCallback<Nil, UInt32, SerializableValue>) {
+    public func getNetworkID(cb: @escaping ApiCallback<NetworkID>) {
         struct GetNetworkIDResponse: Decodable {
             let networkID: String
         }
-        
         service.call(
             method: "info.getNetworkID",
             params: Nil.nil,
             GetNetworkIDResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.flatMap { response in
-                UInt32(response.networkID).map {.success($0)}
-                    ??
-                    .failure(.custom(description: "server returned '" + response.networkID + "' ID which is not UInt32", cause: nil))
-            })
+            cb(response
+                .mapError(AvalancheApiError.init)
+                .flatMap { res in
+                    guard let int = UInt32(res.networkID) else {
+                        return .failure(.malformed(
+                            field: "networkID",
+                            description: "server returned '" + res.networkID + "' ID which is not UInt32")
+                        )
+                    }
+                    return .success(NetworkID(int))
+                }
+            )
         }
     }
     
-    public func getNetworkName(cb: @escaping RequestCallback<Nil, String, SerializableValue>) {
+    public func getNetworkName(cb: @escaping ApiCallback<String>) {
         struct GetNetworkNameResponse: Decodable {
             let networkName: String
         }
-        
         service.call(
             method: "info.getNetworkName",
             params: Nil.nil,
             GetNetworkNameResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.map {$0.networkName})
+            cb(response.mapError(AvalancheApiError.init).map {$0.networkName})
         }
     }
     
-    public func getNodeID(cb: @escaping RequestCallback<Nil, String, SerializableValue>) {
+    public func getNodeID(cb: @escaping ApiCallback<NodeID>) {
         struct GetNodeIDResponse: Decodable {
             let nodeID: String
         }
-        
         service.call(
             method: "info.getNodeID",
             params: Nil.nil,
             GetNodeIDResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.map {$0.nodeID})
+            cb(response
+                .mapError(AvalancheApiError.init)
+                .flatMap{ NodeID(cb58: $0.nodeID).map {.success($0)} ?? .failure(.cb58DecodingFailed(field: "nodeID")) }
+            )
         }
     }
     
-    public func getNodeIP(cb: @escaping RequestCallback<Nil, String, SerializableValue>) {
+    public func getNodeIP(cb: @escaping ApiCallback<String>) {
         struct GetNodeIPResponse: Decodable {
             let ip: String
         }
-        
         service.call(
             method: "info.getNodeIP",
             params: Nil.nil,
             GetNodeIPResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.map {$0.ip})
+            cb(response.mapError(AvalancheApiError.init).map {$0.ip})
         }
     }
     
-    public func getNodeVersion(cb: @escaping RequestCallback<Nil, String, SerializableValue>) {
+    public func getNodeVersion(cb: @escaping ApiCallback<String>) {
         struct GetNodeVersionResponse: Decodable {
             let version: String
         }
-        
         service.call(
             method: "info.getNodeVersion",
             params: Nil.nil,
             GetNodeVersionResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.map {$0.version})
+            cb(response.mapError(AvalancheApiError.init).map {$0.version})
         }
     }
     
     
-    public struct IsBootstrappedParams: Encodable {
-        let chain: String
-    }
-    
-    public func isBootstrapped(chain: String, cb: @escaping RequestCallback<IsBootstrappedParams, Bool, SerializableValue>) {
+    public func isBootstrapped(chain: String, cb: @escaping ApiCallback<Bool>) {
+        struct IsBootstrappedParams: Encodable {
+            let chain: String
+        }
         struct IsBootstrappedResponse: Decodable {
             let isBootstrapped: Bool
         }
@@ -145,7 +156,7 @@ public class AvalancheInfoApi: AvalancheApi {
             IsBootstrappedResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.map {$0.isBootstrapped})
+            cb(response.mapError(AvalancheApiError.init).map {$0.isBootstrapped})
         }
     }
     
@@ -158,20 +169,19 @@ public class AvalancheInfoApi: AvalancheApi {
         let lastReceived: String
     }
     
-    public func peers(cb: @escaping RequestCallback<Nil, [Peer], SerializableValue>) {
+    public func peers(cb: @escaping ApiCallback<[Peer]>) {
         struct PeersResponse: Decodable {
             //seriously???
             let numPeers: String
             let peers: [Peer]
         }
-        
         service.call(
             method: "info.peers",
             params: Nil.nil,
             PeersResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.map {$0.peers})
+            cb(response.mapError(AvalancheApiError.init).map {$0.peers})
         }
     }
     
@@ -180,7 +190,7 @@ public class AvalancheInfoApi: AvalancheApi {
         let txFee: UInt64
     }
     
-    public func getTxFee(cb: @escaping RequestCallback<Nil, TxFee, SerializableValue>) {
+    public func getTxFee(cb: @escaping ApiCallback<TxFee>) {
         struct GetTxFeeResponse: Decodable {
             let creationTxFee: String
             let txFee: String
@@ -192,17 +202,19 @@ public class AvalancheInfoApi: AvalancheApi {
             GetTxFeeResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.flatMap { response in
-                guard let ctf = UInt64(response.creationTxFee) else {
-                    return .failure(.custom(description: "server returned '" + response.creationTxFee + "' creationTxFee which is not UInt64", cause: nil))
+            cb(response
+                .mapError(AvalancheApiError.init)
+                .flatMap { response in
+                    guard let ctf = UInt64(response.creationTxFee) else {
+                        return .failure(.custom(description: "server returned '" + response.creationTxFee + "' creationTxFee which is not UInt64", cause: nil))
+                    }
+                    
+                    guard let tf = UInt64(response.txFee) else {
+                        return .failure(.custom(description: "server returned '" + response.txFee + "' txFee which is not UInt64", cause: nil))
+                    }
+                    return .success(TxFee(creationTxFee: ctf, txFee: tf))
                 }
-                
-                guard let tf = UInt64(response.txFee) else {
-                    return .failure(.custom(description: "server returned '" + response.txFee + "' txFee which is not UInt64", cause: nil))
-                }
-                
-                return .success(TxFee(creationTxFee: ctf, txFee: tf))
-            })
+            )
         }
     }
 }

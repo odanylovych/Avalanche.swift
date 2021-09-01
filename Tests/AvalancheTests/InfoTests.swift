@@ -13,7 +13,7 @@ final class InfoTests: AvalancheTestCase {
         let success = expectation(description: "success")
         
         ava.info.getBlockchainID(alias: "X") { result in
-            XCTAssertFalse(try! result.get().isEmpty)
+            XCTAssertNotNil(try? result.get())
             success.fulfill()
         }
         
@@ -24,7 +24,7 @@ final class InfoTests: AvalancheTestCase {
         let success = expectation(description: "success")
         
         ava.info.getNetworkID { result in
-            XCTAssertEqual(self.ava.networkID.value, try! result.get())
+            XCTAssertEqual(self.ava.networkID.value, try? result.get().value)
             success.fulfill()
         }
         
@@ -46,8 +46,7 @@ final class InfoTests: AvalancheTestCase {
         let success = expectation(description: "success")
         
         ava.info.getNodeID { result in
-            let id = try! result.get()
-            XCTAssert(id.starts(with: "NodeID-"))
+            XCTAssertNotNil(try? result.get())
             success.fulfill()
         }
         
@@ -58,7 +57,11 @@ final class InfoTests: AvalancheTestCase {
         let success = expectation(description: "success")
         
         ava.info.getNodeIP { result in
-            let ip = try! result.get()
+            guard let ip = try? result.get() else {
+                XCTFail("Get NodeIP failed")
+                success.fulfill()
+                return
+            }
             XCTAssertLessThan(0, ip.split(separator: ".").count)
             success.fulfill()
         }

@@ -15,7 +15,7 @@ final class AdminTests: AvalancheTestCase {
         let alias = String("testAlias") + String(UInt64.random(in: 0..<UInt64.max))
         
         ava.admin.alias(alias: alias, endpoint: "health") { result in
-            XCTAssertEqual(try! result.get(), .nil)
+            XCTAssertNotNil(try? result.get())
             expectation.fulfill()
         }
         waitForExpectations(timeout: 10, handler: nil)
@@ -32,7 +32,7 @@ final class AdminTests: AvalancheTestCase {
             let alias = String("testChainAlias") + String(UInt64.random(in: 0..<UInt64.max))
             
             ava.admin.aliasChain(chain: id, alias: alias) { result in
-                XCTAssertEqual(try! result.get(), .nil)
+                XCTAssertNotNil(try? result.get())
                 expectation.fulfill()
             }
         }
@@ -45,7 +45,7 @@ final class AdminTests: AvalancheTestCase {
         let expectation = self.expectation(description: "admin.lockProfile")
         
         ava.admin.lockProfile { result in
-            XCTAssertEqual(try! result.get(), .nil)
+            XCTAssertNotNil(try? result.get())
             expectation.fulfill()
         }
         waitForExpectations(timeout: 10, handler: nil)
@@ -55,7 +55,7 @@ final class AdminTests: AvalancheTestCase {
         let expectation = self.expectation(description: "admin.memoryProfile")
         
         ava.admin.memoryProfile { result in
-            XCTAssertEqual(try! result.get(), .nil)
+            XCTAssertNotNil(try? result.get())
             expectation.fulfill()
         }
         waitForExpectations(timeout: 10, handler: nil)
@@ -65,7 +65,7 @@ final class AdminTests: AvalancheTestCase {
         let expectation = self.expectation(description: "admin.startCPUProfiler")
         
         ava.admin.startCPUProfiler { result in
-            XCTAssertEqual(try! result.get(), .nil)
+            XCTAssertNotNil(try? result.get())
             expectation.fulfill()
         }
         waitForExpectations(timeout: 10, handler: nil)
@@ -75,7 +75,7 @@ final class AdminTests: AvalancheTestCase {
         let expectation = self.expectation(description: "admin.stopCPUProfiler")
         
         ava.admin.stopCPUProfiler { result in
-            XCTAssertEqual(try! result.get(), .nil)
+            XCTAssertNotNil(try? result.get())
             expectation.fulfill()
         }
         waitForExpectations(timeout: 10, handler: nil)

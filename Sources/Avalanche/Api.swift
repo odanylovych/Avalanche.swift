@@ -21,14 +21,14 @@ extension AvalancheApi {
     }
 }
 
+public protocol AvalancheApiInfo {
+    var apiPath: String { get }
+}
+
 public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
     associatedtype Keychain: AvalancheApiAddressManager
     
     var keychain: Keychain? { get }
-}
-
-public protocol AvalancheApiInfo {
-    var apiPath: String { get }
 }
 
 public protocol AvalancheVMApiInfo: AvalancheApiInfo {
@@ -61,8 +61,7 @@ public class AvalancheBaseApiInfo: AvalancheVMApiInfo {
     }
 }
 
-
-public enum ApiCredentials: Equatable, Hashable {
+public enum VmApiCredentials: Equatable, Hashable {
     case password(username: String, password: String)
     case account(Account)
     
@@ -88,3 +87,4 @@ public enum ApiCredentials: Equatable, Hashable {
         return (user, pwd)
     }
 }
+

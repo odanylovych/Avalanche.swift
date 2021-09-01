@@ -18,7 +18,7 @@ final class KeystoreTests: AvalancheTestCase {
         let expectation = self.expectation(description: "setup")
         
         ava.keystore.createUser(username: username, password: password) { result in
-            XCTAssertEqual(try! result.get(), .nil)
+            XCTAssertNotNil(try? result.get())
             expectation.fulfill()
         }
         
@@ -29,7 +29,7 @@ final class KeystoreTests: AvalancheTestCase {
         let expectation = self.expectation(description: "setup")
         
         ava.keystore.deleteUser(username: username, password: password) { result in
-            XCTAssertEqual(try! result.get(), .nil)
+            XCTAssertNotNil(try? result.get())
             expectation.fulfill()
         }
         
@@ -63,7 +63,7 @@ final class KeystoreTests: AvalancheTestCase {
         let password = self.password
         
         ava.keystore.exportUser(username: username, password: password) { response in
-            XCTAssertEqual(try! response.get().encoding, .cb58)
+            XCTAssertEqual(try? response.get().encoding, .cb58)
             expectationExportDefEnc.fulfill()
         }
         
@@ -81,11 +81,11 @@ final class KeystoreTests: AvalancheTestCase {
             let userim = username + "import"
             
             ava.keystore.importUser(username: userim, password: password, user: export.user, encoding: export.encoding) { response in
-                XCTAssertEqual(try! response.get(), .nil)
+                XCTAssertNotNil(try? response.get())
                 expectationImport.fulfill()
                 
                 ava.keystore.deleteUser(username: userim, password: password) { response in
-                    XCTAssertEqual(try! response.get(), .nil)
+                    XCTAssertNotNil(try? response.get())
                     expectationDelete.fulfill()
                 }
             }

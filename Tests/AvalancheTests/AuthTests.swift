@@ -26,7 +26,7 @@ final class AuthTests: AvalancheTestCase {
             expectationNew.fulfill()
             
             ava.auth.revokeToken(password: password, token: token) { result in
-                XCTAssertEqual(try! result.get(), .nil)
+                XCTAssertNotNil(try? result.get())
                 expectationRevoke.fulfill()
             }
         }
@@ -42,11 +42,11 @@ final class AuthTests: AvalancheTestCase {
         let passwordNew = self.passwordNew
         
         ava.auth.changePassword(password: password, newPassword: passwordNew) { result in
-            XCTAssertEqual(try! result.get(), .nil)
+            XCTAssertNotNil(try? result.get())
             expectation1.fulfill()
             
             ava.auth.changePassword(password: passwordNew, newPassword: password) { result in
-                XCTAssertEqual(try! result.get(), .nil)
+                XCTAssertNotNil(try? result.get())
                 expectation2.fulfill()
             }
         }

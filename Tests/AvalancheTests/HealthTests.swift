@@ -6,7 +6,7 @@ final class HealthTests: AvalancheTestCase {
         let expect = expectation(description: "getLiveness")
         
         ava.health.getLiveness() { result in
-            XCTAssertTrue(try! result.get().healthy)
+            XCTAssertEqual((try? result.get())?.healthy, .some(true))
             expect.fulfill()
         }
         wait(for: [expect], timeout: 10)

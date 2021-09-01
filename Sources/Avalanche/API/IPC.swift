@@ -20,15 +20,15 @@ public class AvalancheIPCApi: AvalancheApi {
 
     private let service: Client
 
-    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheIPCApiInfo) {
+    public required init(avalanche: AvalancheCore,
+                         networkID: NetworkID,
+                         hrp: String,
+                         info: AvalancheIPCApiInfo)
+    {
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
             
         self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
-    }
-    
-    public struct IPCRequestParams: Encodable {
-        let blockchainID: String
     }
     
     public struct PublishBlockchainResponse: Decodable {
@@ -36,24 +36,35 @@ public class AvalancheIPCApi: AvalancheApi {
         let decisionsURL: String
     }
     
-    public func publishBlockchain(blockchainID: String, cb: @escaping RequestCallback<IPCRequestParams, PublishBlockchainResponse, SerializableValue>) {
-        service.call(
-            method: "ipcs.publishBlockchain",
-            params: IPCRequestParams(blockchainID: blockchainID),
-            PublishBlockchainResponse.self,
-            SerializableValue.self,
-            response: cb
-        )
+    private struct IPCRequestParams: Encodable {
+        let blockchainID: String
     }
     
-    public func unpublishBlockchain(blockchainID: String, cb: @escaping RequestCallback<IPCRequestParams, Nil, SerializableValue>) {
+    public func publishBlockchain(
+        blockchainID: BlockchainID,
+        cb: @escaping ApiCallback<PublishBlockchainResponse>
+    ) {
+        service.call(
+            method: "ipcs.publishBlockchain",
+            params: IPCRequestParams(blockchainID: blockchainID.cb58()),
+            PublishBlockchainResponse.self,
+            SerializableValue.self
+        ) {
+            cb($0.mapError(AvalancheApiError.init))
+        }
+    }
+    
+    public func unpublishBlockchain(
+        blockchainID: BlockchainID,
+        cb: @escaping ApiCallback<Void>
+    ) {
         service.call(
             method: "ipcs.unpublishBlockchain",
-            params: IPCRequestParams(blockchainID: blockchainID),
+            params: IPCRequestParams(blockchainID: blockchainID.cb58()),
             SuccessResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.flatMap { $0.toResult() })
+            cb(response.mapError(AvalancheApiError.init).flatMap { $0.toResult() })
         }
     }
 }

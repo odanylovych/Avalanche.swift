@@ -37,7 +37,7 @@ final class IPCTests: AvalancheTestCase {
         ava.info.getBlockchainID(alias: "X") { response in
             let id = try! response.get()
             ava.ipc.unpublishBlockchain(blockchainID: id) { response in
-                XCTAssertEqual(try! response.get(), .nil)
+                XCTAssertNotNil(try? response.get())
                 expectation.fulfill()
             }
         }

@@ -20,64 +20,78 @@ public class AvalancheAuthApi: AvalancheApi {
 
     private let service: Client
 
-    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheAuthApiInfo) {
+    public required init(avalanche: AvalancheCore,
+                         networkID: NetworkID,
+                         hrp: String,
+                         info: AvalancheAuthApiInfo)
+    {
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
             
         self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
     }
     
-    public struct NewTokenParams: Encodable {
-        let password: String
-        let endpoints: [String]
-    }
-    
-    public func newToken(password: String, endpoints: [String], cb: @escaping RequestCallback<NewTokenParams, String, SerializableValue>) {
+    public func newToken(password: String,
+                         endpoints: [String],
+                         cb: @escaping ApiCallback<String>)
+    {
+        struct NewTokenParams: Encodable {
+            let password: String
+            let endpoints: [String]
+        }
         struct NewTokenResponse: Decodable {
             let token: String
         }
-        
         service.call(
             method: "auth.newToken",
             params: NewTokenParams(password: password, endpoints: endpoints),
             NewTokenResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.map { $0.token })
+            cb(response.map{ $0.token }.mapError(AvalancheApiError.init))
         }
     }
     
-    
-    public struct RevokeTokenParams: Encodable {
-        let password: String
-        let token: String
-    }
-    
-    public func revokeToken(password: String, token: String, cb: @escaping RequestCallback<RevokeTokenParams, Nil, SerializableValue>) {
+    public func revokeToken(password: String,
+                            token: String,
+                            cb: @escaping ApiCallback<Void>)
+    {
+        struct RevokeTokenParams: Encodable {
+            let password: String
+            let token: String
+        }
         service.call(
             method: "auth.revokeToken",
             params: RevokeTokenParams(password: password, token: token),
             SuccessResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.flatMap { $0.toResult() })
+            cb(response
+                .mapError(AvalancheApiError.init)
+                .flatMap { $0.toResult() })
         }
     }
     
-    
-    public struct ChangePasswordParams: Encodable {
-        let oldPassword: String
-        let newPassword: String
-    }
-    
-    public func changePassword(password: String, newPassword: String, cb: @escaping RequestCallback<ChangePasswordParams, Nil, SerializableValue>) {
+    public func changePassword(password: String,
+                               newPassword: String,
+                               cb: @escaping ApiCallback<Void>)
+    {
+        struct ChangePasswordParams: Encodable {
+            let oldPassword: String
+            let newPassword: String
+        }
         service.call(
             method: "auth.changePassword",
-            params: ChangePasswordParams(oldPassword: password, newPassword: newPassword),
+            params: ChangePasswordParams(
+                oldPassword: password,
+                newPassword: newPassword
+            ),
             SuccessResponse.self,
             SerializableValue.self
         ) { response in
-            cb(response.flatMap { $0.toResult() })
+            cb(response
+                .mapError(AvalancheApiError.init)
+                .flatMap { $0.toResult() })
         }
     }
 }

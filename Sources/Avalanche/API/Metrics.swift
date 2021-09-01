@@ -21,7 +21,11 @@ public class AvalancheMetricsApi: AvalancheApi {
     private let connection: SingleShotConnection
     private let decoder: ContentDecoder
     
-    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheMetricsApiInfo) {
+    public required init(avalanche: AvalancheCore,
+                         networkID: NetworkID,
+                         hrp: String,
+                         info: AvalancheMetricsApiInfo)
+    {
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
         
@@ -29,24 +33,21 @@ public class AvalancheMetricsApi: AvalancheApi {
         self.decoder = settings.decoder
     }
     
-    public enum MetricsError: Decodable {
-        public init(from decoder: Decoder) throws {
-            fatalError("conformance only. Should never be called")
-        }
-        
-        case malformed(data: Data, message: String)
-    }
-    
-    public func getMetrics(cb: @escaping RequestCallback<Nil, String, MetricsError>) {
+    public func getMetrics(cb: @escaping ApiCallback<String>) {
         connection.request(data: nil) { response in
-            cb(response.mapError {
-                .service(error: .connection(cause: $0))
-            }.flatMap { data in
-                guard let data = data else {
-                    return .failure(RequestError.empty)
+            cb(response
+                .mapError { .networkService(error: .connection(cause: $0)) }
+                .flatMap { data in
+                    guard let data = data else {
+                        return .failure(.networkBodyIsEmpty)
+                    }
+                    guard let string = String(data: data, encoding: .utf8) else {
+                        return .failure(.malformed(field: "body",
+                                                   description: .decodeError))
+                    }
+                    return .success(string)
                 }
-                return String(data: data, encoding: .utf8).map {.success($0)} ?? .failure(.custom(description: .decodeError, cause: .malformed(data: data, message: .decodeError)))
-            })
+            )
         }
     }
 }

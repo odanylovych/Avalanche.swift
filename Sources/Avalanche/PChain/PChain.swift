@@ -67,7 +67,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     public func addDelegator(
         nodeID: NodeID, startTime: Date, endTime: Date, stakeAmount: UInt64,
         reward: Address, from: Array<Address>? = nil, change: Address? = nil,
-        credentials: ApiCredentials,
+        credentials: VmApiCredentials,
         _ cb: @escaping Callback<AddDelegatorParams,
                                  (txID: TransactionID, change: Address),
                                  SerializableValue>
@@ -104,7 +104,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     }
     
     public func createAddress(
-        credentials: ApiCredentials,
+        credentials: VmApiCredentials,
         _ cb: @escaping Callback<CreateAddressParams, Address, SerializableValue>) {
         switch credentials {
         case .password(username: let user, password: let pass):
