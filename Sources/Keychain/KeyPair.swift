@@ -8,7 +8,6 @@
 import Foundation
 #if !COCOAPODS
 import Avalanche
-import Base58
 #endif
 
 public struct KeyPair {
@@ -49,10 +48,10 @@ public extension KeyPair {
         guard parts[0] == "PrivateKey" else {
             throw Error.badStringPrefix(prefix: String(parts[0]))
         }
-        guard let pk = Base58.base58CheckDecode(String(parts[1])) else {
+        guard let pk = Algos.Base58.from(cb58: String(parts[1])) else {
             throw Error.badBase58(b58: String(parts[1]))
         }
-        try self.init(sk: Data(pk), chainCode: nil)
+        try self.init(sk: pk, chainCode: nil)
     }
     
     init(seed: Data) throws {
@@ -100,11 +99,11 @@ public extension KeyPair {
     }
     
     var privateString: String {
-        "PrivateKey-" + Base58.base58CheckEncode(_sk.bytes)
+        "PrivateKey-" + Algos.Base58.cb58(data: _sk)
     }
     
     var publicString: String {
-        Base58.base58CheckEncode(publicKey.bytes)
+        Algos.Base58.cb58(data: publicKey)
     }
     
     static func generate() -> KeyPair? {

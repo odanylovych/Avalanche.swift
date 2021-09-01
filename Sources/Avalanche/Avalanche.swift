@@ -24,15 +24,15 @@ public class Avalanche: AvalancheCore {
         didSet { lock.unlock(); clearApis() }
     }
     
-    public var network: AvalancheNetwork {
+    public var networkID: NetworkID {
         willSet { lock.lock() }
         didSet { lock.unlock(); clearApis() }
     }
     
-    public required init(url: URL, network: AvalancheNetwork, networkInfo: AvalancheNetworkInfoProvider = AvalancheDefaultNetworkInfoProvider.default, settings: AvalancheSettings = .default) {
+    public required init(url: URL, networkID: NetworkID, networkInfo: AvalancheNetworkInfoProvider = AvalancheDefaultNetworkInfoProvider.default, settings: AvalancheSettings = .default) {
         self._url = url
         self.apis = [:]
-        self.network = network
+        self.networkID = networkID
         self.signer = nil
         self.networkInfo = networkInfo
         self.settings = settings
@@ -46,21 +46,21 @@ public class Avalanche: AvalancheCore {
         if let api = self.apis[API.id] as? API {
             return api
         }
-        guard let netInfo = self.networkInfo.info(for: network) else {
-            throw AvalancheApiSearchError.networkInfoNotFound(net: network)
+        guard let netInfo = self.networkInfo.info(for: networkID) else {
+            throw AvalancheApiSearchError.networkInfoNotFound(net: networkID)
         }
         guard let info = netInfo.apiInfo.info(for: API.self) else {
-            throw AvalancheApiSearchError.apiInfoNotFound(net: network, apiId: API.id)
+            throw AvalancheApiSearchError.apiInfoNotFound(net: networkID, apiId: API.id)
         }
-        let api: API = self.createAPI(network: network, hrp: netInfo.hrp, info: info)
+        let api: API = self.createAPI(networkID: networkID, hrp: netInfo.hrp, info: info)
         self.apis[API.id] = api
         return api
     }
     
-    public func createAPI<API: AvalancheApi>(network: AvalancheNetwork, hrp: String, info: API.Info) -> API {
+    public func createAPI<API: AvalancheApi>(networkID: NetworkID, hrp: String, info: API.Info) -> API {
         lock.lock()
         defer { lock.unlock() }
-        return API(avalanche: self, network: network, hrp: hrp, info: info)
+        return API(avalanche: self, networkID: networkID, hrp: hrp, info: info)
     }
     
     public func url(path: String) -> URL {

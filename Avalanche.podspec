@@ -42,24 +42,11 @@ The library allows one to issue commands to the Avalanche node APIs.
   s.subspec 'Keychain' do |ss|
     ss.source_files = 'Sources/Keychain/**/*.swift'
 
-    ss.dependency 'Avalanche/Base58'
     ss.dependency 'Avalanche/Avalanche'
     
     ss.test_spec 'KeychainTests' do |test_spec|
       test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
       test_spec.source_files = 'Tests/KeychainTests/**/*.swift'
-    end
-  end
-  
-  s.subspec 'Base58' do |ss|
-    ss.source_files = 'Sources/Base58/**/*.swift'
-
-    ss.dependency 'BigInt', '~> 5.2'
-    ss.dependency 'UncommonCrypto' '~> 0.1.0'
-    
-    ss.test_spec 'Base58Tests' do |test_spec|
-      test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
-      test_spec.source_files = 'Tests/Base58Tests/**/*.swift'
     end
   end
 

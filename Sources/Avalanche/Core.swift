@@ -10,25 +10,25 @@ import Foundation
 public typealias AvalancheResponseCallback<R, E: Error> = (Result<R, E>) -> ()
 
 public enum AvalancheApiSearchError: Error {
-    case networkInfoNotFound(net: AvalancheNetwork)
-    case apiInfoNotFound(net: AvalancheNetwork, apiId: String)
+    case networkInfoNotFound(net: NetworkID)
+    case apiInfoNotFound(net: NetworkID, apiId: String)
 }
 
 public protocol AvalancheCore: AnyObject {
     var signer: AvalancheSignatureProvider? { get set }
     var networkInfo: AvalancheNetworkInfoProvider { get }
     var settings: AvalancheSettings { get }
-    var network: AvalancheNetwork { get set }
+    var networkID: NetworkID { get set }
     
     init(
         url: URL,
-        network: AvalancheNetwork,
+        networkID: NetworkID,
         networkInfo: AvalancheNetworkInfoProvider,
         settings: AvalancheSettings
     )
     
     func getAPI<A: AvalancheApi>() throws -> A
-    func createAPI<A: AvalancheApi>(network: AvalancheNetwork, hrp: String, info: A.Info) -> A
+    func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A
     
     func url(path: String) -> URL
 }
@@ -37,16 +37,16 @@ public protocol AvalancheCore: AnyObject {
 extension AvalancheCore {
     public init(
         url: URL,
-        network: AvalancheNetwork,
+        networkID: NetworkID,
         hrp: String,
         apiInfo: AvalancheApiInfoProvider,
         settings: AvalancheSettings
     ) {
         let provider = AvalancheDefaultNetworkInfoProvider()
         let netInfo = AvalancheDefaultNetworkInfo(hrp: hrp, apiInfo: apiInfo)
-        provider.setInfo(info: netInfo, for: network)
-        self.init(url: url, network: network, networkInfo: provider, settings: settings)
-        self.network = network
+        provider.setInfo(info: netInfo, for: networkID)
+        self.init(url: url, networkID: networkID, networkInfo: provider, settings: settings)
+        self.networkID = networkID
     }
     
 }

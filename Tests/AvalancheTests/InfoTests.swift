@@ -24,7 +24,7 @@ final class InfoTests: AvalancheTestCase {
         let success = expectation(description: "success")
         
         ava.info.getNetworkID { result in
-            XCTAssertEqual(self.ava.network.networkId, try! result.get())
+            XCTAssertEqual(self.ava.networkID.value, try! result.get())
             success.fulfill()
         }
         
