@@ -36,5 +36,5 @@ public class SECP256K1Credential: Credential {
 }
 
 public class NFTCredential: Credential {
-    override public class var typeID: TypeID { CommonTypeID.nftCredential }
+    override public class var typeID: TypeID { XChainTypeID.nftCredential }
 }

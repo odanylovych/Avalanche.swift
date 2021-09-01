@@ -377,3 +377,40 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
             .encode(subnetAuth)
     }
 }
+
+public class AddDelegatorTransaction: BaseTransaction {
+    override public class var typeID: TypeID { PChainTypeID.addDelegatorTransaction }
+    
+    public let validator: Validator
+    public let stake: Stake
+    public let rewardsOwner: SECP256K1OutputOwners
+    
+    public init(
+        networkID: UInt32,
+        blockchainID: BlockchainID,
+        outputs: [TransferableOutput],
+        inputs: [TransferableInput],
+        memo: Data,
+        validator: Validator,
+        stake: Stake,
+        rewardsOwner: SECP256K1OutputOwners
+    ) throws {
+        self.validator = validator
+        self.stake = stake
+        self.rewardsOwner = rewardsOwner
+        try super.init(
+            networkID: networkID,
+            blockchainID: blockchainID,
+            outputs: outputs,
+            inputs: inputs,
+            memo: memo
+        )
+    }
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
+        try super.encode(in: encoder)
+        try encoder.encode(validator)
+            .encode(stake)
+            .encode(rewardsOwner)
+    }
+}
