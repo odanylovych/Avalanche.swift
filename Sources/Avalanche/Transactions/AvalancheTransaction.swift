@@ -162,7 +162,7 @@ public class OperationTransaction: BaseTransaction {
 }
 
 public class ImportTransaction: BaseTransaction {
-    override public class var typeID: TypeID { CommonTypeID.importTransaction }
+    override public class var typeID: TypeID { XChainTypeID.importTransaction }
     
     public let sourceChain: BlockchainID
     public let transferableInputs: [TransferableInput]
@@ -194,7 +194,7 @@ public class ImportTransaction: BaseTransaction {
 }
 
 public class ExportTransaction: BaseTransaction {
-    override public class var typeID: TypeID { CommonTypeID.exportTransaction }
+    override public class var typeID: TypeID { XChainTypeID.exportTransaction }
     
     public let destinationChain: BlockchainID
     public let transferableOutputs: [TransferableOutput]
@@ -442,4 +442,12 @@ public class CreateSubnetTransaction: BaseTransaction {
         try super.encode(in: encoder)
         try encoder.encode(rewardsOwner)
     }
+}
+
+public class PChainImportTransaction: ImportTransaction {
+    override public class var typeID: TypeID { PChainTypeID.importTransaction }
+}
+
+public class PChainExportTransaction: ExportTransaction {
+    override public class var typeID: TypeID { PChainTypeID.exportTransaction }
 }
