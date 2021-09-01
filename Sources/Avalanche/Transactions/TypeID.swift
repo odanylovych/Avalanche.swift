@@ -60,6 +60,7 @@ public enum PChainTypeID: UInt32, TypeID, CaseIterable {
     case addValidatorTransaction = 0x0000000c
     case addSubnetValidatorTransaction = 0x0000000d
     case addDelegatorTransaction = 0x0000000e
+    case createSubnetTransaction = 0x00000010
     
     case subnetAuth = 0x0000000a
 }
