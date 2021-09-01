@@ -24,11 +24,9 @@ public enum CommonTypeID: UInt32, TypeID, CaseIterable {
     // Outputs
     case secp256K1TransferOutput = 0x00000007
     case secp256K1MintOutput = 0x00000006
-    case nftMintOutput = 0x0000000a
     
     // Operations
     case secp256K1MintOperation = 0x00000008
-    case nftTransferOperation = 0x0000000d
     
     // Credentials
     case secp256K1Credential = 0x00000009
@@ -45,9 +43,11 @@ public enum CommonTypeID: UInt32, TypeID, CaseIterable {
 public enum XChainTypeID: UInt32, TypeID, CaseIterable {
     // Outputs
     case nftTransferOutput = 0x0000000b
+    case nftMintOutput = 0x0000000a
     
     // Operations
     case nftMintOperation = 0x0000000c
+    case nftTransferOperation = 0x0000000d
 }
 
 public enum PChainTypeID: UInt32, TypeID, CaseIterable {
@@ -56,4 +56,7 @@ public enum PChainTypeID: UInt32, TypeID, CaseIterable {
     
     // Transactions
     case addValidatorTransaction = 0x0000000c
+    case addSubnetValidatorTransaction = 0x0000000d
+    
+    case subnetAuth = 0x0000000a
 }

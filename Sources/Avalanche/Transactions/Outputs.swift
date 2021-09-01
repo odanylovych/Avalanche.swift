@@ -122,7 +122,7 @@ public class NFTTransferOutput: Output {
 }
 
 public class NFTMintOutput: Output {
-    override public class var typeID: TypeID { CommonTypeID.nftMintOutput }
+    override public class var typeID: TypeID { XChainTypeID.nftMintOutput }
     
     public let groupID: UInt32
     public let locktime: Date

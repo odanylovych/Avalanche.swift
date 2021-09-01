@@ -121,11 +121,46 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
+    private func examplePChainTransferableOutput() throws -> TransferableOutput {
+        try TransferableOutput(
+            assetId: AssetID(hex: "0x6870b7d66ac32540311379e5b5dbad28ec7eb8ddbfc8f4d67299ebb48475907a")!,
+            output: SECP256K1TransferOutput(
+                amount: 3999000000,
+                locktime: Date(timeIntervalSince1970: 0),
+                threshold: 1,
+                addresses: [
+                    Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: "avax", chainId: "P")
+                ]
+            )
+        )
+    }
+    
+    private func examplePChainTransferableInput() throws -> TransferableInput {
+        try TransferableInput(
+            transactionID: TransactionID(hex: "0xdfafbdf5c81f635c9257824ff21c8e3e6f7b632ac306e11446ee540d34711a15")!,
+            utxoIndex: 1,
+            assetID: AssetID(hex: "0x6870b7d66ac32540311379e5b5dbad28ec7eb8ddbfc8f4d67299ebb48475907a")!,
+            input: SECP256K1TransferInput(
+                amount: 4000000000,
+                addressIndices: [0]
+            )
+        )
+    }
+    
     private func exampleSECP256K1OutputOwners() throws -> SECP256K1OutputOwners {
         try SECP256K1OutputOwners(
             locktime: Date(timeIntervalSince1970: 0),
             threshold: 1,
             addresses: [Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: "avax", chainId: "P")]
+        )
+    }
+    
+    private func exampleValidator() -> Validator {
+        Validator(
+            nodeID: NodeID(hex: "0xe9094f73698002fd52c90819b457b9fbc866ab80")!,
+            startTime: Date(timeIntervalSince1970: 0x000000005f21f31d),
+            endTime: Date(timeIntervalSince1970: 0x000000005f497dc6),
+            weight: 0x000000000000d431
         )
     }
     
@@ -1192,37 +1227,10 @@ final class TransactionsTests: AvalancheTestCase {
             actual: AddValidatorTransaction(
                 networkID: 12345,
                 blockchainID: BlockchainID(data: Data(count: 32))!,
-                outputs: [
-                    TransferableOutput(
-                        assetId: AssetID(hex: "0x6870b7d66ac32540311379e5b5dbad28ec7eb8ddbfc8f4d67299ebb48475907a")!,
-                        output: SECP256K1TransferOutput(
-                            amount: 3999000000,
-                            locktime: Date(timeIntervalSince1970: 0),
-                            threshold: 1,
-                            addresses: [
-                                Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: "avax", chainId: "P")
-                            ]
-                        )
-                    )
-                ],
-                inputs: [
-                    TransferableInput(
-                        transactionID: TransactionID(hex: "0xdfafbdf5c81f635c9257824ff21c8e3e6f7b632ac306e11446ee540d34711a15")!,
-                        utxoIndex: 1,
-                        assetID: AssetID(hex: "0x6870b7d66ac32540311379e5b5dbad28ec7eb8ddbfc8f4d67299ebb48475907a")!,
-                        input: SECP256K1TransferInput(
-                            amount: 4000000000,
-                            addressIndices: [0]
-                        )
-                    )
-                ],
+                outputs: [examplePChainTransferableOutput()],
+                inputs: [examplePChainTransferableInput()],
                 memo: Data(),
-                validator: Validator(
-                    nodeID: NodeID(hex: "0xe9094f73698002fd52c90819b457b9fbc866ab80")!,
-                    startTime: Date(timeIntervalSince1970: 0x000000005f21f31d),
-                    endTime: Date(timeIntervalSince1970: 0x000000005f497dc6),
-                    weight: 0x000000000000d431
-                ),
+                validator: exampleValidator(),
                 stake: Stake(lockedOuts: [
                     TransferableOutput(
                         assetId: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
@@ -1301,6 +1309,77 @@ final class TransactionsTests: AvalancheTestCase {
                 0xed, 0xa8, 0xeb, 0x30, 0xfb, 0x5a, 0x71, 0x5c,
                 // Shares
                 0x00, 0x00, 0x00, 0x64,
+            ]
+        )
+    }
+    
+    func testAddSubnetValidatorTransaction() throws {
+        try encodeTest(
+            actual: AddSubnetValidatorTransaction(
+                networkID: 12345,
+                blockchainID: BlockchainID(data: Data(count: 32))!,
+                outputs: [examplePChainTransferableOutput()],
+                inputs: [examplePChainTransferableInput()],
+                memo: Data(),
+                validator: exampleValidator(),
+                subnetID: SubnetID(hex: "0x58b1092871db85bc752742054e2e8be0adf8166ec1f0f0769f4779f14c71d7eb")!,
+                subnetAuth: SubnetAuth(signatureIndices: [0])
+            ),
+            expected: [
+                // base tx:
+                0x00, 0x00, 0x00, 0x0d,
+                0x00, 0x00, 0x30, 0x39,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x01,
+                0x68, 0x70, 0xb7, 0xd6, 0x6a, 0xc3, 0x25, 0x40,
+                0x31, 0x13, 0x79, 0xe5, 0xb5, 0xdb, 0xad, 0x28,
+                0xec, 0x7e, 0xb8, 0xdd, 0xbf, 0xc8, 0xf4, 0xd6,
+                0x72, 0x99, 0xeb, 0xb4, 0x84, 0x75, 0x90, 0x7a,
+                0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00,
+                0xee, 0x5b, 0xe5, 0xc0, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                0x00, 0x00, 0x00, 0x01, 0xda, 0x2b, 0xee, 0x01,
+                0xbe, 0x82, 0xec, 0xc0, 0x0c, 0x34, 0xf3, 0x61,
+                0xed, 0xa8, 0xeb, 0x30, 0xfb, 0x5a, 0x71, 0x5c,
+                0x00, 0x00, 0x00, 0x01,
+                0xdf, 0xaf, 0xbd, 0xf5, 0xc8, 0x1f, 0x63, 0x5c,
+                0x92, 0x57, 0x82, 0x4f, 0xf2, 0x1c, 0x8e, 0x3e,
+                0x6f, 0x7b, 0x63, 0x2a, 0xc3, 0x06, 0xe1, 0x14,
+                0x46, 0xee, 0x54, 0x0d, 0x34, 0x71, 0x1a, 0x15,
+                0x00, 0x00, 0x00, 0x01,
+                0x68, 0x70, 0xb7, 0xd6, 0x6a, 0xc3, 0x25, 0x40,
+                0x31, 0x13, 0x79, 0xe5, 0xb5, 0xdb, 0xad, 0x28,
+                0xec, 0x7e, 0xb8, 0xdd, 0xbf, 0xc8, 0xf4, 0xd6,
+                0x72, 0x99, 0xeb, 0xb4, 0x84, 0x75, 0x90, 0x7a,
+                0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00,
+                0xee, 0x6b, 0x28, 0x00, 0x00, 0x00, 0x00, 0x01,
+                0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                // Node ID
+                0xe9, 0x09, 0x4f, 0x73, 0x69, 0x80, 0x02, 0xfd,
+                0x52, 0xc9, 0x08, 0x19, 0xb4, 0x57, 0xb9, 0xfb,
+                0xc8, 0x66, 0xab, 0x80,
+                // StartTime
+                0x00, 0x00, 0x00, 0x00, 0x5f, 0x21, 0xf3, 0x1d,
+                // EndTime
+                0x00, 0x00, 0x00, 0x00, 0x5f, 0x49, 0x7d, 0xc6,
+                // Weight
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xd4, 0x31,
+                // SubnetID
+                0x58, 0xb1, 0x09, 0x28, 0x71, 0xdb, 0x85, 0xbc,
+                0x75, 0x27, 0x42, 0x05, 0x4e, 0x2e, 0x8b, 0xe0,
+                0xad, 0xf8, 0x16, 0x6e, 0xc1, 0xf0, 0xf0, 0x76,
+                0x9f, 0x47, 0x79, 0xf1, 0x4c, 0x71, 0xd7, 0xeb,
+                // SubnetAuth
+                // SubnetAuth TypeID
+                0x00, 0x00, 0x00, 0x0a,
+                // SigIndices length
+                0x00, 0x00, 0x00, 0x01,
+                // SigIndices
+                0x00, 0x00, 0x00, 0x00,
             ]
         )
     }

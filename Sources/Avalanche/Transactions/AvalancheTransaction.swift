@@ -314,3 +314,66 @@ public class AddValidatorTransaction: BaseTransaction {
             .encode(shares)
     }
 }
+
+public struct SubnetID: ID {
+    public static let size = 32
+    
+    public let raw: Data
+    
+    public init(raw: Data) {
+        self.raw = raw
+    }
+}
+
+public struct SubnetAuth {
+    public static let typeID: TypeID = PChainTypeID.subnetAuth
+    
+    public let signatureIndices: [UInt32]
+    
+    public init(signatureIndices: [UInt32]) {
+        self.signatureIndices = signatureIndices
+    }
+}
+
+extension SubnetAuth: AvalancheEncodable {
+    public func encode(in encoder: AvalancheEncoder) throws {
+        try encoder.encode(Self.typeID).encode(signatureIndices)
+    }
+}
+
+public class AddSubnetValidatorTransaction: BaseTransaction {
+    override public class var typeID: TypeID { PChainTypeID.addSubnetValidatorTransaction }
+    
+    public let validator: Validator
+    public let subnetID: SubnetID
+    public let subnetAuth: SubnetAuth
+    
+    public init(
+        networkID: UInt32,
+        blockchainID: BlockchainID,
+        outputs: [TransferableOutput],
+        inputs: [TransferableInput],
+        memo: Data,
+        validator: Validator,
+        subnetID: SubnetID,
+        subnetAuth: SubnetAuth
+    ) throws {
+        self.validator = validator
+        self.subnetID = subnetID
+        self.subnetAuth = subnetAuth
+        try super.init(
+            networkID: networkID,
+            blockchainID: blockchainID,
+            outputs: outputs,
+            inputs: inputs,
+            memo: memo
+        )
+    }
+    
+    override public func encode(in encoder: AvalancheEncoder) throws {
+        try super.encode(in: encoder)
+        try encoder.encode(validator)
+            .encode(subnetID)
+            .encode(subnetAuth)
+    }
+}

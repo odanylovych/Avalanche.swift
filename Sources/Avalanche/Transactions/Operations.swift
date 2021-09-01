@@ -137,7 +137,7 @@ extension NFTTransferOperationOutput: AvalancheEncodable {
 }
 
 public class NFTTransferOperation: Operation {
-    override public class var typeID: TypeID { CommonTypeID.nftTransferOperation }
+    override public class var typeID: TypeID { XChainTypeID.nftTransferOperation }
     
     public let addressIndices: [UInt32]
     public let nftTransferOutput: NFTTransferOperationOutput
