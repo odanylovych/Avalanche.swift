@@ -16,7 +16,7 @@ public class Operation: AvalancheEncodable {
 }
 
 public class SECP256K1MintOperation: Operation {
-    override public class var typeID: TypeID { CommonTypeID.secp256K1MintOperation }
+    override public class var typeID: TypeID { XChainTypeID.secp256K1MintOperation }
     
     public let addressIndices: [UInt32]
     public let mintOutput: SECP256K1MintOutput

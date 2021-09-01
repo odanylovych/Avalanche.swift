@@ -34,7 +34,3 @@ public class Credential: AvalancheEncodable {
 public class SECP256K1Credential: Credential {
     override public class var typeID: TypeID { CommonTypeID.secp256K1Credential }
 }
-
-public class NFTCredential: Credential {
-    override public class var typeID: TypeID { XChainTypeID.nftCredential }
-}
