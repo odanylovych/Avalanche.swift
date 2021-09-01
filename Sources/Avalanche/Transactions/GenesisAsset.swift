@@ -9,7 +9,7 @@ import Foundation
 
 public struct GenesisAsset {
     public let alias: String
-    public let networkID: UInt32
+    public let networkID: NetworkID
     public let blockchainID: BlockchainID
     public let outputs: [TransferableOutput]
     public let inputs: [TransferableInput]
@@ -21,7 +21,7 @@ public struct GenesisAsset {
     
     public init(
         alias: String,
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],

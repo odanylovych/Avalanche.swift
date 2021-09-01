@@ -20,7 +20,7 @@ public class AvalancheInfoApi: AvalancheApi {
     
     private let service: Client
     
-    public required init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: AvalancheInfoApiInfo) {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheInfoApiInfo) {
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
         
@@ -50,7 +50,7 @@ public class AvalancheInfoApi: AvalancheApi {
 
     
     
-    public func getNetworkID(cb: @escaping RequestCallback<Nil, UInt, SerializableValue>) {
+    public func getNetworkID(cb: @escaping RequestCallback<Nil, UInt32, SerializableValue>) {
         struct GetNetworkIDResponse: Decodable {
             let networkID: String
         }
@@ -62,9 +62,9 @@ public class AvalancheInfoApi: AvalancheApi {
             SerializableValue.self
         ) { response in
             cb(response.flatMap { response in
-                UInt(response.networkID).map {.success($0)}
+                UInt32(response.networkID).map {.success($0)}
                     ??
-                    .failure(.custom(description: "server returned '" + response.networkID + "' ID which is not UInt", cause: nil))
+                    .failure(.custom(description: "server returned '" + response.networkID + "' ID which is not UInt32", cause: nil))
             })
         }
     }

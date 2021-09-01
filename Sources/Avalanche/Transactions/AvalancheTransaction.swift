@@ -54,14 +54,14 @@ public struct BlockchainID: ID {
 public class BaseTransaction: UnsignedAvalancheTransaction {
     override public class var typeID: TypeID { CommonTypeID.baseTransaction }
     
-    public let networkID: UInt32
+    public let networkID: NetworkID
     public let blockchainID: BlockchainID
     public let outputs: [TransferableOutput]
     public let inputs: [TransferableInput]
     public let memo: Data
     
     public init(
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],
@@ -100,7 +100,7 @@ public class CreateAssetTransaction: BaseTransaction {
     public let initialStates: [InitialState]
     
     public init(
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],
@@ -138,7 +138,7 @@ public class OperationTransaction: BaseTransaction {
     public let operations: [TransferableOperation]
     
     public init(
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],
@@ -168,7 +168,7 @@ public class ImportTransaction: BaseTransaction {
     public let transferableInputs: [TransferableInput]
     
     public init(
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],
@@ -200,7 +200,7 @@ public class ExportTransaction: BaseTransaction {
     public let transferableOutputs: [TransferableOutput]
     
     public init(
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],
@@ -283,7 +283,7 @@ public class AddValidatorTransaction: BaseTransaction {
     public let shares: UInt32
     
     public init(
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],
@@ -349,7 +349,7 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
     public let subnetAuth: SubnetAuth
     
     public init(
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],
@@ -386,7 +386,7 @@ public class AddDelegatorTransaction: BaseTransaction {
     public let rewardsOwner: SECP256K1OutputOwners
     
     public init(
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],
@@ -421,7 +421,7 @@ public class CreateSubnetTransaction: BaseTransaction {
     public let rewardsOwner: SECP256K1OutputOwners
     
     public init(
-        networkID: UInt32,
+        networkID: NetworkID,
         blockchainID: BlockchainID,
         outputs: [TransferableOutput],
         inputs: [TransferableInput],

@@ -10,7 +10,7 @@ import Foundation
 public protocol AvalancheApi {
     associatedtype Info: AvalancheApiInfo
     
-    init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: Info)
+    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info)
     
     static var id: String { get }
 }
@@ -26,23 +26,23 @@ public protocol AvalancheApiInfo {
 }
 
 public protocol AvalancheVMApiInfo: AvalancheApiInfo {
-    var blockchainId: BlockchainID { get }
+    var blockchainID: BlockchainID { get }
     var alias: String? { get }
     var vm: String { get }
 }
 
 public class AvalancheBaseApiInfo: AvalancheVMApiInfo {
-    public let blockchainId: BlockchainID
+    public let blockchainID: BlockchainID
     public let alias: String?
     public let vm: String
     
-    public init(bId: BlockchainID, alias: String?, vm: String) {
-        self.blockchainId = bId
+    public init(blockchainID: BlockchainID, alias: String?, vm: String) {
+        self.blockchainID = blockchainID
         self.alias = alias
         self.vm = vm
     }
     
     public var apiPath: String {
-        return "/ext/bc/\(alias ?? blockchainId.cb58())"
+        return "/ext/bc/\(alias ?? blockchainID.cb58())"
     }
 }

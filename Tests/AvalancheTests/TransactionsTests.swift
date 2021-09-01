@@ -111,7 +111,7 @@ final class TransactionsTests: AvalancheTestCase {
     
     private func exampleBaseTransaction() throws -> BaseTransaction {
         try BaseTransaction(
-            networkID: 4,
+            networkID: NetworkID(4),
             blockchainID: BlockchainID(
                 data: Data(hex: "0xffffffffeeeeeeeeddddddddccccccccbbbbbbbbaaaaaaaa9999999988888888")!
             )!,
@@ -745,7 +745,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeCreateAssetTransaction() throws {
         try encodeTest(
             actual: CreateAssetTransaction(
-                networkID: 4,
+                networkID: NetworkID(4),
                 blockchainID: BlockchainID(
                     data: Data(hex: "0xffffffffeeeeeeeeddddddddccccccccbbbbbbbbaaaaaaaa9999999988888888")!
                 )!,
@@ -821,7 +821,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeOperationTransaction() throws {
         try encodeTest(
             actual: OperationTransaction(
-                networkID: 4,
+                networkID: NetworkID(4),
                 blockchainID: BlockchainID(
                     data: Data(hex: "0xffffffffeeeeeeeeddddddddccccccccbbbbbbbbaaaaaaaa9999999988888888")!
                 )!,
@@ -894,7 +894,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeImportTransaction() throws {
         try encodeTest(
             actual: ImportTransaction(
-                networkID: 4,
+                networkID: NetworkID(4),
                 blockchainID: BlockchainID(
                     data: Data(hex: "0xffffffffeeeeeeeeddddddddccccccccbbbbbbbbaaaaaaaa9999999988888888")!
                 )!,
@@ -968,7 +968,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeExportTransaction() throws {
         try encodeTest(
             actual: ExportTransaction(
-                networkID: 4,
+                networkID: NetworkID(4),
                 blockchainID: BlockchainID(
                     data: Data(hex: "0xffffffffeeeeeeeeddddddddccccccccbbbbbbbbaaaaaaaa9999999988888888")!
                 )!,
@@ -1145,7 +1145,7 @@ final class TransactionsTests: AvalancheTestCase {
         try encodeTest(
             actual: GenesisAsset(
                 alias: "asset1",
-                networkID: 12345,
+                networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [],
                 inputs: [],
@@ -1225,7 +1225,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeAddValidatorTransaction() throws {
         try encodeTest(
             actual: AddValidatorTransaction(
-                networkID: 12345,
+                networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
                 inputs: [examplePChainTransferableInput()],
@@ -1316,7 +1316,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeAddSubnetValidatorTransaction() throws {
         try encodeTest(
             actual: AddSubnetValidatorTransaction(
-                networkID: 12345,
+                networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
                 inputs: [examplePChainTransferableInput()],
@@ -1387,7 +1387,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeAddDelegatorTransaction() throws {
         try encodeTest(
             actual: AddDelegatorTransaction(
-                networkID: 12345,
+                networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
                 inputs: [examplePChainTransferableInput()],
@@ -1475,7 +1475,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeCreateSubnetTransaction() throws {
         try encodeTest(
             actual: CreateSubnetTransaction(
-                networkID: 12345,
+                networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
                 inputs: [examplePChainTransferableInput()],
@@ -1533,7 +1533,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodePChainImportTransaction() throws {
         try encodeTest(
             actual: PChainImportTransaction(
-                networkID: 12345,
+                networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
                 inputs: [examplePChainTransferableInput()],
@@ -1603,7 +1603,7 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodePChainExportTransaction() throws {
         try encodeTest(
             actual: PChainExportTransaction(
-                networkID: 12345,
+                networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
                 inputs: [examplePChainTransferableInput()],

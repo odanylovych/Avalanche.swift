@@ -14,12 +14,12 @@ public class AvalancheCChainApiInfo: AvalancheBaseApiInfo {
     public let chainId: UInt32
     
     public init(
-        gasPrice: BigUInt, chainId: UInt32, bId: BlockchainID,
+        gasPrice: BigUInt, chainId: UInt32, blockchainID: BlockchainID,
         alias: String? = nil, vm: String = "evm"
     ) {
         self.gasPrice = gasPrice
         self.chainId = chainId
-        super.init(bId: bId, alias: alias, vm: vm)
+        super.init(blockchainID: blockchainID, alias: alias, vm: vm)
     }
     
     override public var apiPath: String {
@@ -43,7 +43,7 @@ public class AvalancheCChainApi: AvalancheApi {
     //FIX: public let network: AvalancheSubscribableRpcConnection
     public let signer: AvalancheSignatureProvider?
     
-    public required init(avalanche: AvalancheCore, network: AvalancheNetwork, hrp: String, info: Info) {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         //FIX: self.network = avalanche.connections.wsRpcConnection(for: info.wsApiPath)
         self.signer = avalanche.signer
         self.subscriptions = [:]
@@ -103,7 +103,7 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func CChain(network: AvalancheNetwork, hrp: String, info: AvalancheCChainApi.Info) -> AvalancheCChainApi {
-        return self.createAPI(network: network, hrp: hrp, info: info)
+    public func CChain(networkID: NetworkID, hrp: String, info: AvalancheCChainApi.Info) -> AvalancheCChainApi {
+        return self.createAPI(networkID: networkID, hrp: hrp, info: info)
     }
 }
