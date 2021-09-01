@@ -61,7 +61,7 @@ public struct Account: AccountProtocol, Equatable, Hashable {
 public struct Address: AddressProtocol, Equatable, Hashable {
     public typealias Extended = ExtendedAddress
     
-    static let rawAddressSize = 20
+    public static let rawAddressSize = 20
     
     public let rawAddress: Data
     public let hrp: String

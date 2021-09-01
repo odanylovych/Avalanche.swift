@@ -71,3 +71,9 @@ public struct EthAddress: AddressProtocol, Equatable, Hashable {
         }
     }
 }
+
+extension EthAddress: AvalancheEncodable {
+    public func encode(in encoder: AvalancheEncoder) throws {
+        try encoder.encode(rawAddress, size: 20)
+    }
+}
