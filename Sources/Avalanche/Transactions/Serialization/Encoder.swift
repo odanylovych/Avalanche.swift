@@ -45,6 +45,8 @@ class AEncoder: AvalancheEncoder {
     }
     
     func encode(_ value: AvalancheFixedEncodable, size: Int) throws -> Self {
+        context.push(type(of: value), size: size)
+        defer { context.pop() }
         try value.encode(in: self, size: size)
         return self
     }

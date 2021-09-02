@@ -33,6 +33,10 @@ struct AvalancheEncoderContext {
         path.append(String(describing: element))
     }
     
+    mutating func push<T>(_ element: T, size: Int) {
+        path.append("\(String(describing: element))[\(size)]")
+    }
+    
     mutating func pop() {
         let _ = path.popLast()
     }
