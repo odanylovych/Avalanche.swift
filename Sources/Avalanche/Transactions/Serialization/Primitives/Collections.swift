@@ -12,7 +12,12 @@ import Foundation
 extension Collection where Element: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder, size: Int) throws {
         guard count == size else {
-            throw AvalancheEncoderError.wrongFixedArraySize(self, actual: count, expected: size)
+            throw AvalancheEncoderError.wrongFixedArraySize(
+                self,
+                actual: count,
+                expected: size,
+                AvalancheEncoderError.Context(path: encoder.path)
+            )
         }
         try forEach { try encoder.encode($0) }
     }

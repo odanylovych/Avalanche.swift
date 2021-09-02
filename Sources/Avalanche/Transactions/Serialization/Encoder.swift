@@ -16,6 +16,7 @@ public protocol AvalancheFixedEncodable {
 }
 
 public protocol AvalancheEncoder {
+    var path: [String] { get }
     var output: Data { get }
     
     @discardableResult func encode(_ value: AvalancheEncodable) throws -> Self
@@ -25,12 +26,20 @@ public protocol AvalancheEncoder {
 
 class AEncoder: AvalancheEncoder {
     public private(set) var output: Data
+    private var context: AvalancheEncoderContext
+    
+    public var path: [String] {
+        return context.path
+    }
     
     init() {
         output = Data()
+        context = AvalancheEncoderContext()
     }
     
     func encode(_ value: AvalancheEncodable) throws -> Self {
+        context.push(type(of: value))
+        defer { context.pop() }
         try value.encode(in: self)
         return self
     }
