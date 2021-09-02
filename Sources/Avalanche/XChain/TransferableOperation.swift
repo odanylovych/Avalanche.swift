@@ -19,7 +19,8 @@ public struct UTXOID {
 
 extension UTXOID: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(transactionID).encode(utxoIndex)
+        try encoder.encode(transactionID, name: "transactionID")
+            .encode(utxoIndex, name: "utxoIndex")
     }
 }
 
@@ -37,8 +38,8 @@ public struct TransferableOperation {
 
 extension TransferableOperation: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(assetID)
-            .encode(utxoIDs)
-            .encode(transferOperation)
+        try encoder.encode(assetID, name: "assetID")
+            .encode(utxoIDs, name: "utxoIDs")
+            .encode(transferOperation, name: "transferOperation")
     }
 }

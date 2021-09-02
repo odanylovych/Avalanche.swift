@@ -21,8 +21,8 @@ public struct EVMOutput {
 
 extension EVMOutput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(address)
-            .encode(amount)
-            .encode(assetID)
+        try encoder.encode(address, name: "address")
+            .encode(amount, name: "amount")
+            .encode(assetID, name: "assetID")
     }
 }

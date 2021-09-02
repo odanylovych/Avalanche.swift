@@ -21,8 +21,8 @@ public struct StakeableLockedOutput {
 
 extension StakeableLockedOutput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(locktime)
-            .encode(transferableOutput)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(locktime, name: "locktime")
+            .encode(transferableOutput, name: "transferableOutput")
     }
 }

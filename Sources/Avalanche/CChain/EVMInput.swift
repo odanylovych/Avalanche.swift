@@ -23,9 +23,9 @@ public struct EVMInput {
 
 extension EVMInput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(address)
-            .encode(amount)
-            .encode(assetID)
-            .encode(nonce)
+        try encoder.encode(address, name: "address")
+            .encode(amount, name: "amount")
+            .encode(assetID, name: "assetID")
+            .encode(nonce, name: "nonce")
     }
 }

@@ -88,15 +88,15 @@ public struct GenesisAsset {
 
 extension GenesisAsset: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(alias)
-            .encode(networkID)
-            .encode(blockchainID)
-            .encode(outputs)
-            .encode(inputs)
-            .encode(memo)
-            .encode(name)
-            .encode(symbol)
-            .encode(denomination)
-            .encode(initialStates)
+        try encoder.encode(alias, name: "alias")
+            .encode(networkID, name: "networkID")
+            .encode(blockchainID, name: "blockchainID")
+            .encode(outputs, name: "outputs")
+            .encode(inputs, name: "inputs")
+            .encode(memo, name: "memo")
+            .encode(name, name: "name")
+            .encode(symbol, name: "symbol")
+            .encode(denomination, name: "denomination")
+            .encode(initialStates, name: "initialStates")
     }
 }

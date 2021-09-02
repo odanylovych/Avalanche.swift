@@ -31,12 +31,12 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(networkID)
-            .encode(blockchainID)
-            .encode(destinationChain)
-            .encode(inputs)
-            .encode(exportedOutputs)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(networkID, name: "networkID")
+            .encode(blockchainID, name: "blockchainID")
+            .encode(destinationChain, name: "destinationChain")
+            .encode(inputs, name: "inputs")
+            .encode(exportedOutputs, name: "exportedOutputs")
     }
 }
 
@@ -64,11 +64,11 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(networkID)
-            .encode(blockchainID)
-            .encode(sourceChain)
-            .encode(importedInputs)
-            .encode(outputs)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(networkID, name: "networkID")
+            .encode(blockchainID, name: "blockchainID")
+            .encode(sourceChain, name: "sourceChain")
+            .encode(importedInputs, name: "importedInputs")
+            .encode(outputs, name: "outputs")
     }
 }

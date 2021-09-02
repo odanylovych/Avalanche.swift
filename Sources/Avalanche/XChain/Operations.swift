@@ -29,10 +29,10 @@ public class SECP256K1MintOperation: Operation {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(addressIndices)
-            .encode(mintOutput)
-            .encode(transferOutput)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(addressIndices, name: "addressIndices")
+            .encode(mintOutput, name: "mintOutput")
+            .encode(transferOutput, name: "transferOutput")
     }
 }
 
@@ -58,9 +58,9 @@ public struct NFTMintOperationOutput {
 
 extension NFTMintOperationOutput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(locktime)
-            .encode(threshold)
-            .encode(addresses)
+        try encoder.encode(locktime, name: "locktime")
+            .encode(threshold, name: "threshold")
+            .encode(addresses, name: "addresses")
     }
 }
 
@@ -87,11 +87,11 @@ public class NFTMintOperation: Operation {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(addressIndices)
-            .encode(groupID)
-            .encode(payload)
-            .encode(outputs)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(addressIndices, name: "addressIndices")
+            .encode(groupID, name: "groupID")
+            .encode(payload, name: "payload")
+            .encode(outputs, name: "outputs")
     }
 }
 
@@ -128,11 +128,11 @@ public struct NFTTransferOperationOutput {
 
 extension NFTTransferOperationOutput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(groupID)
-            .encode(payload)
-            .encode(locktime)
-            .encode(threshold)
-            .encode(addresses)
+        try encoder.encode(groupID, name: "groupID")
+            .encode(payload, name: "payload")
+            .encode(locktime, name: "locktime")
+            .encode(threshold, name: "threshold")
+            .encode(addresses, name: "addresses")
     }
 }
 
@@ -148,8 +148,8 @@ public class NFTTransferOperation: Operation {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(addressIndices)
-            .encode(nftTransferOutput)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(addressIndices, name: "addressIndices")
+            .encode(nftTransferOutput, name: "nftTransferOutput")
     }
 }

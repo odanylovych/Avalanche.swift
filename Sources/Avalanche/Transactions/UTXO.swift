@@ -25,10 +25,10 @@ public struct UTXO {
 
 extension UTXO: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.codecID)
-            .encode(transactionId)
-            .encode(outputIndex)
-            .encode(assetID)
-            .encode(output)
+        try encoder.encode(Self.codecID, name: "codecID")
+            .encode(transactionId, name: "transactionId")
+            .encode(outputIndex, name: "outputIndex")
+            .encode(assetID, name: "assetID")
+            .encode(output, name: "output")
     }
 }

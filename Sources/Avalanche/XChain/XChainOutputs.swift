@@ -29,10 +29,10 @@ public class SECP256K1MintOutput: Output {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(locktime)
-            .encode(threshold)
-            .encode(addresses)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(locktime, name: "locktime")
+            .encode(threshold, name: "threshold")
+            .encode(addresses, name: "addresses")
     }
 }
 
@@ -69,12 +69,12 @@ public class NFTTransferOutput: Output {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(groupID)
-            .encode(payload)
-            .encode(locktime)
-            .encode(threshold)
-            .encode(addresses)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(groupID, name: "groupID")
+            .encode(payload, name: "payload")
+            .encode(locktime, name: "locktime")
+            .encode(threshold, name: "threshold")
+            .encode(addresses, name: "addresses")
     }
 }
 
@@ -102,10 +102,10 @@ public class NFTMintOutput: Output {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(groupID)
-            .encode(locktime)
-            .encode(threshold)
-            .encode(addresses)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(groupID, name: "groupID")
+            .encode(locktime, name: "locktime")
+            .encode(threshold, name: "threshold")
+            .encode(addresses, name: "addresses")
     }
 }

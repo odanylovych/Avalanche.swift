@@ -30,8 +30,8 @@ public class SECP256K1TransferInput: Input {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(amount)
-            .encode(addressIndices)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(amount, name: "amount")
+            .encode(addressIndices, name: "addressIndices")
     }
 }

@@ -30,6 +30,7 @@ public struct InitialState {
 
 extension InitialState: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(featureExtensionID).encode(outputs)
+        try encoder.encode(featureExtensionID, name: "featureExtensionID")
+            .encode(outputs, name: "outputs")
     }
 }

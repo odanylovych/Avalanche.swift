@@ -27,7 +27,8 @@ public class Credential: AvalancheEncodable {
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID).encode(signatures)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(signatures, name: "signatures")
     }
 }
 

@@ -33,10 +33,10 @@ public struct Validator {
 
 extension Validator: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(nodeID)
-            .encode(startTime)
-            .encode(endTime)
-            .encode(weight)
+        try encoder.encode(nodeID, name: "nodeID")
+            .encode(startTime, name: "startTime")
+            .encode(endTime, name: "endTime")
+            .encode(weight, name: "weight")
     }
 }
 
@@ -50,7 +50,7 @@ public struct Stake {
 
 extension Stake: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(lockedOuts)
+        try encoder.encode(lockedOuts, name: "lockedOuts")
     }
 }
 
@@ -88,10 +88,10 @@ public class AddValidatorTransaction: BaseTransaction {
     
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
-        try encoder.encode(validator)
-            .encode(stake)
-            .encode(rewardsOwner)
-            .encode(shares)
+        try encoder.encode(validator, name: "validator")
+            .encode(stake, name: "stake")
+            .encode(rewardsOwner, name: "rewardsOwner")
+            .encode(shares, name: "shares")
     }
 }
 
@@ -107,7 +107,8 @@ public struct SubnetAuth {
 
 extension SubnetAuth: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID).encode(signatureIndices)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(signatureIndices, name: "signatureIndices")
     }
 }
 
@@ -142,9 +143,9 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
     
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
-        try encoder.encode(validator)
-            .encode(subnetID)
-            .encode(subnetAuth)
+        try encoder.encode(validator, name: "validator")
+            .encode(subnetID, name: "subnetID")
+            .encode(subnetAuth, name: "subnetAuth")
     }
 }
 
@@ -179,9 +180,9 @@ public class AddDelegatorTransaction: BaseTransaction {
     
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
-        try encoder.encode(validator)
-            .encode(stake)
-            .encode(rewardsOwner)
+        try encoder.encode(validator, name: "validator")
+            .encode(stake, name: "stake")
+            .encode(rewardsOwner, name: "rewardsOwner")
     }
 }
 
@@ -210,7 +211,7 @@ public class CreateSubnetTransaction: BaseTransaction {
     
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
-        try encoder.encode(rewardsOwner)
+        try encoder.encode(rewardsOwner, name: "rewardsOwner")
     }
 }
 

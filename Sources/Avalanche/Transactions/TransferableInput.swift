@@ -33,9 +33,9 @@ public struct TransferableInput {
 
 extension TransferableInput: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(transactionID)
-            .encode(utxoIndex)
-            .encode(assetID)
-            .encode(input)
+        try encoder.encode(transactionID, name: "transactionID")
+            .encode(utxoIndex, name: "utxoIndex")
+            .encode(assetID, name: "assetID")
+            .encode(input, name: "input")
     }
 }

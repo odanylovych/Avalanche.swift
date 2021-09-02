@@ -41,10 +41,10 @@ public class CreateAssetTransaction: BaseTransaction {
     
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
-        try encoder.encode(name)
-            .encode(symbol)
-            .encode(denomination)
-            .encode(initialStates)
+        try encoder.encode(name, name: "name")
+            .encode(symbol, name: "symbol")
+            .encode(denomination, name: "denomination")
+            .encode(initialStates, name: "initialStates")
     }
 }
 
@@ -73,7 +73,7 @@ public class OperationTransaction: BaseTransaction {
     
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
-        try encoder.encode(operations)
+        try encoder.encode(operations, name: "operations")
     }
 }
 
@@ -105,7 +105,8 @@ public class ImportTransaction: BaseTransaction {
     
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
-        try encoder.encode(sourceChain).encode(transferableInputs)
+        try encoder.encode(sourceChain, name: "sourceChain")
+            .encode(transferableInputs, name: "transferableInputs")
     }
 }
 
@@ -137,6 +138,7 @@ public class ExportTransaction: BaseTransaction {
     
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
-        try encoder.encode(destinationChain).encode(transferableOutputs)
+        try encoder.encode(destinationChain, name: "destinationChain")
+            .encode(transferableOutputs, name: "transferableOutputs")
     }
 }

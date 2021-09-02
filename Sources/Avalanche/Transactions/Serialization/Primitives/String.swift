@@ -14,7 +14,7 @@ extension String: AvalancheEncodable {
                 self,
                 AvalancheEncoderError.Context(
                     path: encoder.path,
-                    description: "Can't be encoded to UTF8: \(self)"
+                    description: "Can't be encoded to UTF8"
                 )
             )
         }

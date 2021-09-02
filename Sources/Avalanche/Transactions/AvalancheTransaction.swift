@@ -35,9 +35,9 @@ extension SignedAvalancheTransaction: SignedTransaction {
 
 extension SignedAvalancheTransaction: AvalancheEncodable {
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.codecID)
-            .encode(unsignedTransaction)
-            .encode(credentials)
+        try encoder.encode(Self.codecID, name: "codecID")
+            .encode(unsignedTransaction, name: "unsignedTransaction")
+            .encode(credentials, name: "credentials")
     }
 }
 
@@ -82,11 +82,11 @@ public class BaseTransaction: UnsignedAvalancheTransaction {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(networkID)
-            .encode(blockchainID)
-            .encode(outputs)
-            .encode(inputs)
-            .encode(memo)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(networkID, name: "networkID")
+            .encode(blockchainID, name: "blockchainID")
+            .encode(outputs, name: "outputs")
+            .encode(inputs, name: "inputs")
+            .encode(memo, name: "memo")
     }
 }

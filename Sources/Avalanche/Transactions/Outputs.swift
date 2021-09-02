@@ -42,10 +42,10 @@ public class SECP256K1TransferOutput: Output {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID)
-            .encode(amount)
-            .encode(locktime)
-            .encode(threshold)
-            .encode(addresses)
+        try encoder.encode(Self.typeID, name: "typeID")
+            .encode(amount, name: "amount")
+            .encode(locktime, name: "locktime")
+            .encode(threshold, name: "threshold")
+            .encode(addresses, name: "addresses")
     }
 }
