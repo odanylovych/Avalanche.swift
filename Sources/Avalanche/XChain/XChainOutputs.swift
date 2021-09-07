@@ -12,7 +12,6 @@ public class SECP256K1MintOutput: Output {
     
     public let locktime: Date
     public let threshold: UInt32
-    public let addresses: [Address]
     
     public init(locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard threshold <= addresses.count else {
@@ -25,7 +24,7 @@ public class SECP256K1MintOutput: Output {
         }
         self.locktime = locktime
         self.threshold = threshold
-        self.addresses = addresses
+        super.init(addresses: addresses)
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
@@ -43,7 +42,6 @@ public class NFTTransferOutput: Output {
     public let payload: Data
     public let locktime: Date
     public let threshold: UInt32
-    public let addresses: [Address]
     
     public init(groupID: UInt32, payload: Data, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard payload.count <= 1024 else {
@@ -65,7 +63,7 @@ public class NFTTransferOutput: Output {
         self.payload = payload
         self.locktime = locktime
         self.threshold = threshold
-        self.addresses = addresses
+        super.init(addresses: addresses)
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
@@ -84,7 +82,6 @@ public class NFTMintOutput: Output {
     public let groupID: UInt32
     public let locktime: Date
     public let threshold: UInt32
-    public let addresses: [Address]
     
     public init(groupID: UInt32, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard threshold <= addresses.count else {
@@ -98,7 +95,7 @@ public class NFTMintOutput: Output {
         self.groupID = groupID
         self.locktime = locktime
         self.threshold = threshold
-        self.addresses = addresses
+        super.init(addresses: addresses)
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {

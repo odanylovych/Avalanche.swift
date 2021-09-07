@@ -7,8 +7,19 @@
 
 import Foundation
 
-public class UnsignedAvalancheTransaction: AvalancheEncodable {
+public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodable {
+    public typealias Addr = Address
+    public typealias Signed = SignedAvalancheTransaction
+    
     public class var typeID: TypeID { fatalError("Not supported") }
+    
+    public func utxoAddressIndices() -> [(TransactionID, UInt32, [UInt32])] {
+        fatalError("Not supported")
+    }
+    
+    public func toSigned(signatures: Dictionary<Address, Signature>) throws -> SignedAvalancheTransaction {
+        fatalError("Not supported")
+    }
     
     public func encode(in encoder: AvalancheEncoder) throws {
         fatalError("Not supported")
@@ -38,6 +49,41 @@ extension SignedAvalancheTransaction: AvalancheEncodable {
         try encoder.encode(Self.codecID, name: "codecID")
             .encode(unsignedTransaction, name: "unsignedTransaction")
             .encode(credentials, name: "credentials")
+    }
+}
+
+public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
+    public typealias Addr = Address
+    public typealias Signed = SignedAvalancheTransaction
+    
+    public let transaction: UnsignedAvalancheTransaction
+    public let pathes: Dictionary<Addr, Bip32Path>
+    public let utxoAddresses: [[Addr]]
+    
+    public init(transaction: UnsignedAvalancheTransaction, utxos: [UTXO], pathes: Dictionary<Addr, Bip32Path>) {
+        self.transaction = transaction
+        self.pathes = pathes
+        utxoAddresses = transaction.utxoAddressIndices().map { transactionID, utxoIndex, addressIndices in
+            let utxo = utxos.first(where: { $0.transactionId == transactionID && $0.utxoIndex == utxoIndex })!
+            return addressIndices.map { utxo.output.addresses[Int($0)] }
+        }
+    }
+    
+    public func toSigned(signatures: Dictionary<Addr, Signature>) throws -> SignedAvalancheTransaction {
+        return SignedAvalancheTransaction(
+            unsignedTransaction: transaction,
+            credentials: utxoAddresses.map { addresses in
+                SECP256K1Credential(signatures: addresses.map { signatures[$0]! })
+            }
+        )
+    }
+    
+    public func serialized() throws -> Data {
+        try AEncoder().encode(transaction).output
+    }
+    
+    public func signingAddresses() throws -> [Addr.Extended] {
+        try Set(utxoAddresses.flatMap { $0 }).map { try $0.extended(path: pathes[$0]!) }
     }
 }
 
@@ -79,6 +125,10 @@ public class BaseTransaction: UnsignedAvalancheTransaction {
         self.outputs = outputs
         self.inputs = inputs
         self.memo = memo
+    }
+    
+    override public func utxoAddressIndices() -> [(TransactionID, UInt32, [UInt32])] {
+        inputs.map { ($0.transactionID, $0.utxoIndex, ($0.input as! SECP256K1TransferInput).addressIndices)}
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {

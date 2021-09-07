@@ -12,7 +12,6 @@ public class SECP256K1OutputOwners: Output {
     
     public let locktime: Date
     public let threshold: UInt32
-    public let addresses: [Address]
     
     public init(locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard threshold <= addresses.count else {
@@ -25,7 +24,7 @@ public class SECP256K1OutputOwners: Output {
         }
         self.locktime = locktime
         self.threshold = threshold
-        self.addresses = addresses
+        super.init(addresses: addresses)
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {

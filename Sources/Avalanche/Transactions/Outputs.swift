@@ -10,6 +10,12 @@ import Foundation
 public class Output: AvalancheEncodable {
     public class var typeID: TypeID { fatalError("Not supported") }
     
+    public let addresses: [Address]
+    
+    public init(addresses: [Address]) {
+        self.addresses = addresses
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         fatalError("Not supported")
     }
@@ -21,7 +27,6 @@ public class SECP256K1TransferOutput: Output {
     public let amount: UInt64
     public let locktime: Date
     public let threshold: UInt32
-    public let addresses: [Address]
     
     public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard amount > 0 else {
@@ -38,7 +43,7 @@ public class SECP256K1TransferOutput: Output {
         self.amount = amount
         self.locktime = locktime
         self.threshold = threshold
-        self.addresses = addresses
+        super.init(addresses: addresses)
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
