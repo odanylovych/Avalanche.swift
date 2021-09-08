@@ -8,7 +8,7 @@
 import Foundation
 import BigInt
 
-public class AvalanchePChainApiInfo: AvalancheBaseApiInfo {
+public class AvalanchePChainApiInfo: AvalancheBaseVMApiInfo {
     public let txFee: BigUInt
     public let creationTxFee: BigUInt
     public let minConsumption: Double

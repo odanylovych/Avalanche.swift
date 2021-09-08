@@ -18,6 +18,10 @@ public struct AvalancheInfoApiInfo: AvalancheApiInfo {
 public class AvalancheInfoApi: AvalancheApi {
     public typealias Info = AvalancheInfoApiInfo
     
+    public let networkID: NetworkID
+    public let hrp: String
+    public let info: Info
+    
     private let service: Client
     
     public required init(avalanche: AvalancheCore,
@@ -25,6 +29,10 @@ public class AvalancheInfoApi: AvalancheApi {
                          hrp: String,
                          info: AvalancheInfoApiInfo)
     {
+        self.networkID = networkID
+        self.hrp = hrp
+        self.info = info
+        
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
         

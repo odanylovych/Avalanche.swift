@@ -16,12 +16,13 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     public typealias Info = AvalanchePChainApiInfo
     public typealias Keychain = AvalanchePChainApiAddressManager
     
-    private let service: Client
     private let addressManager: AvalancheAddressManager?
-    private let queue: DispatchQueue
+    internal let service: Client
+    internal let queue: DispatchQueue
     
-    public let info: Info
+    public let networkID: NetworkID
     public let hrp: String
+    public let info: Info
     
     public var keychain: AvalanchePChainApiAddressManager? {
         addressManager.map {
@@ -39,6 +40,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         self.addressManager = avalanche.addressManager
         self.info = info
         self.hrp = hrp
+        self.networkID = networkID
         self.queue = settings.queue
         
         let url = avalanche.url(path: info.apiPath)
@@ -66,7 +68,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     public func addDelegator(
         nodeID: NodeID, startTime: Date, endTime: Date, stakeAmount: UInt64,
         reward: Address, from: Array<Address>? = nil, change: Address? = nil,
-        credentials: VmApiCredentials,
+        credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
     ) {
         switch credentials {
@@ -87,9 +89,9 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                     .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
             }
         case .account(let account):
-            // TODO: Build and execute TX.
-            // Extended Addresses can be obtained from self.keychain
-            fatalError("Not implemented")
+            txAddDelegator(nodeID: nodeID, startTime: startTime, endTime: endTime,
+                           stakeAmount: stakeAmount, reward: reward,
+                           from: from, change: change, account: account, cb)
         }
     }
     
@@ -103,7 +105,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     }
     
     public func createAddress(
-        credentials: VmApiCredentials,
+        credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<Address>) {
         switch credentials {
         case .password(username: let user, password: let pass):
@@ -116,7 +118,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         case .account(let account):
             self.queue.async {
                 guard let kc = keychain else {
-                    cb(.failure(.emptyAddressManager))
+                    cb(.failure(.nilAddressManager))
                     return
                 }
                 cb(.success(kc.newAddress(for: account)))
@@ -140,7 +142,11 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         public let address: String
     }
     
-    public func getUTXOs() {
+    public func getTransaction(id: TransactionID, result: @escaping ApiCallback<SignedAvalancheTransaction>) {
+        
+    }
+    
+    public func getUTXOs(addresses: [Address], limit: UInt32?, startIndex: UTXOIndex?, sourceChain: String?, result: @escaping ApiCallback<(fetched: UInt32, utxos: [UTXO], endIndex: UTXOIndex)>) {
         
     }
 }

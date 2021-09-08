@@ -11,50 +11,113 @@ public enum AvalancheAddressManagerError: Error {
     case addressNotFound(address: String)
 }
 
-public typealias AddressUsedFilterCallback<A: AddressProtocol> =
-    ([A], @escaping ApiCallback<[A]>) -> Void
-
 public protocol AvalancheAddressManager: AnyObject {
+    func start(avalanche: AvalancheCore)
+    
     func accounts(
         type: AvalancheSignatureProviderAccountRequestType,
         forceUpdate: Bool,
         _ cb: @escaping (AvalancheSignatureProviderResult<AvalancheSignatureProviderAccounts>) -> Void
     )
     
-    func addresses(avm account: Account,
-                   chainId: String, hrp: String,
-                   change: Bool) -> [Address]
+    func addresses<A: AvalancheVMApi>(avm api: A,
+                                      account: Account,
+                                      change: Bool) -> [Address]
     
-    func newAddresses(avm account: Account,
-                      chainId: String, hrp: String,
-                      change: Bool, count: Int) -> [Address]
+    func newAddresses<A: AvalancheVMApi>(avm api: A,
+                                         account: Account,
+                                         change: Bool,
+                                         count: Int) -> [Address]
     
     func extended(avm addresses: [Address]) throws -> [ExtendedAddress]
     func extended(eth addresses: [EthAddress]) throws -> [EthAccount]
     
-    func fetchMoreAddresses(avm account: Account,
-                            chainId: String, hrp: String, change: Bool,
-                            filter: @escaping AddressUsedFilterCallback<Address>)
+    func fetchAddresses<A: AvalancheVMApi>(avm api: A,
+                                           account: Account,
+                                           change: Bool,
+                                           result: ApiCallback<Void>?)
+}
+
+public protocol AvalancheApiAddressManager {
+    associatedtype Acct: AccountProtocol
+  
+    func accounts(result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void)
+    func accounts(forceUpdate: Bool,
+                  result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void)
+    func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended]
+}
+
+public protocol AvalancheApiUTXOAddressManager: AvalancheApiAddressManager {
+    func addresses(for account: Acct, change: Bool) -> [Acct.Addr]
+    
+    func newAddress(for account: Acct) -> Acct.Addr
+    
+    func newChange(for account: Acct) -> Acct.Addr
+    func randomChange(for account: Acct) -> Acct.Addr
+    
+    func newAddresses(for account: Acct, change: Bool, count: Int) -> [Acct.Addr]
+    
+    func fetchAddresses(for account: Acct,
+                        result: ApiCallback<[Acct.Addr]>?)
+    func fetchAddresses(for account: Acct, change: Bool,
+                        result: ApiCallback<[Acct.Addr]>?)
+}
+
+public extension AvalancheApiUTXOAddressManager {
+    func newAddress(for account: Acct) -> Acct.Addr {
+        newAddresses(for: account, change: false, count: 1)[0]
+    }
+    
+    func newChange(for account: Acct) -> Acct.Addr {
+        newAddresses(for: account, change: true, count: 1)[0]
+    }
+    
+    func randomChange(for account: Acct) -> Acct.Addr {
+        let addresses = self.addresses(for: account, change: true)
+        if addresses.count == 0 {
+            return newChange(for: account)
+        }
+        return addresses.randomElement()!
+    }
+    
+    func fetchAddresses(for account: Acct,
+                        result: ApiCallback<[Acct.Addr]>?)
+    {
+        fetchAddresses(for: account, change: false) {
+            switch $0 {
+            case .failure(let err): result?(.failure(err))
+            case .success(let addresses):
+                fetchAddresses(for: account, change: true) {
+                    result?($0.map{ addresses + $0 })
+                }
+            }
+        }
+    }
 }
 
 public class AvalancheDefaultAddressManager: AvalancheAddressManager {
+    public private (set) weak var avalanche: AvalancheCore!
+
     public let signer: AvalancheSignatureProvider
-    public let queue: DispatchQueue
     
+    private var queue: DispatchQueue { avalanche.settings.queue }
     private var accountsCache: AvalancheSignatureProviderAccounts?
     private var syncQueue: DispatchQueue
     private var addresses: Dictionary<Account, Dictionary<Address, Bip32Path>>
     
-    public init(signer: AvalancheSignatureProvider, queue: DispatchQueue) {
+    public init(signer: AvalancheSignatureProvider) {
         self.signer = signer
         self.accountsCache = nil
-        self.queue = .global()
         self.syncQueue = DispatchQueue(
             label: "address.manager.internal.sync.queue",
             qos: .userInitiated,
             target: .global(qos: .userInitiated)
         )
         self.addresses = [:]
+    }
+    
+    public func start(avalanche: AvalancheCore) {
+        self.avalanche = avalanche
     }
     
     public func accounts(
@@ -92,34 +155,33 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
         returnAccounts(accounts)
     }
     
-    public func addresses(avm account: Account,
-                          chainId: String,
-                          hrp: String,
-                          change: Bool) -> [Address] {
+    public func addresses<A: AvalancheVMApi>(avm api: A,
+                                             account: Account,
+                                             change: Bool) -> [Address]
+     {
         self.syncQueue.sync {
             guard let addresses = self.addresses[account] else {
                 return []
             }
             return addresses
                 .filter {
-                    $0.key.chainId == chainId
-                        && $0.key.hrp == hrp
+                    $0.key.chainId == api.info.chainId
+                        && $0.key.hrp == api.hrp
                         && $0.value.isChange == change
                 }
                 .map { $0.key }
         }
     }
     
-    public func newAddresses(avm account: Account,
-                             chainId: String,
-                             hrp: String,
-                             change: Bool,
-                             count: Int) -> [Address] {
+    public func newAddresses<A: AvalancheVMApi>(avm api: A,
+                                                account: Account,
+                                                change: Bool,
+                                                count: Int) -> [Address] {
         let from = lastAddressIndex(
-            avm: account, chainId: chainId, hrp: hrp, change: change
+            avm: account, chainId: api.info.chainId, hrp: api.hrp, change: change
         ) + 1
         let newAddresses = generateMoreAddresses(
-            avm: account, chainId: chainId, hrp: hrp, change: change, from: from, count: count
+            avm: account, chainId: api.info.chainId, hrp: api.hrp, change: change, from: from, count: count
         )
         self.syncQueue.sync {
             var addresses = self.addresses[account] ?? [:]
@@ -162,15 +224,19 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
         }
     }
     
-    public func fetchMoreAddresses(
-        avm account: Account,
-        chainId: String, hrp: String, change: Bool,
-        filter: @escaping AddressUsedFilterCallback<Address>
-    ) {
+    public func fetchAddresses<A: AvalancheVMApi>(
+        avm api: A, account: Account,
+        change: Bool, result: ApiCallback<Void>?)
+    {
         let from = lastAddressIndex(
-            avm: account, chainId: chainId, hrp: hrp, change: change
+            avm: account, chainId: api.info.chainId, hrp: api.hrp, change: change
         ) + 1
-        // TODO: IMPLEMENT
+        
+        // TODO: IMPLEMENT. Should fetch addresses till 20 empty addresses.
+        let iterator = avalanche.utxoProvider.utxos(api: api, addresses: [], forceUpdate: true)
+        iterator.next(limit: 100) { _ in
+            
+        }
     }
     
     private func lastAddressIndex(avm account: Account,
@@ -203,48 +269,5 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
             newAddresses.append(extended)
         }
         return newAddresses
-    }
-}
-
-public protocol AvalancheApiAddressManager {
-    associatedtype Acct: AccountProtocol
-  
-    func accounts(result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void)
-    func accounts(forceUpdate: Bool,
-                  result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void)
-    func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended]
-}
-
-public protocol AvalancheApiUTXOAddressManager: AvalancheApiAddressManager {
-    func addresses(for account: Acct, change: Bool) -> [Acct.Addr]
-    func newAddress(for account: Acct) -> Acct.Addr
-    func newChange(for account: Acct) -> Acct.Addr
-    func newAddresses(for account: Acct, change: Bool, count: Int) -> [Acct.Addr]
-    
-    func fetchMoreAddresses(for account: Acct, change: Bool, maxCount: Int,
-                            result: @escaping ApiCallback<[Acct.Addr]>)
-    func fetchMoreAddresses(for account: Acct, maxCount: Int,
-                            result: @escaping ApiCallback<[Acct.Addr]>)
-}
-
-public extension AvalancheApiUTXOAddressManager {
-    func newAddress(for account: Acct) -> Acct.Addr {
-        newAddresses(for: account, change: false, count: 1)[0]
-    }
-    func newChange(for account: Acct) -> Acct.Addr {
-        newAddresses(for: account, change: true, count: 1)[0]
-    }
-    
-    func fetchMoreAddresses(for account: Acct, maxCount: Int,
-                            result: @escaping ApiCallback<[Acct.Addr]>) {
-        fetchMoreAddresses(for: account, change: false, maxCount: maxCount) {
-            switch $0 {
-            case .failure(let err): result(.failure(err))
-            case .success(let addresses):
-                fetchMoreAddresses(for: account, change: true, maxCount: maxCount) {
-                    result($0.map{ addresses + $0 })
-                }
-            }
-        }
     }
 }

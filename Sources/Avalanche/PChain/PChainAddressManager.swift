@@ -38,26 +38,26 @@ public struct AvalanchePChainApiAddressManager: AvalancheApiUTXOAddressManager {
     }
     
     public func addresses(for account: Acct, change: Bool) -> [Acct.Addr] {
-        manager.addresses(avm: account,
-                          chainId: api.info.chainId,
-                          hrp: api.hrp,
+        manager.addresses(avm: api,
+                          account: account,
                           change: change)
     }
     
     public func newAddresses(for account: Acct,
                              change: Bool,
                              count: Int) -> [Acct.Addr] {
-        manager.newAddresses(avm: account,
-                              chainId: api.info.chainId,
-                              hrp: api.hrp,
-                              change: change,
-                              count: count)
+        manager.newAddresses(avm: api,
+                             account: account,
+                             change: change,
+                             count: count)
     }
     
-    public func fetchMoreAddresses(
-        for account: Acct, change: Bool, maxCount: Int,
-        result: @escaping ApiCallback<[Acct.Addr]>
+    public func fetchAddresses(
+        for account: Acct, change: Bool,
+        result: ApiCallback<[Acct.Addr]>?
     ) {
-        //TODO: Implement
+        manager.fetchAddresses(avm: api, account: account, change: change) { res in
+            result?(res.map { self.addresses(for: account, change: change) })
+        }
     }
 }

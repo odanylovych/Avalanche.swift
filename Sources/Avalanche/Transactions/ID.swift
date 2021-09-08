@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol ID: AvalancheEncodable {
+public protocol ID: AvalancheEncodable, Hashable {
     static var size: Int { get }
 
     var raw: Data { get }

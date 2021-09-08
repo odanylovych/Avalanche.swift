@@ -18,6 +18,10 @@ public struct AvalancheMetricsApiInfo: AvalancheApiInfo {
 public class AvalancheMetricsApi: AvalancheApi {
     public typealias Info = AvalancheMetricsApiInfo
     
+    public let networkID: NetworkID
+    public let hrp: String
+    public let info: Info
+    
     private let connection: SingleShotConnection
     private let decoder: ContentDecoder
     
@@ -26,6 +30,10 @@ public class AvalancheMetricsApi: AvalancheApi {
                          hrp: String,
                          info: AvalancheMetricsApiInfo)
     {
+        self.info = info
+        self.hrp = hrp
+        self.networkID = networkID
+        
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
         

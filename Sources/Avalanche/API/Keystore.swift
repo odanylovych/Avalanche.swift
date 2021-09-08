@@ -17,6 +17,10 @@ public struct AvalancheKeystoreApiInfo: AvalancheApiInfo {
 
 public class AvalancheKeystoreApi: AvalancheApi {
     public typealias Info = AvalancheKeystoreApiInfo
+    
+    public let networkID: NetworkID
+    public let hrp: String
+    public let info: Info
 
     private let service: Client
 
@@ -25,6 +29,10 @@ public class AvalancheKeystoreApi: AvalancheApi {
                          hrp: String,
                          info: AvalancheKeystoreApiInfo)
     {
+        self.info = info
+        self.hrp = hrp
+        self.networkID = networkID
+        
         let settings = avalanche.settings
         let url = avalanche.url(path: info.apiPath)
             

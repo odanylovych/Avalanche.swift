@@ -10,6 +10,10 @@ import Foundation
 public protocol AvalancheApi {
     associatedtype Info: AvalancheApiInfo
     
+    var networkID: NetworkID { get }
+    var hrp: String { get }
+    var info: Info { get }
+    
     init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info)
     
     static var id: String { get }
@@ -29,6 +33,19 @@ public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
     associatedtype Keychain: AvalancheApiAddressManager
     
     var keychain: Keychain? { get }
+    
+    func getTransaction(id: TransactionID,
+                        result: @escaping ApiCallback<SignedAvalancheTransaction>)
+    
+    func getUTXOs(
+        addresses: [Keychain.Acct.Addr],
+        limit: UInt32?,
+        startIndex: UTXOIndex?,
+        sourceChain: String?,
+        result: @escaping ApiCallback<(fetched: UInt32,
+                                       utxos: [UTXO],
+                                       endIndex: UTXOIndex)>)
+    
 }
 
 public protocol AvalancheVMApiInfo: AvalancheApiInfo {
@@ -45,12 +62,14 @@ extension AvalancheVMApiInfo {
     }
 }
 
-public class AvalancheBaseApiInfo: AvalancheVMApiInfo {
+public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
     public let blockchainID: BlockchainID
     public let alias: String?
     public let vm: String
     
-    public init(blockchainID: BlockchainID, alias: String?, vm: String) {
+    public init(blockchainID: BlockchainID,
+                alias: String?, vm: String)
+    {
         self.blockchainID = blockchainID
         self.alias = alias
         self.vm = vm
@@ -61,7 +80,7 @@ public class AvalancheBaseApiInfo: AvalancheVMApiInfo {
     }
 }
 
-public enum VmApiCredentials: Equatable, Hashable {
+public enum AvalancheVmApiCredentials: Equatable, Hashable {
     case password(username: String, password: String)
     case account(Account)
     

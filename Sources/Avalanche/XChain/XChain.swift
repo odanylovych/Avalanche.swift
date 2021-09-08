@@ -11,7 +11,7 @@ import BigInt
 import RPC
 #endif
 
-public class AvalancheXChainApiInfo: AvalancheBaseApiInfo {
+public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
     public let txFee: BigUInt
     public let creationTxFee: BigUInt
     
@@ -34,11 +34,19 @@ public class AvalancheXChainApi: AvalancheApi {
     
     public let keychain: AvalancheAddressManager?
     
+    public let networkID: NetworkID
+    public let hrp: String
+    public let info: Info
+    
     private let service: Client
     private let vmService: Client
     
 
     public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
+        self.networkID = networkID
+        self.hrp = hrp
+        self.info = info
+        
         self.keychain = avalanche.addressManager
         let settings = avalanche.settings
         

@@ -20,7 +20,8 @@ public enum AvalancheApiError: Error {
     case malformed(field: String, description: String)
     case cb58DecodingFailed(field: String)
     case addressNotFound(address: String)
-    case emptyAddressManager
+    case methodIsNotSupported(method: String)
+    case nilAddressManager
     
     public init<P: Encodable>(request: RequestError<P, SerializableValue>) {
         switch request {
@@ -43,6 +44,15 @@ public enum ApiDataEncoding: String, Encodable, Decodable {
     
     case cb58 = "cb58"
     case hex = "hex"
+}
+
+public struct UTXOIndex: Codable {
+    public let address: String
+    public let utxo: String
+}
+
+extension CodingUserInfoKey {
+    public static let avaDataEncoding = CodingUserInfoKey(rawValue: "AvalancheDataEncoding")!
 }
 
 struct SuccessResponse: Decodable {

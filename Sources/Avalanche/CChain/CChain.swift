@@ -9,7 +9,7 @@ import Foundation
 import BigInt
 //import RPC
 
-public class AvalancheCChainApiInfo: AvalancheBaseApiInfo {
+public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
     public let gasPrice: BigUInt
     public let chainId: UInt32
     
@@ -38,6 +38,10 @@ public class AvalancheCChainApi: AvalancheApi {
         let subscription: String
     }
     
+    public let networkID: NetworkID
+    public let hrp: String
+    public let info: Info
+    
     private var subscriptions: Dictionary<String, (Data) -> Void>
     private var subscriptionId: UInt?
     //FIX: public let network: AvalancheSubscribableRpcConnection
@@ -45,6 +49,10 @@ public class AvalancheCChainApi: AvalancheApi {
     
     public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         //FIX: self.network = avalanche.connections.wsRpcConnection(for: info.wsApiPath)
+        self.hrp = hrp
+        self.networkID = networkID
+        self.info = info
+        
         self.keychain = avalanche.addressManager
         self.subscriptions = [:]
         self.subscriptionId = nil
