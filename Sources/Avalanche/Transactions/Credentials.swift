@@ -22,7 +22,7 @@ public class Credential: AvalancheEncodable {
     
     public let signatures: [Signature]
     
-    public init(signatures: [Signature]) {
+    required public init(signatures: [Signature]) {
         self.signatures = signatures
     }
     
