@@ -13,7 +13,7 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
     
     public class var typeID: TypeID { fatalError("Not supported") }
     
-    public func utxoAddressIndices() -> [(TransactionID, UInt32, [UInt32])] {
+    public func utxoAddressIndices() -> [(TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])] {
         fatalError("Not supported")
     }
     
@@ -60,11 +60,13 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     public let pathes: Dictionary<Addr, Bip32Path>
     public let utxoAddresses: [[Addr]]
     
-    public init(transaction: UnsignedAvalancheTransaction, utxos: [UTXO], pathes: Dictionary<Addr, Bip32Path>) {
+    public init(transaction: UnsignedAvalancheTransaction, utxos: [UTXO], pathes: Dictionary<Addr, Bip32Path>) throws {
         self.transaction = transaction
         self.pathes = pathes
-        utxoAddresses = transaction.utxoAddressIndices().map { transactionID, utxoIndex, addressIndices in
-            let utxo = utxos.first(where: { $0.transactionId == transactionID && $0.utxoIndex == utxoIndex })!
+        utxoAddresses = try transaction.utxoAddressIndices().map { transactionID, utxoIndex, addressIndices in
+            guard let utxo = utxos.first(where: { $0.transactionId == transactionID && $0.utxoIndex == utxoIndex }) else {
+                throw ExtendedAvalancheTransactionError.noSuchUtxo(transactionID, utxoIndex: utxoIndex, in: utxos)
+            }
             return addressIndices.map { utxo.output.addresses[Int($0)] }
         }
     }
@@ -72,8 +74,13 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     public func toSigned(signatures: Dictionary<Addr, Signature>) throws -> SignedAvalancheTransaction {
         return SignedAvalancheTransaction(
             unsignedTransaction: transaction,
-            credentials: utxoAddresses.map { addresses in
-                SECP256K1Credential(signatures: addresses.map { signatures[$0]! })
+            credentials: try utxoAddresses.map { addresses in
+                SECP256K1Credential(signatures: try addresses.map { address in
+                    guard let signature = signatures[address] else {
+                        throw ExtendedAvalancheTransactionError.noSuchSignature(address, in: signatures)
+                    }
+                    return signature
+                })
             }
         )
     }
@@ -83,7 +90,12 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     }
     
     public func signingAddresses() throws -> [Addr.Extended] {
-        try Set(utxoAddresses.flatMap { $0 }).map { try $0.extended(path: pathes[$0]!) }
+        try Set(utxoAddresses.flatMap { $0 }).map { address in
+            guard let path = pathes[address] else {
+                throw ExtendedAvalancheTransactionError.noSuchPath(address, in: pathes)
+            }
+            return try address.extended(path: path)
+        }
     }
 }
 
@@ -127,7 +139,7 @@ public class BaseTransaction: UnsignedAvalancheTransaction {
         self.memo = memo
     }
     
-    override public func utxoAddressIndices() -> [(TransactionID, UInt32, [UInt32])] {
+    override public func utxoAddressIndices() -> [(TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])] {
         inputs.map { ($0.transactionID, $0.utxoIndex, ($0.input as! SECP256K1TransferInput).addressIndices)}
     }
     
