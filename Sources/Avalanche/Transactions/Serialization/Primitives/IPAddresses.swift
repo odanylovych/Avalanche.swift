@@ -23,7 +23,7 @@ public struct IPv4Address: Equatable {
 
 extension IPv4Address: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let _ = try decoder.read(count: 12)
+        let _ = try Data(from: decoder, size: 12)
         host = (
             try UInt8(from: decoder),
             try UInt8(from: decoder),

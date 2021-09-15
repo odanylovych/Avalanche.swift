@@ -277,9 +277,9 @@ final class TransactionsTests: AvalancheTestCase {
     }
 
     func testEncodeString() throws {
-        try encodeTest(
-            actual: "Avax",
-            expected: [0x00, 0x04, 0x41, 0x76, 0x61, 0x78]
+        try encodeDecodeTest(
+            value: "Avax",
+            bytes: [0x00, 0x04, 0x41, 0x76, 0x61, 0x78]
         )
     }
     

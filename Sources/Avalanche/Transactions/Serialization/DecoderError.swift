@@ -9,4 +9,5 @@ import Foundation
 
 public enum AvalancheDecoderError: Error {
     case noDataLeft
+    case dataCorrupted(Any, description: String)
 }
