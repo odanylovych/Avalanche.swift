@@ -15,8 +15,15 @@ public protocol AvalancheFixedDecodable {
     init(from decoder: AvalancheDecoder, size: Int) throws
 }
 
+public protocol AvalancheDecoderContext {
+    var hrp: String { get }
+    var chainId: String { get }
+}
+
 public protocol AvalancheDecoder {
-    init(data: Data)
+    var context: AvalancheDecoderContext { get }
+    
+    init(context: AvalancheDecoderContext, data: Data)
     
     func decode<T: AvalancheDecodable>() throws -> T
     func decode<T: AvalancheFixedDecodable>(size: Int) throws -> T
@@ -34,10 +41,12 @@ extension AvalancheDecoder {
 }
 
 class ADecoder: AvalancheDecoder {
+    var context: AvalancheDecoderContext
     private let data: Data
     private var position: Int
     
-    required init(data: Data) {
+    required init(context: AvalancheDecoderContext, data: Data) {
+        self.context = context
         self.data = data
         position = 0
     }

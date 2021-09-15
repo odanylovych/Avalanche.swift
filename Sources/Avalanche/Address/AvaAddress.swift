@@ -115,7 +115,12 @@ public struct Address: AddressProtocol, Equatable, Hashable {
     }
 }
 
-extension Address: AvalancheEncodable {
+extension Address: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        let raw = try Data(from: decoder, size: Self.rawAddressSize)
+        try self.init(raw: raw, hrp: decoder.context.hrp, chainId: decoder.context.chainId)
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(rawAddress, size: Self.rawAddressSize)
     }

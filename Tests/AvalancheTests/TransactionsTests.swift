@@ -10,6 +10,23 @@ import XCTest
 @testable import Avalanche
 
 final class TransactionsTests: AvalancheTestCase {
+    private let hrp = "avax"
+    private let chainId = "X"
+    
+    struct TestAvalancheDecoderContext: AvalancheDecoderContext {
+        let hrp: String
+        let chainId: String
+        
+        init(hrp: String, chainId: String) {
+            self.hrp = hrp
+            self.chainId = chainId
+        }
+    }
+    
+    private func decoderContext() -> AvalancheDecoderContext {
+        TestAvalancheDecoderContext(hrp: hrp, chainId: chainId)
+    }
+    
     private func exampleTransferableOutput() throws -> TransferableOutput {
         try TransferableOutput(
             assetId: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
@@ -23,8 +40,8 @@ final class TransactionsTests: AvalancheTestCase {
             locktime: Date(timeIntervalSince1970: 54321),
             threshold: 1,
             addresses: [
-                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: hrp, chainId: chainId),
+                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: hrp, chainId: chainId),
             ]
         )
     }
@@ -34,8 +51,8 @@ final class TransactionsTests: AvalancheTestCase {
             locktime: Date(timeIntervalSince1970: 54321),
             threshold: 1,
             addresses: [
-                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: hrp, chainId: chainId),
+                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: hrp, chainId: chainId),
             ]
         )
     }
@@ -82,13 +99,13 @@ final class TransactionsTests: AvalancheTestCase {
                 addresses: [
                     Address(
                         raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!,
-                        hrp: "avax",
-                        chainId: "X"
+                        hrp: hrp,
+                        chainId: chainId
                     ),
                     Address(
                         raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!,
-                        hrp: "avax",
-                        chainId: "X"
+                        hrp: hrp,
+                        chainId: chainId
                     ),
                 ]
             )
@@ -129,7 +146,7 @@ final class TransactionsTests: AvalancheTestCase {
                 locktime: Date(timeIntervalSince1970: 0),
                 threshold: 1,
                 addresses: [
-                    Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: "avax", chainId: "P")
+                    Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: hrp, chainId: "P")
                 ]
             )
         )
@@ -151,7 +168,7 @@ final class TransactionsTests: AvalancheTestCase {
         try SECP256K1OutputOwners(
             locktime: Date(timeIntervalSince1970: 0),
             threshold: 1,
-            addresses: [Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: "avax", chainId: "P")]
+            addresses: [Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: chainId, chainId: "P")]
         )
     }
     
@@ -194,14 +211,14 @@ final class TransactionsTests: AvalancheTestCase {
     private func encodeDecodeTest<T: Equatable & AvalancheCodable>(value: T, bytes: [UInt8]) throws {
         let encoded = Array(try AEncoder().encode(value).output)
         XCTAssertEqual(encoded, bytes)
-        let decoded = try ADecoder(data: Data(bytes)).decode(T.self)
+        let decoded = try ADecoder(context: decoderContext(), data: Data(bytes)).decode(T.self)
         XCTAssertEqual(decoded, value)
     }
     
     private func encodeDecodeFixedTest<T: Equatable & AvalancheFixedCodable>(value: T, bytes: [UInt8], size: Int) throws {
         let encoded = Array(try AEncoder().encode(value, size: size).output)
         XCTAssertEqual(encoded, bytes)
-        let decoded = try ADecoder(data: Data(bytes)).decode(T.self, size: size)
+        let decoded = try ADecoder(context: decoderContext(), data: Data(bytes)).decode(T.self, size: size)
         XCTAssertEqual(decoded, value)
     }
     
@@ -233,7 +250,7 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
 
-    func testEncodeIPAddresses() throws {
+    func testEncodeDecodeIPAddresses() throws {
         try encodeDecodeTest(
             value: IPv4Address(host: (127, 0, 0, 1), port: 9650),
             bytes: [
@@ -252,7 +269,7 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
 
-    func testEncodeFixedLengthArray() throws {
+    func testEncodeDecodeFixedLengthArray() throws {
         try encodeDecodeFixedTest(
             value: [UInt8(0x01), UInt8(0x02)],
             bytes: [0x01, 0x02],
@@ -265,7 +282,7 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
 
-    func testEncodeVariableLengthArray() throws {
+    func testEncodeDecodeVariableLengthArray() throws {
         try encodeDecodeTest(
             value: [UInt8(0x01), UInt8(0x02)],
             bytes: [0x00, 0x00, 0x00, 0x02, 0x01, 0x02]
@@ -276,7 +293,7 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
 
-    func testEncodeString() throws {
+    func testEncodeDecodeString() throws {
         try encodeDecodeTest(
             value: "Avax",
             bytes: [0x00, 0x04, 0x41, 0x76, 0x61, 0x78]
@@ -305,7 +322,7 @@ final class TransactionsTests: AvalancheTestCase {
             ]
         )
     }
-    
+
     func testEncodeSECP256K1TransferOutput() throws {
         try encodeTest(
             actual: exampleSECP256K1TransferOutput(),
@@ -364,8 +381,8 @@ final class TransactionsTests: AvalancheTestCase {
                 locktime: Date(timeIntervalSince1970: 54321),
                 threshold: 1,
                 addresses: [
-                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: hrp, chainId: chainId),
+                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: hrp, chainId: chainId),
                 ]
             ),
             expected: [
@@ -402,8 +419,8 @@ final class TransactionsTests: AvalancheTestCase {
                 locktime: Date(timeIntervalSince1970: 54321),
                 threshold: 1,
                 addresses: [
-                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: hrp, chainId: chainId),
+                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: hrp, chainId: chainId),
                 ]
             ),
             expected: [
@@ -523,8 +540,8 @@ final class TransactionsTests: AvalancheTestCase {
                         addresses: [
                             Address(
                                 raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!,
-                                hrp: "avax",
-                                chainId: "X"
+                                hrp: hrp,
+                                chainId: chainId
                             ),
                         ]
                     )
@@ -1270,7 +1287,7 @@ final class TransactionsTests: AvalancheTestCase {
                             locktime: Date(timeIntervalSince1970: 0),
                             threshold: 1,
                             addresses: [
-                                Address(raw: Data(hex: "0x3cb7d3842e8cee6a0ebd09f1fe884f6861e1b29c")!, hrp: "avax", chainId: "P")
+                                Address(raw: Data(hex: "0x3cb7d3842e8cee6a0ebd09f1fe884f6861e1b29c")!, hrp: hrp, chainId: "P")
                             ]
                         )
                     )
@@ -1432,7 +1449,7 @@ final class TransactionsTests: AvalancheTestCase {
                             locktime: Date(timeIntervalSince1970: 0),
                             threshold: 1,
                             addresses: [
-                                Address(raw: Data(hex: "0x3cb7d3842e8cee6a0ebd09f1fe884f6861e1b29c")!, hrp: "avax", chainId: "P")
+                                Address(raw: Data(hex: "0x3cb7d3842e8cee6a0ebd09f1fe884f6861e1b29c")!, hrp: hrp, chainId: "P")
                             ]
                         )
                     )
@@ -1812,7 +1829,7 @@ final class TransactionsTests: AvalancheTestCase {
                             locktime: Date(timeIntervalSince1970: 0),
                             threshold: 1,
                             addresses: [
-                                Address(raw: Data(hex: "0x66f90db6137a78f76b3693f7f2bc507956dae563")!, hrp: "avax", chainId: "C")
+                                Address(raw: Data(hex: "0x66f90db6137a78f76b3693f7f2bc507956dae563")!, hrp: hrp, chainId: "C")
                             ]
                         )
                     )
