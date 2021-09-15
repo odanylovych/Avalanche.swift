@@ -26,7 +26,15 @@ public class SECP256K1MintOutput: Output {
         self.threshold = threshold
         super.init(addresses: addresses)
     }
-    
+
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            locktime: try Date(from: decoder),
+            threshold: try UInt32(from: decoder),
+            addresses: try [Address](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(locktime, name: "locktime")
@@ -66,6 +74,16 @@ public class NFTTransferOutput: Output {
         super.init(addresses: addresses)
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            groupID: try UInt32(from: decoder),
+            payload: try Data(from: decoder),
+            locktime: try Date(from: decoder),
+            threshold: try UInt32(from: decoder),
+            addresses: try [Address](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(groupID, name: "groupID")
@@ -98,6 +116,15 @@ public class NFTMintOutput: Output {
         super.init(addresses: addresses)
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            groupID: try UInt32(from: decoder),
+            locktime: try Date(from: decoder),
+            threshold: try UInt32(from: decoder),
+            addresses: try [Address](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(groupID, name: "groupID")

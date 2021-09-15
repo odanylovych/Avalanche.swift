@@ -27,6 +27,14 @@ public class SECP256K1OutputOwners: Output {
         super.init(addresses: addresses)
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            locktime: try Date(from: decoder),
+            threshold: try UInt32(from: decoder),
+            addresses: try [Address](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(locktime, name: "locktime")

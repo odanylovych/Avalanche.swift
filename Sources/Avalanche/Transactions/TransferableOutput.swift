@@ -27,7 +27,12 @@ public struct TransferableOutput {
     }
 }
 
-extension TransferableOutput: AvalancheEncodable {
+extension TransferableOutput: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        assetID = try AssetID(from: decoder)
+        output = try Output.from(decoder: decoder)
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(assetID, name: "assetID")
             .encode(output, name: "output")

@@ -7,13 +7,35 @@
 
 import Foundation
 
-public class Output: AvalancheEncodable {
+public class Output: AvalancheCodable {
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public let addresses: [Address]
     
     public init(addresses: [Address]) {
         self.addresses = addresses
+    }
+    
+    required public init(from decoder: AvalancheDecoder) throws {
+        fatalError("Not supported")
+    }
+    
+    public static func from(decoder: AvalancheDecoder) throws -> Output {
+        let typeID = try UInt32(from: decoder)
+        switch typeID {
+        case CommonTypeID.secp256K1TransferOutput.rawValue:
+            return try SECP256K1TransferOutput(from: decoder)
+        case XChainTypeID.secp256K1MintOutput.rawValue:
+            return try SECP256K1MintOutput(from: decoder)
+        case XChainTypeID.nftTransferOutput.rawValue:
+            return try NFTTransferOutput(from: decoder)
+        case XChainTypeID.nftMintOutput.rawValue:
+            return try NFTMintOutput(from: decoder)
+        case PChainTypeID.secp256K1OutputOwners.rawValue:
+            return try SECP256K1OutputOwners(from: decoder)
+        default:
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Output typeID")
+        }
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
@@ -45,7 +67,16 @@ public class SECP256K1TransferOutput: Output {
         self.threshold = threshold
         super.init(addresses: addresses)
     }
-    
+
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            amount: try UInt64(from: decoder),
+            locktime: try Date(from: decoder),
+            threshold: try UInt32(from: decoder),
+            addresses: try [Address](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(amount, name: "amount")
