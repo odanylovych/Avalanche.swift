@@ -8,3 +8,4 @@
 import Foundation
 
 public typealias AvalancheCodable = AvalancheEncodable & AvalancheDecodable
+public typealias AvalancheFixedCodable = AvalancheFixedEncodable & AvalancheFixedDecodable

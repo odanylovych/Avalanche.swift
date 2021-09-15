@@ -32,5 +32,32 @@ extension Collection where Element: AvalancheEncodable {
     }
 }
 
+extension Array: AvalancheFixedDecodable where Element: AvalancheDecodable {
+    public init(from decoder: AvalancheDecoder, size: Int) throws {
+        self = try (0..<size).map { _ in try decoder.decode(Element.self) }
+    }
+}
+
+extension Array: AvalancheDecodable where Element: AvalancheDecodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        let count = try UInt32(from: decoder)
+        self = try (0..<count).map { _ in try decoder.decode(Element.self) }
+    }
+}
+
 extension Array: AvalancheFixedEncodable, AvalancheEncodable where Element: AvalancheEncodable {}
+
+extension Data: AvalancheFixedDecodable {
+    public init(from decoder: AvalancheDecoder, size: Int) throws {
+        self = try decoder.read(count: size)
+    }
+}
+
+extension Data: AvalancheDecodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        let count = try UInt32(from: decoder)
+        self = try decoder.read(count: Int(count))
+    }
+}
+
 extension Data: AvalancheFixedEncodable, AvalancheEncodable {}
