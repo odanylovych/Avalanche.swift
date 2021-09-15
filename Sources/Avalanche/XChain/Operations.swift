@@ -7,8 +7,28 @@
 
 import Foundation
 
-public class Operation: AvalancheEncodable {
+public class Operation: AvalancheCodable {
     public class var typeID: TypeID { fatalError("Not supported") }
+    
+    public init() {}
+    
+    required public init(from decoder: AvalancheDecoder) throws {
+        fatalError("Not supported")
+    }
+    
+    public static func from(decoder: AvalancheDecoder) throws -> Operation {
+        let typeID = try UInt32(from: decoder)
+        switch typeID {
+        case XChainTypeID.secp256K1MintOperation.rawValue:
+            return try SECP256K1MintOperation(from: decoder)
+        case XChainTypeID.nftMintOperation.rawValue:
+            return try NFTMintOperation(from: decoder)
+        case XChainTypeID.nftTransferOperation.rawValue:
+            return try NFTTransferOperation(from: decoder)
+        default:
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Input typeID")
+        }
+    }
     
     public func encode(in encoder: AvalancheEncoder) throws {
         fatalError("Not supported")
@@ -26,8 +46,17 @@ public class SECP256K1MintOperation: Operation {
         self.addressIndices = addressIndices
         self.mintOutput = mintOutput
         self.transferOutput = transferOutput
+        super.init()
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            addressIndices: try [UInt32](from: decoder),
+            mintOutput: try SECP256K1MintOutput(from: decoder),
+            transferOutput: try SECP256K1TransferOutput(from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(addressIndices, name: "addressIndices")
@@ -56,7 +85,15 @@ public struct NFTMintOperationOutput {
     }
 }
 
-extension NFTMintOperationOutput: AvalancheEncodable {
+extension NFTMintOperationOutput: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            locktime: try Date(from: decoder),
+            threshold: try UInt32(from: decoder),
+            addresses: try [Address](from: decoder)
+        )
+    }
+
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(locktime, name: "locktime")
             .encode(threshold, name: "threshold")
@@ -84,8 +121,18 @@ public class NFTMintOperation: Operation {
         self.groupID = groupID
         self.payload = payload
         self.outputs = outputs
+        super.init()
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            addressIndices: try [UInt32](from: decoder),
+            groupID: try UInt32(from: decoder),
+            payload: try Data(from: decoder),
+            outputs: try [NFTMintOperationOutput](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(addressIndices, name: "addressIndices")
@@ -126,7 +173,17 @@ public struct NFTTransferOperationOutput {
     }
 }
 
-extension NFTTransferOperationOutput: AvalancheEncodable {
+extension NFTTransferOperationOutput: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            groupID: try UInt32(from: decoder),
+            payload: try Data(from: decoder),
+            locktime: try Date(from: decoder),
+            threshold: try UInt32(from: decoder),
+            addresses: try [Address](from: decoder)
+        )
+    }
+
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(groupID, name: "groupID")
             .encode(payload, name: "payload")
@@ -145,8 +202,16 @@ public class NFTTransferOperation: Operation {
     public init(addressIndices: [UInt32], nftTransferOutput: NFTTransferOperationOutput) {
         self.addressIndices = addressIndices
         self.nftTransferOutput = nftTransferOutput
+        super.init()
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            addressIndices: try [UInt32](from: decoder),
+            nftTransferOutput: try NFTTransferOperationOutput(from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(addressIndices, name: "addressIndices")

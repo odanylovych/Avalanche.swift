@@ -17,7 +17,12 @@ public struct UTXOID {
     }
 }
 
-extension UTXOID: AvalancheEncodable {
+extension UTXOID: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        transactionID = try TransactionID(from: decoder)
+        utxoIndex = try UInt32(from: decoder)
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(transactionID, name: "transactionID")
             .encode(utxoIndex, name: "utxoIndex")
@@ -36,7 +41,13 @@ public struct TransferableOperation {
     }
 }
 
-extension TransferableOperation: AvalancheEncodable {
+extension TransferableOperation: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        assetID = try AssetID(from: decoder)
+        utxoIDs = try [UTXOID](from: decoder)
+        transferOperation = try Operation.from(decoder: decoder)
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(assetID, name: "assetID")
             .encode(utxoIDs, name: "utxoIDs")
