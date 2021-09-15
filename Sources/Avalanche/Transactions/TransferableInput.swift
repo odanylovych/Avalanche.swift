@@ -31,7 +31,14 @@ public struct TransferableInput {
     }
 }
 
-extension TransferableInput: AvalancheEncodable {
+extension TransferableInput: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        transactionID = try TransactionID(from: decoder)
+        utxoIndex = try UInt32(from: decoder)
+        assetID = try AssetID(from: decoder)
+        input = try Input.from(decoder: decoder)
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(transactionID, name: "transactionID")
             .encode(utxoIndex, name: "utxoIndex")

@@ -7,13 +7,27 @@
 
 import Foundation
 
-public class Input: AvalancheEncodable {
+public class Input: AvalancheCodable {
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public let addressIndices: [UInt32]
     
     public init(addressIndices: [UInt32]) {
         self.addressIndices = addressIndices
+    }
+    
+    required public init(from decoder: AvalancheDecoder) throws {
+        fatalError("Not supported")
+    }
+    
+    public static func from(decoder: AvalancheDecoder) throws -> Input {
+        let typeID = try UInt32(from: decoder)
+        switch typeID {
+        case CommonTypeID.secp256K1TransferInput.rawValue:
+            return try SECP256K1TransferInput(from: decoder)
+        default:
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Input typeID")
+        }
     }
     
     public func credentialType() -> Credential.Type {
@@ -38,6 +52,13 @@ public class SECP256K1TransferInput: Input {
         super.init(addressIndices: addressIndices)
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            amount: try UInt64(from: decoder),
+            addressIndices: try [UInt32](from: decoder)
+        )
+    }
+
     override public func credentialType() -> Credential.Type {
         SECP256K1Credential.self
     }
