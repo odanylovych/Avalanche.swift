@@ -234,17 +234,17 @@ final class TransactionsTests: AvalancheTestCase {
     }
 
     func testEncodeIPAddresses() throws {
-        try encodeTest(
-            actual: IPv4Address(host: (127, 0, 0, 1), port: 9650),
-            expected: [
+        try encodeDecodeTest(
+            value: IPv4Address(host: (127, 0, 0, 1), port: 9650),
+            bytes: [
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x7f, 0x00, 0x00, 0x01,
                 0x25, 0xb2
             ]
         )
-        try encodeTest(
-            actual: IPv6Address(host: [0x2001, 0x0db8, 0xac10, 0xfe01, 0, 0, 0, 0], port: 12345),
-            expected: [
+        try encodeDecodeTest(
+            value: IPv6Address(host: [0x2001, 0x0db8, 0xac10, 0xfe01, 0, 0, 0, 0], port: 12345),
+            bytes: [
                 0x20, 0x01, 0x0d, 0xb8, 0xac, 0x10, 0xfe, 0x01,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x30, 0x39
