@@ -190,32 +190,39 @@ final class TransactionsTests: AvalancheTestCase {
         let encoded = Array(try AEncoder().encode(actual, size: size).output)
         XCTAssertEqual(encoded, expected)
     }
-
-    func testEncodeByte() throws {
-        try encodeTest(
-            actual: UInt8(0x01),
-            expected: [0x01]
+    
+    private func encodeDecodeTest<T: Equatable & AvalancheCodable>(value: T, bytes: [UInt8]) throws {
+        let encoded = Array(try AEncoder().encode(value).output)
+        XCTAssertEqual(encoded, bytes)
+        let decoded = try ADecoder(data: Data(bytes)).decode(T.self)
+        XCTAssertEqual(decoded, value)
+    }
+    
+    func testEncodeDecodeByte() throws {
+        try encodeDecodeTest(
+            value: UInt8(0x01),
+            bytes: [0x01]
         )
     }
 
-    func testEncodeShort() throws {
-        try encodeTest(
-            actual: UInt16(0x0102),
-            expected: [0x01, 0x02]
+    func testEncodeDecodeShort() throws {
+        try encodeDecodeTest(
+            value: UInt16(0x0102),
+            bytes: [0x01, 0x02]
         )
     }
 
-    func testEncodeInteger() throws {
-        try encodeTest(
-            actual: UInt32(0x01020304),
-            expected: [0x01, 0x02, 0x03, 0x04]
+    func testEncodeDecodeInteger() throws {
+        try encodeDecodeTest(
+            value: UInt32(0x01020304),
+            bytes: [0x01, 0x02, 0x03, 0x04]
         )
     }
 
-    func testEncodeLongInteger() throws {
-        try encodeTest(
-            actual: UInt64(0x0102030405060708),
-            expected: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
+    func testEncodeDecodeLongInteger() throws {
+        try encodeDecodeTest(
+            value: UInt64(0x0102030405060708),
+            bytes: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
         )
     }
 
