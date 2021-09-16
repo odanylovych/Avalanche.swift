@@ -50,7 +50,14 @@ extension SignedAvalancheTransaction: SignedTransaction {
     }
 }
 
-extension SignedAvalancheTransaction: AvalancheEncodable {
+extension SignedAvalancheTransaction: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            unsignedTransaction: try UnsignedAvalancheTransaction(from: decoder),
+            credentials: try [Credential](from: decoder)
+        )
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.codecID, name: "codecID")
             .encode(unsignedTransaction, name: "unsignedTransaction")
