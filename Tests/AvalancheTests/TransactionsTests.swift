@@ -1279,7 +1279,7 @@ final class TransactionsTests: AvalancheTestCase {
                 inputs: [examplePChainTransferableInput()],
                 memo: Data(),
                 validator: exampleValidator(),
-                stake: Stake(lockedOuts: [
+                stake: Stake(lockedOutputs: [
                     TransferableOutput(
                         assetID: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
                         output: SECP256K1TransferOutput(
@@ -1441,7 +1441,7 @@ final class TransactionsTests: AvalancheTestCase {
                 inputs: [examplePChainTransferableInput()],
                 memo: Data(),
                 validator: exampleValidator(),
-                stake: Stake(lockedOuts: [
+                stake: Stake(lockedOutputs: [
                     TransferableOutput(
                         assetID: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
                         output: SECP256K1TransferOutput(

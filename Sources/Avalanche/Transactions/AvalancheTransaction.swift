@@ -7,11 +7,17 @@
 
 import Foundation
 
-public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodable {
+public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheCodable {
     public typealias Addr = Address
     public typealias Signed = SignedAvalancheTransaction
     
     public class var typeID: TypeID { fatalError("Not supported") }
+    
+    public init() {}
+    
+    required public init(from decoder: AvalancheDecoder) throws {
+        fatalError("Not supported")
+    }
     
     public func utxoAddressIndices() -> [(Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])] {
         fatalError("Not supported")
@@ -137,8 +143,19 @@ public class BaseTransaction: UnsignedAvalancheTransaction {
         self.outputs = outputs
         self.inputs = inputs
         self.memo = memo
+        super.init()
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            networkID: try NetworkID(from: decoder),
+            blockchainID: try BlockchainID(from: decoder),
+            outputs: try [TransferableOutput](from: decoder),
+            inputs: try [TransferableInput](from: decoder),
+            memo: try Data(from: decoder)
+        )
+    }
+
     override public func utxoAddressIndices() -> [
         (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
     ] {

@@ -39,6 +39,20 @@ public class CreateAssetTransaction: BaseTransaction {
         )
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            networkID: try NetworkID(from: decoder),
+            blockchainID: try BlockchainID(from: decoder),
+            outputs: try [TransferableOutput](from: decoder),
+            inputs: try [TransferableInput](from: decoder),
+            memo: try Data(from: decoder),
+            name: try String(from: decoder),
+            symbol: try String(from: decoder),
+            denomination: try UInt8(from: decoder),
+            initialStates: try [InitialState](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(name, name: "name")
@@ -71,6 +85,17 @@ public class OperationTransaction: BaseTransaction {
         )
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            networkID: try NetworkID(from: decoder),
+            blockchainID: try BlockchainID(from: decoder),
+            outputs: try [TransferableOutput](from: decoder),
+            inputs: try [TransferableInput](from: decoder),
+            memo: try Data(from: decoder),
+            operations: try [TransferableOperation](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(operations, name: "operations")
@@ -103,6 +128,18 @@ public class ImportTransaction: BaseTransaction {
         )
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            networkID: try NetworkID(from: decoder),
+            blockchainID: try BlockchainID(from: decoder),
+            outputs: try [TransferableOutput](from: decoder),
+            inputs: try [TransferableInput](from: decoder),
+            memo: try Data(from: decoder),
+            sourceChain: try BlockchainID(from: decoder),
+            transferableInputs: try [TransferableInput](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(sourceChain, name: "sourceChain")
@@ -136,6 +173,18 @@ public class ExportTransaction: BaseTransaction {
         )
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        try self.init(
+            networkID: try NetworkID(from: decoder),
+            blockchainID: try BlockchainID(from: decoder),
+            outputs: try [TransferableOutput](from: decoder),
+            inputs: try [TransferableInput](from: decoder),
+            memo: try Data(from: decoder),
+            destinationChain: try BlockchainID(from: decoder),
+            transferableOutputs: try [TransferableOutput](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(destinationChain, name: "destinationChain")

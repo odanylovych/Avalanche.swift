@@ -28,8 +28,19 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction {
         self.destinationChain = destinationChain
         self.inputs = inputs
         self.exportedOutputs = exportedOutputs
+        super.init()
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            networkID: try NetworkID(from: decoder),
+            blockchainID: try BlockchainID(from: decoder),
+            destinationChain: try BlockchainID(from: decoder),
+            inputs: try [EVMInput](from: decoder),
+            exportedOutputs: try [TransferableOutput](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")
@@ -61,8 +72,19 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction {
         self.sourceChain = sourceChain
         self.importedInputs = importedInputs
         self.outputs = outputs
+        super.init()
     }
     
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            networkID: try NetworkID(from: decoder),
+            blockchainID: try BlockchainID(from: decoder),
+            sourceChain: try BlockchainID(from: decoder),
+            importedInputs: try [TransferableInput](from: decoder),
+            outputs: try [EVMOutput](from: decoder)
+        )
+    }
+
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")
