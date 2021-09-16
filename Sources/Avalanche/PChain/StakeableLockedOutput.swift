@@ -19,7 +19,14 @@ public struct StakeableLockedOutput {
     }
 }
 
-extension StakeableLockedOutput: AvalancheEncodable {
+extension StakeableLockedOutput: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            locktime: try Date(from: decoder),
+            transferableOutput: try TransferableOutput(from: decoder)
+        )
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(locktime, name: "locktime")
