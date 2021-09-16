@@ -30,7 +30,7 @@ public struct TransferableOutput {
 extension TransferableOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            assetID: try AssetID(from: decoder),
+            assetID: try decoder.decode(),
             output: try Output.from(decoder: decoder)
         )
     }

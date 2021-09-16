@@ -89,16 +89,16 @@ public struct GenesisAsset {
 extension GenesisAsset: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            alias: try String(from: decoder),
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder),
-            name: try String(from: decoder),
-            symbol: try String(from: decoder),
-            denomination: try UInt8(from: decoder),
-            initialStates: try [InitialState](from: decoder)
+            alias: try decoder.decode(),
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode(),
+            name: try decoder.decode(),
+            symbol: try decoder.decode(),
+            denomination: try decoder.decode(),
+            initialStates: try decoder.decode()
         )
     }
     

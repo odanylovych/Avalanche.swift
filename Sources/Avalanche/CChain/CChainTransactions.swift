@@ -33,11 +33,11 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            destinationChain: try BlockchainID(from: decoder),
-            inputs: try [EVMInput](from: decoder),
-            exportedOutputs: try [TransferableOutput](from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            destinationChain: try decoder.decode(),
+            inputs: try decoder.decode(),
+            exportedOutputs: try decoder.decode()
         )
     }
 
@@ -77,11 +77,11 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            sourceChain: try BlockchainID(from: decoder),
-            importedInputs: try [TransferableInput](from: decoder),
-            outputs: try [EVMOutput](from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            sourceChain: try decoder.decode(),
+            importedInputs: try decoder.decode(),
+            outputs: try decoder.decode()
         )
     }
 

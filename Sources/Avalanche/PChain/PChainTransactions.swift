@@ -34,10 +34,10 @@ public struct Validator {
 extension Validator: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            nodeID: try NodeID(from: decoder),
-            startTime: try Date(from: decoder),
-            endTime: try Date(from: decoder),
-            weight: try UInt64(from: decoder)
+            nodeID: try decoder.decode(),
+            startTime: try decoder.decode(),
+            endTime: try decoder.decode(),
+            weight: try decoder.decode()
         )
     }
     
@@ -59,7 +59,7 @@ public struct Stake {
 
 extension Stake: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        self.init(lockedOutputs: try [TransferableOutput](from: decoder))
+        self.init(lockedOutputs: try decoder.decode())
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
@@ -101,15 +101,15 @@ public class AddValidatorTransaction: BaseTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder),
-            validator: try Validator(from: decoder),
-            stake: try Stake(from: decoder),
-            rewardsOwner: try SECP256K1OutputOwners(from: decoder),
-            shares: try UInt32(from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode(),
+            validator: try decoder.decode(),
+            stake: try decoder.decode(),
+            rewardsOwner: try decoder.decode(),
+            shares: try decoder.decode()
         )
     }
 
@@ -134,7 +134,7 @@ public struct SubnetAuth {
 
 extension SubnetAuth: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        self.init(signatureIndices: try [UInt32](from: decoder))
+        self.init(signatureIndices: try decoder.decode())
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
@@ -174,14 +174,14 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder),
-            validator: try Validator(from: decoder),
-            subnetID: try BlockchainID(from: decoder),
-            subnetAuth: try SubnetAuth(from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode(),
+            validator: try decoder.decode(),
+            subnetID: try decoder.decode(),
+            subnetAuth: try decoder.decode()
         )
     }
 
@@ -224,14 +224,14 @@ public class AddDelegatorTransaction: BaseTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder),
-            validator: try Validator(from: decoder),
-            stake: try Stake(from: decoder),
-            rewardsOwner: try SECP256K1OutputOwners(from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode(),
+            validator: try decoder.decode(),
+            stake: try decoder.decode(),
+            rewardsOwner: try decoder.decode()
         )
     }
 
@@ -268,12 +268,12 @@ public class CreateSubnetTransaction: BaseTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder),
-            rewardsOwner: try SECP256K1OutputOwners(from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode(),
+            rewardsOwner: try decoder.decode()
         )
     }
 

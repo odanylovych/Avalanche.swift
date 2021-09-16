@@ -21,10 +21,10 @@ public class Input: AvalancheCodable {
     }
     
     public static func from(decoder: AvalancheDecoder) throws -> Input {
-        let typeID = try UInt32(from: decoder)
+        let typeID: UInt32 = try decoder.decode()
         switch typeID {
         case CommonTypeID.secp256K1TransferInput.rawValue:
-            return try SECP256K1TransferInput(from: decoder)
+            return try decoder.decode(SECP256K1TransferInput.self)
         default:
             throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Input typeID")
         }
@@ -54,8 +54,8 @@ public class SECP256K1TransferInput: Input {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            amount: try UInt64(from: decoder),
-            addressIndices: try [UInt32](from: decoder)
+            amount: try decoder.decode(),
+            addressIndices: try decoder.decode()
         )
     }
 

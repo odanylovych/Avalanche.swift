@@ -31,12 +31,12 @@ public class Credential: AvalancheCodable {
     }
     
     public static func from(decoder: AvalancheDecoder) throws -> Credential {
-        let typeID = try UInt32(from: decoder)
+        let typeID: UInt32 = try decoder.decode()
         switch typeID {
         case CommonTypeID.secp256K1Credential.rawValue:
-            return try SECP256K1Credential(from: decoder)
+            return try decoder.decode(SECP256K1Credential.self)
         case XChainTypeID.nftCredential.rawValue:
-            return try NFTCredential(from: decoder)
+            return try decoder.decode(NFTCredential.self)
         default:
             throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Credential typeID")
         }
@@ -52,6 +52,6 @@ public class SECP256K1Credential: Credential {
     override public class var typeID: TypeID { CommonTypeID.secp256K1Credential }
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
-        self.init(signatures: try [Signature](from: decoder))
+        self.init(signatures: try decoder.decode())
     }
 }

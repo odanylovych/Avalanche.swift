@@ -21,18 +21,18 @@ public class Output: AvalancheCodable {
     }
     
     public static func from(decoder: AvalancheDecoder) throws -> Output {
-        let typeID = try UInt32(from: decoder)
+        let typeID: UInt32 = try decoder.decode()
         switch typeID {
         case CommonTypeID.secp256K1TransferOutput.rawValue:
-            return try SECP256K1TransferOutput(from: decoder)
+            return try decoder.decode(SECP256K1TransferOutput.self)
         case XChainTypeID.secp256K1MintOutput.rawValue:
-            return try SECP256K1MintOutput(from: decoder)
+            return try decoder.decode(SECP256K1MintOutput.self)
         case XChainTypeID.nftTransferOutput.rawValue:
-            return try NFTTransferOutput(from: decoder)
+            return try decoder.decode(NFTTransferOutput.self)
         case XChainTypeID.nftMintOutput.rawValue:
-            return try NFTMintOutput(from: decoder)
+            return try decoder.decode(NFTMintOutput.self)
         case PChainTypeID.secp256K1OutputOwners.rawValue:
-            return try SECP256K1OutputOwners(from: decoder)
+            return try decoder.decode(SECP256K1OutputOwners.self)
         default:
             throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Output typeID")
         }
@@ -70,10 +70,10 @@ public class SECP256K1TransferOutput: Output {
 
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            amount: try UInt64(from: decoder),
-            locktime: try Date(from: decoder),
-            threshold: try UInt32(from: decoder),
-            addresses: try [Address](from: decoder)
+            amount: try decoder.decode(),
+            locktime: try decoder.decode(),
+            threshold: try decoder.decode(),
+            addresses: try decoder.decode()
         )
     }
 

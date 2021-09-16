@@ -11,6 +11,6 @@ public class NFTCredential: Credential {
     override public class var typeID: TypeID { XChainTypeID.nftCredential }
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
-        self.init(signatures: try [Signature](from: decoder))
+        self.init(signatures: try decoder.decode())
     }
 }

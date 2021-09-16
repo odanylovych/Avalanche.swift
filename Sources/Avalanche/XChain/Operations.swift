@@ -17,14 +17,14 @@ public class Operation: AvalancheCodable {
     }
     
     public static func from(decoder: AvalancheDecoder) throws -> Operation {
-        let typeID = try UInt32(from: decoder)
+        let typeID: UInt32 = try decoder.decode()
         switch typeID {
         case XChainTypeID.secp256K1MintOperation.rawValue:
-            return try SECP256K1MintOperation(from: decoder)
+            return try decoder.decode(SECP256K1MintOperation.self)
         case XChainTypeID.nftMintOperation.rawValue:
-            return try NFTMintOperation(from: decoder)
+            return try decoder.decode(NFTMintOperation.self)
         case XChainTypeID.nftTransferOperation.rawValue:
-            return try NFTTransferOperation(from: decoder)
+            return try decoder.decode(NFTTransferOperation.self)
         default:
             throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Operation typeID")
         }
@@ -51,9 +51,9 @@ public class SECP256K1MintOperation: Operation {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            addressIndices: try [UInt32](from: decoder),
-            mintOutput: try SECP256K1MintOutput(from: decoder),
-            transferOutput: try SECP256K1TransferOutput(from: decoder)
+            addressIndices: try decoder.decode(),
+            mintOutput: try decoder.decode(),
+            transferOutput: try decoder.decode()
         )
     }
 
@@ -88,9 +88,9 @@ public struct NFTMintOperationOutput {
 extension NFTMintOperationOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            locktime: try Date(from: decoder),
-            threshold: try UInt32(from: decoder),
-            addresses: try [Address](from: decoder)
+            locktime: try decoder.decode(),
+            threshold: try decoder.decode(),
+            addresses: try decoder.decode()
         )
     }
 
@@ -126,10 +126,10 @@ public class NFTMintOperation: Operation {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            addressIndices: try [UInt32](from: decoder),
-            groupID: try UInt32(from: decoder),
-            payload: try Data(from: decoder),
-            outputs: try [NFTMintOperationOutput](from: decoder)
+            addressIndices: try decoder.decode(),
+            groupID: try decoder.decode(),
+            payload: try decoder.decode(),
+            outputs: try decoder.decode()
         )
     }
 
@@ -176,11 +176,11 @@ public struct NFTTransferOperationOutput {
 extension NFTTransferOperationOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            groupID: try UInt32(from: decoder),
-            payload: try Data(from: decoder),
-            locktime: try Date(from: decoder),
-            threshold: try UInt32(from: decoder),
-            addresses: try [Address](from: decoder)
+            groupID: try decoder.decode(),
+            payload: try decoder.decode(),
+            locktime: try decoder.decode(),
+            threshold: try decoder.decode(),
+            addresses: try decoder.decode()
         )
     }
 
@@ -207,8 +207,8 @@ public class NFTTransferOperation: Operation {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            addressIndices: try [UInt32](from: decoder),
-            nftTransferOutput: try NFTTransferOperationOutput(from: decoder)
+            addressIndices: try decoder.decode(),
+            nftTransferOutput: try decoder.decode()
         )
     }
 

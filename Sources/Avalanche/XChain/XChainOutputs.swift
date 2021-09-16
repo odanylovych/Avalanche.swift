@@ -29,9 +29,9 @@ public class SECP256K1MintOutput: Output {
 
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            locktime: try Date(from: decoder),
-            threshold: try UInt32(from: decoder),
-            addresses: try [Address](from: decoder)
+            locktime: try decoder.decode(),
+            threshold: try decoder.decode(),
+            addresses: try decoder.decode()
         )
     }
 
@@ -76,11 +76,11 @@ public class NFTTransferOutput: Output {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            groupID: try UInt32(from: decoder),
-            payload: try Data(from: decoder),
-            locktime: try Date(from: decoder),
-            threshold: try UInt32(from: decoder),
-            addresses: try [Address](from: decoder)
+            groupID: try decoder.decode(),
+            payload: try decoder.decode(),
+            locktime: try decoder.decode(),
+            threshold: try decoder.decode(),
+            addresses: try decoder.decode()
         )
     }
 
@@ -118,10 +118,10 @@ public class NFTMintOutput: Output {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            groupID: try UInt32(from: decoder),
-            locktime: try Date(from: decoder),
-            threshold: try UInt32(from: decoder),
-            addresses: try [Address](from: decoder)
+            groupID: try decoder.decode(),
+            locktime: try decoder.decode(),
+            threshold: try decoder.decode(),
+            addresses: try decoder.decode()
         )
     }
 

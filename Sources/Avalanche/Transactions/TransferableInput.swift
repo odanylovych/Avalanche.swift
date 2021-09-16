@@ -34,9 +34,9 @@ public struct TransferableInput {
 extension TransferableInput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            transactionID: try TransactionID(from: decoder),
-            utxoIndex: try UInt32(from: decoder),
-            assetID: try AssetID(from: decoder),
+            transactionID: try decoder.decode(),
+            utxoIndex: try decoder.decode(),
+            assetID: try decoder.decode(),
             input: try Input.from(decoder: decoder)
         )
     }

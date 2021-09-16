@@ -28,7 +28,7 @@ public struct NetworkID: Equatable, Hashable {
 
 extension NetworkID: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        self.init(try UInt32(from: decoder))
+        self.init(try decoder.decode(UInt32.self))
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {

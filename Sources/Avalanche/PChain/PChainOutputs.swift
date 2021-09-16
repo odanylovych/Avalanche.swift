@@ -29,9 +29,9 @@ public class SECP256K1OutputOwners: Output {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            locktime: try Date(from: decoder),
-            threshold: try UInt32(from: decoder),
-            addresses: try [Address](from: decoder)
+            locktime: try decoder.decode(),
+            threshold: try decoder.decode(),
+            addresses: try decoder.decode()
         )
     }
 

@@ -9,7 +9,7 @@ import Foundation
 
 extension Date: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        self.init(timeIntervalSince1970: TimeInterval(try UInt64(from: decoder)))
+        self.init(timeIntervalSince1970: TimeInterval(try decoder.decode(UInt64.self)))
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {

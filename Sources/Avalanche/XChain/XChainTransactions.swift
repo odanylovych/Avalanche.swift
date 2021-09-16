@@ -41,15 +41,15 @@ public class CreateAssetTransaction: BaseTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder),
-            name: try String(from: decoder),
-            symbol: try String(from: decoder),
-            denomination: try UInt8(from: decoder),
-            initialStates: try [InitialState](from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode(),
+            name: try decoder.decode(),
+            symbol: try decoder.decode(),
+            denomination: try decoder.decode(),
+            initialStates: try decoder.decode()
         )
     }
 
@@ -87,12 +87,12 @@ public class OperationTransaction: BaseTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder),
-            operations: try [TransferableOperation](from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode(),
+            operations: try decoder.decode()
         )
     }
 
@@ -130,13 +130,13 @@ public class ImportTransaction: BaseTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder),
-            sourceChain: try BlockchainID(from: decoder),
-            transferableInputs: try [TransferableInput](from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode(),
+            sourceChain: try decoder.decode(),
+            transferableInputs: try decoder.decode()
         )
     }
 
@@ -175,13 +175,13 @@ public class ExportTransaction: BaseTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder),
-            destinationChain: try BlockchainID(from: decoder),
-            transferableOutputs: try [TransferableOutput](from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode(),
+            destinationChain: try decoder.decode(),
+            transferableOutputs: try decoder.decode()
         )
     }
 

@@ -48,7 +48,7 @@ extension ID {
 
 extension ID {
     public init(from decoder: AvalancheDecoder) throws {
-        let data = try Data(from: decoder, size: Self.size)
+        let data: Data = try decoder.decode(size: Self.size)
         guard let id = Self(data: data) else {
             throw AvalancheDecoderError.dataCorrupted(data, description: "Bad ID data")
         }

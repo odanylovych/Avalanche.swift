@@ -38,7 +38,7 @@ extension Array: AvalancheFixedCodable, AvalancheCodable where Element: Avalanch
     }
     
     public init(from decoder: AvalancheDecoder) throws {
-        let count = try UInt32(from: decoder)
+        let count: UInt32 = try decoder.decode()
         self = try (0..<count).map { _ in try decoder.decode(Element.self) }
     }
 }
@@ -49,7 +49,7 @@ extension Data: AvalancheFixedCodable, AvalancheCodable {
     }
     
     public init(from decoder: AvalancheDecoder) throws {
-        let count = try UInt32(from: decoder)
+        let count: UInt32 = try decoder.decode()
         self = try decoder.read(count: Int(count))
     }
 }

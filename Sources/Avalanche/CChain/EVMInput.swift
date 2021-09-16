@@ -24,10 +24,10 @@ public struct EVMInput {
 extension EVMInput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            address: try EthAddress(from: decoder),
-            amount: try UInt64(from: decoder),
-            assetID: try AssetID(from: decoder),
-            nonce: try UInt64(from: decoder)
+            address: try decoder.decode(),
+            amount: try decoder.decode(),
+            assetID: try decoder.decode(),
+            nonce: try decoder.decode()
         )
     }
     

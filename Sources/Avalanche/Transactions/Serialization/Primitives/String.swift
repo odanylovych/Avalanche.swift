@@ -9,8 +9,8 @@ import Foundation
 
 extension String: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let count = try UInt16(from: decoder)
-        let data = try Data(from: decoder, size: Int(count))
+        let count: UInt16 = try decoder.decode()
+        let data: Data = try decoder.decode(size: Int(count))
         guard let string = String(data: data, encoding: .utf8) else {
             throw AvalancheDecoderError.dataCorrupted(data, description: "Bad UTF8 string data")
         }

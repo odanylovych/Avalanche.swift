@@ -20,8 +20,8 @@ public struct UTXOID {
 extension UTXOID: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            transactionID: try TransactionID(from: decoder),
-            utxoIndex: try UInt32(from: decoder)
+            transactionID: try decoder.decode(),
+            utxoIndex: try decoder.decode()
         )
     }
     
@@ -46,8 +46,8 @@ public struct TransferableOperation {
 extension TransferableOperation: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            assetID: try AssetID(from: decoder),
-            utxoIDs: try [UTXOID](from: decoder),
+            assetID: try decoder.decode(),
+            utxoIDs: try decoder.decode(),
             transferOperation: try Operation.from(decoder: decoder)
         )
     }

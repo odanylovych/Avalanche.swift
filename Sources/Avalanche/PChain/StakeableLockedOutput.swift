@@ -22,8 +22,8 @@ public struct StakeableLockedOutput {
 extension StakeableLockedOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            locktime: try Date(from: decoder),
-            transferableOutput: try TransferableOutput(from: decoder)
+            locktime: try decoder.decode(),
+            transferableOutput: try decoder.decode()
         )
     }
     

@@ -53,8 +53,8 @@ extension SignedAvalancheTransaction: SignedTransaction {
 extension SignedAvalancheTransaction: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            unsignedTransaction: try UnsignedAvalancheTransaction(from: decoder),
-            credentials: try [Credential](from: decoder)
+            unsignedTransaction: try decoder.decode(),
+            credentials: try decoder.decode()
         )
     }
     
@@ -155,11 +155,11 @@ public class BaseTransaction: UnsignedAvalancheTransaction {
     
     convenience required public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            networkID: try NetworkID(from: decoder),
-            blockchainID: try BlockchainID(from: decoder),
-            outputs: try [TransferableOutput](from: decoder),
-            inputs: try [TransferableInput](from: decoder),
-            memo: try Data(from: decoder)
+            networkID: try decoder.decode(),
+            blockchainID: try decoder.decode(),
+            outputs: try decoder.decode(),
+            inputs: try decoder.decode(),
+            memo: try decoder.decode()
         )
     }
 

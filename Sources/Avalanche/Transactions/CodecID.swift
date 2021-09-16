@@ -13,7 +13,7 @@ public enum CodecID: UInt16 {
 
 extension CodecID: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let rawValue = try UInt16(from: decoder)
+        let rawValue: UInt16 = try decoder.decode()
         guard let codecID = Self(rawValue: rawValue) else {
             throw AvalancheDecoderError.dataCorrupted(rawValue, description: "Wrong CodecID")
         }

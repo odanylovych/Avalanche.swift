@@ -117,7 +117,7 @@ public struct Address: AddressProtocol, Equatable, Hashable {
 
 extension Address: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let raw = try Data(from: decoder, size: Self.rawAddressSize)
+        let raw: Data = try decoder.decode(size: Self.rawAddressSize)
         try self.init(raw: raw, hrp: decoder.context.hrp, chainId: decoder.context.chainId)
     }
     

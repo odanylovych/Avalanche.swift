@@ -14,7 +14,7 @@ public enum FeatureExtensionID: UInt32, CaseIterable {
 
 extension FeatureExtensionID: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let rawValue = try UInt32(from: decoder)
+        let rawValue: UInt32 = try decoder.decode()
         guard let featureExtensionID = Self(rawValue: rawValue) else {
             throw AvalancheDecoderError.dataCorrupted(rawValue, description: "Wrong FeatureExtensionID")
         }
@@ -39,8 +39,8 @@ public struct InitialState {
 extension InitialState: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            featureExtensionID: try FeatureExtensionID(from: decoder),
-            outputs: try [Output](from: decoder)
+            featureExtensionID: try decoder.decode(),
+            outputs: try decoder.decode()
         )
     }
     
