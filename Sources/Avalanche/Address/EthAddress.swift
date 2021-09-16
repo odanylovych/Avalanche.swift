@@ -37,6 +37,8 @@ public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, H
 public struct EthAddress: AddressProtocol, Equatable, Hashable {
     public typealias Extended = EthAccount
     
+    public static let rawAddressSize = 20
+    
     public let rawAddress: Data
     
     public init(pubKey: Data) throws {
@@ -72,8 +74,12 @@ public struct EthAddress: AddressProtocol, Equatable, Hashable {
     }
 }
 
-extension EthAddress: AvalancheEncodable {
+extension EthAddress: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        self.rawAddress = try Data(from: decoder, size: Self.rawAddressSize)
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(rawAddress, size: 20)
+        try encoder.encode(rawAddress, size: Self.rawAddressSize)
     }
 }

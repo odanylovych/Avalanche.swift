@@ -21,7 +21,16 @@ public struct EVMInput {
     }
 }
 
-extension EVMInput: AvalancheEncodable {
+extension EVMInput: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            address: try EthAddress(from: decoder),
+            amount: try UInt64(from: decoder),
+            assetID: try AssetID(from: decoder),
+            nonce: try UInt64(from: decoder)
+        )
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(address, name: "address")
             .encode(amount, name: "amount")
