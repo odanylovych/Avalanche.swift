@@ -17,13 +17,29 @@ public struct Signature: ID {
     }
 }
 
-public class Credential: AvalancheEncodable {
+public class Credential: AvalancheCodable {
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public let signatures: [Signature]
     
     required public init(signatures: [Signature]) {
         self.signatures = signatures
+    }
+    
+    required public init(from decoder: AvalancheDecoder) throws {
+        fatalError("Not supported")
+    }
+    
+    public static func from(decoder: AvalancheDecoder) throws -> Credential {
+        let typeID = try UInt32(from: decoder)
+        switch typeID {
+        case CommonTypeID.secp256K1Credential.rawValue:
+            return try SECP256K1Credential(from: decoder)
+        case XChainTypeID.nftCredential.rawValue:
+            return try NFTCredential(from: decoder)
+        default:
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Credential typeID")
+        }
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
@@ -34,4 +50,8 @@ public class Credential: AvalancheEncodable {
 
 public class SECP256K1Credential: Credential {
     override public class var typeID: TypeID { CommonTypeID.secp256K1Credential }
+    
+    convenience required public init(from decoder: AvalancheDecoder) throws {
+        self.init(signatures: try [Signature](from: decoder))
+    }
 }

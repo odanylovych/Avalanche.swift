@@ -26,7 +26,7 @@ public class Operation: AvalancheCodable {
         case XChainTypeID.nftTransferOperation.rawValue:
             return try NFTTransferOperation(from: decoder)
         default:
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Input typeID")
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Operation typeID")
         }
     }
     
