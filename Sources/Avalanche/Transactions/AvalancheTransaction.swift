@@ -64,7 +64,7 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
         self.transaction = transaction
         self.pathes = pathes
         utxoAddresses = try transaction.utxoAddressIndices().map { credentialType, transactionID, utxoIndex, addressIndices in
-            guard let utxo = utxos.first(where: { $0.transactionId == transactionID && $0.utxoIndex == utxoIndex }) else {
+            guard let utxo = utxos.first(where: { $0.transactionID == transactionID && $0.utxoIndex == utxoIndex }) else {
                 throw ExtendedAvalancheTransactionError.noSuchUtxo(transactionID, utxoIndex: utxoIndex, in: utxos)
             }
             return (credentialType, addressIndices.map { utxo.output.addresses[Int($0)] })
