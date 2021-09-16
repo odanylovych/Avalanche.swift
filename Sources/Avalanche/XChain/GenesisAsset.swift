@@ -86,7 +86,20 @@ public struct GenesisAsset {
     }
 }
 
-extension GenesisAsset: AvalancheEncodable {
+extension GenesisAsset: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        alias = try String(from: decoder)
+        networkID = try NetworkID(from: decoder)
+        blockchainID = try BlockchainID(from: decoder)
+        outputs = try [TransferableOutput](from: decoder)
+        inputs = try [TransferableInput](from: decoder)
+        memo = try Data(from: decoder)
+        name = try String(from: decoder)
+        symbol = try String(from: decoder)
+        denomination = try UInt8(from: decoder)
+        initialStates = try [InitialState](from: decoder)
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(alias, name: "alias")
             .encode(networkID, name: "networkID")

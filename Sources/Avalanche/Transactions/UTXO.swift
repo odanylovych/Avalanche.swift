@@ -23,7 +23,7 @@ public struct UTXO {
     }
 }
 
-extension UTXO: AvalancheEncodable {
+extension UTXO: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         transactionID = try TransactionID(from: decoder)
         utxoIndex = try UInt32(from: decoder)
