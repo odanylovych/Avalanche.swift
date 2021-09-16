@@ -29,7 +29,7 @@ final class TransactionsTests: AvalancheTestCase {
     
     private func exampleTransferableOutput() throws -> TransferableOutput {
         try TransferableOutput(
-            assetId: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
+            assetID: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
             output: exampleSECP256K1TransferOutput()
         )
     }
@@ -140,7 +140,7 @@ final class TransactionsTests: AvalancheTestCase {
     
     private func examplePChainTransferableOutput() throws -> TransferableOutput {
         try TransferableOutput(
-            assetId: AssetID(hex: "0x6870b7d66ac32540311379e5b5dbad28ec7eb8ddbfc8f4d67299ebb48475907a")!,
+            assetID: AssetID(hex: "0x6870b7d66ac32540311379e5b5dbad28ec7eb8ddbfc8f4d67299ebb48475907a")!,
             output: SECP256K1TransferOutput(
                 amount: 3999000000,
                 locktime: Date(timeIntervalSince1970: 0),
@@ -1155,8 +1155,8 @@ final class TransactionsTests: AvalancheTestCase {
     func testEncodeUTXO() throws {
         try encodeTest(
             actual: UTXO(
-                transactionId: TransactionID(hex: "0xf966750f438867c3c9828ddcdbe660e21ccdbb36a9276958f011ba472f75d4e7")!,
-                outputIndex: 0,
+                transactionID: TransactionID(hex: "0xf966750f438867c3c9828ddcdbe660e21ccdbb36a9276958f011ba472f75d4e7")!,
+                utxoIndex: 0,
                 assetID: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
                 output: exampleSECP256K1TransferOutput()
             ),
@@ -1281,7 +1281,7 @@ final class TransactionsTests: AvalancheTestCase {
                 validator: exampleValidator(),
                 stake: Stake(lockedOuts: [
                     TransferableOutput(
-                        assetId: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
+                        assetID: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
                         output: SECP256K1TransferOutput(
                             amount: 2000000000000,
                             locktime: Date(timeIntervalSince1970: 0),
@@ -1443,7 +1443,7 @@ final class TransactionsTests: AvalancheTestCase {
                 validator: exampleValidator(),
                 stake: Stake(lockedOuts: [
                     TransferableOutput(
-                        assetId: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
+                        assetID: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
                         output: SECP256K1TransferOutput(
                             amount: 2000000000000,
                             locktime: Date(timeIntervalSince1970: 0),
@@ -1823,7 +1823,7 @@ final class TransactionsTests: AvalancheTestCase {
                 inputs: [exampleEVMInput()],
                 exportedOutputs: [
                     TransferableOutput(
-                        assetId: AssetID(hex: "0xdbcf890f77f49b96857648b72b77f9f82937f28a68704af05da0dc12ba53f2db")!,
+                        assetID: AssetID(hex: "0xdbcf890f77f49b96857648b72b77f9f82937f28a68704af05da0dc12ba53f2db")!,
                         output: SECP256K1TransferOutput(
                             amount: 1000000,
                             locktime: Date(timeIntervalSince1970: 0),

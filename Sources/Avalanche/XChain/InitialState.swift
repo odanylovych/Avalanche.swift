@@ -38,8 +38,10 @@ public struct InitialState {
 
 extension InitialState: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        featureExtensionID = try FeatureExtensionID(from: decoder)
-        outputs = try [Output](from: decoder)
+        self.init(
+            featureExtensionID: try FeatureExtensionID(from: decoder),
+            outputs: try [Output](from: decoder)
+        )
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {

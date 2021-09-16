@@ -24,13 +24,15 @@ public struct IPv4Address: Equatable {
 extension IPv4Address: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         let _ = try Data(from: decoder, size: 12)
-        host = (
-            try UInt8(from: decoder),
-            try UInt8(from: decoder),
-            try UInt8(from: decoder),
-            try UInt8(from: decoder)
+        self.init(
+            host: (
+                try UInt8(from: decoder),
+                try UInt8(from: decoder),
+                try UInt8(from: decoder),
+                try UInt8(from: decoder)
+            ),
+            port: try UInt16(from: decoder)
         )
-        port = try UInt16(from: decoder)
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
@@ -55,8 +57,10 @@ public struct IPv6Address: Equatable {
 
 extension IPv6Address: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        host = try [UInt16](from: decoder, size: 8)
-        port = try UInt16(from: decoder)
+        self.init(
+            host: try [UInt16](from: decoder, size: 8),
+            port: try UInt16(from: decoder)
+        )
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {

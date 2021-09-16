@@ -15,9 +15,9 @@ public struct UTXO {
     public let assetID: AssetID
     public let output: Output
     
-    public init(transactionId: TransactionID, outputIndex: UInt32, assetID: AssetID, output: Output) {
-        self.transactionID = transactionId
-        self.utxoIndex = outputIndex
+    public init(transactionID: TransactionID, utxoIndex: UInt32, assetID: AssetID, output: Output) {
+        self.transactionID = transactionID
+        self.utxoIndex = utxoIndex
         self.assetID = assetID
         self.output = output
     }
@@ -25,10 +25,12 @@ public struct UTXO {
 
 extension UTXO: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        transactionID = try TransactionID(from: decoder)
-        utxoIndex = try UInt32(from: decoder)
-        assetID = try AssetID(from: decoder)
-        output = try Output.from(decoder: decoder)
+        self.init(
+            transactionID: try TransactionID(from: decoder),
+            utxoIndex: try UInt32(from: decoder),
+            assetID: try AssetID(from: decoder),
+            output: try Output.from(decoder: decoder)
+        )
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
