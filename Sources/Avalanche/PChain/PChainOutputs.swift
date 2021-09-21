@@ -44,4 +44,11 @@ public class SECP256K1OutputOwners: Output, AvalancheDecodable {
             .encode(threshold, name: "threshold")
             .encode(addresses, name: "addresses")
     }
+    
+    override public func equalTo(rhs: Output) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return locktime == rhs.locktime
+            && threshold == rhs.threshold
+            && addresses == rhs.addresses
+    }
 }

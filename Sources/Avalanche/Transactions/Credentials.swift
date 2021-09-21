@@ -17,7 +17,7 @@ public struct Signature: ID {
     }
 }
 
-public class Credential: AvalancheEncodable, AvalancheDynamicDecodableTypeID {
+public class Credential: AvalancheEncodable, AvalancheDynamicDecodableTypeID, Equatable {
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public let signatures: [Signature]
@@ -37,6 +37,10 @@ public class Credential: AvalancheEncodable, AvalancheDynamicDecodableTypeID {
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(signatures, name: "signatures")
+    }
+    
+    public static func == (lhs: Credential, rhs: Credential) -> Bool {
+        lhs.signatures == rhs.signatures
     }
 }
 

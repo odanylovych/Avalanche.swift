@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct UTXO {
+public struct UTXO: Equatable {
     public static let codecID: CodecID = .latest
     
     public let transactionID: TransactionID
@@ -25,6 +25,10 @@ public struct UTXO {
 
 extension UTXO: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
+        let codecID: CodecID = try decoder.decode()
+        guard codecID == Self.codecID else {
+            throw AvalancheDecoderError.dataCorrupted(codecID, description: "Wrong CodecID")
+        }
         self.init(
             transactionID: try decoder.decode(),
             utxoIndex: try decoder.decode(),

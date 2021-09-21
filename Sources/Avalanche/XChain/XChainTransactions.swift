@@ -63,6 +63,15 @@ public class CreateAssetTransaction: BaseTransaction {
             .encode(denomination, name: "denomination")
             .encode(initialStates, name: "initialStates")
     }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return name == rhs.name
+            && symbol == rhs.symbol
+            && denomination == rhs.denomination
+            && initialStates == rhs.initialStates
+            && super.equalTo(rhs: rhs)
+    }
 }
 
 public class OperationTransaction: BaseTransaction {
@@ -105,6 +114,12 @@ public class OperationTransaction: BaseTransaction {
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(operations, name: "operations")
+    }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return operations == rhs.operations
+            && super.equalTo(rhs: rhs)
     }
 }
 
@@ -154,6 +169,13 @@ public class ImportTransaction: BaseTransaction {
         try encoder.encode(sourceChain, name: "sourceChain")
             .encode(transferableInputs, name: "transferableInputs")
     }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return sourceChain == rhs.sourceChain
+            && transferableInputs == rhs.transferableInputs
+            && super.equalTo(rhs: rhs)
+    }
 }
 
 public class ExportTransaction: BaseTransaction {
@@ -201,5 +223,12 @@ public class ExportTransaction: BaseTransaction {
         try super.encode(in: encoder)
         try encoder.encode(destinationChain, name: "destinationChain")
             .encode(transferableOutputs, name: "transferableOutputs")
+    }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return destinationChain == rhs.destinationChain
+            && transferableOutputs == rhs.transferableOutputs
+            && super.equalTo(rhs: rhs)
     }
 }

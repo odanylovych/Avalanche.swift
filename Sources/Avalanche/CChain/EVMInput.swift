@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct EVMInput {
+public struct EVMInput: Equatable {
     public let address: EthAddress
     public let amount: UInt64
     public let assetID: AssetID

@@ -26,7 +26,7 @@ extension FeatureExtensionID: AvalancheCodable {
     }
 }
 
-public struct InitialState {
+public struct InitialState: Equatable {
     public let featureExtensionID: FeatureExtensionID
     public let outputs: [Output]
 

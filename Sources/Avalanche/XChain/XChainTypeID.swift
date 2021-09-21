@@ -27,6 +27,7 @@ public enum XChainTypeID: UInt32, TypeID, CaseIterable {
     case nftCredential = 0x0000000e
     
     // Transactions
+    case baseTransaction = 0x00000000
     case createAssetTransaction = 0x00000001
     case operationTransaction = 0x00000002
     case importTransaction = 0x00000003
@@ -60,6 +61,7 @@ public struct XChainDynamicTypeRegistry: DynamicTypeRegistry {
             .nftCredential: Self.wrap(NFTCredential.self),
         ]
         transactions = [
+            .baseTransaction: Self.wrap(BaseTransaction.self),
             .createAssetTransaction: Self.wrap(CreateAssetTransaction.self),
             .operationTransaction: Self.wrap(OperationTransaction.self),
             .importTransaction: Self.wrap(ImportTransaction.self),

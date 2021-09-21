@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Input: AvalancheEncodable, AvalancheDynamicDecodableTypeID {
+public class Input: AvalancheEncodable, AvalancheDynamicDecodableTypeID, Equatable {
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public let addressIndices: [UInt32]
@@ -31,9 +31,17 @@ public class Input: AvalancheEncodable, AvalancheDynamicDecodableTypeID {
     public func encode(in encoder: AvalancheEncoder) throws {
         fatalError("Not supported")
     }
+    
+    public func equalTo(rhs: Input) -> Bool {
+        fatalError("Not supported")
+    }
+    
+    public static func == (lhs: Input, rhs: Input) -> Bool {
+        lhs.equalTo(rhs: rhs)
+    }
 }
 
-public class SECP256K1TransferInput: Input, AvalancheDecodable, Equatable {
+public class SECP256K1TransferInput: Input, AvalancheDecodable {
     override public class var typeID: TypeID { CommonTypeID.secp256K1TransferInput }
     
     public let amount: UInt64
@@ -66,7 +74,9 @@ public class SECP256K1TransferInput: Input, AvalancheDecodable, Equatable {
             .encode(addressIndices, name: "addressIndices")
     }
     
-    public static func == (lhs: SECP256K1TransferInput, rhs: SECP256K1TransferInput) -> Bool {
-        lhs.amount == rhs.amount && lhs.addressIndices == rhs.addressIndices
+    override public func equalTo(rhs: Input) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return amount == rhs.amount
+            && addressIndices == rhs.addressIndices
     }
 }

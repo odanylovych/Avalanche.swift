@@ -52,6 +52,15 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction, AvalancheDec
             .encode(inputs, name: "inputs")
             .encode(exportedOutputs, name: "exportedOutputs")
     }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return networkID == rhs.networkID
+            && blockchainID == rhs.blockchainID
+            && destinationChain == rhs.destinationChain
+            && inputs == rhs.inputs
+            && exportedOutputs == rhs.exportedOutputs
+    }
 }
 
 public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
@@ -98,5 +107,14 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDec
             .encode(sourceChain, name: "sourceChain")
             .encode(importedInputs, name: "importedInputs")
             .encode(outputs, name: "outputs")
+    }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return networkID == rhs.networkID
+            && blockchainID == rhs.blockchainID
+            && sourceChain == rhs.sourceChain
+            && importedInputs == rhs.importedInputs
+            && outputs == rhs.outputs
     }
 }

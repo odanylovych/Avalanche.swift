@@ -19,6 +19,7 @@ public enum PChainTypeID: UInt32, TypeID, CaseIterable {
     case secp256K1Credential = 0x00000009
     
     // Transactions
+    case baseTransaction = 0x00000000
     case addValidatorTransaction = 0x0000000c
     case addSubnetValidatorTransaction = 0x0000000d
     case addDelegatorTransaction = 0x0000000e
@@ -49,6 +50,7 @@ public struct PChainDynamicTypeRegistry: DynamicTypeRegistry {
         operations = [:]
         credentials = [.secp256K1Credential: Self.wrap(SECP256K1Credential.self)]
         transactions = [
+            .baseTransaction: Self.wrap(BaseTransaction.self),
             .addValidatorTransaction: Self.wrap(AddValidatorTransaction.self),
             .addSubnetValidatorTransaction: Self.wrap(AddSubnetValidatorTransaction.self),
             .addDelegatorTransaction: Self.wrap(AddDelegatorTransaction.self),

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct GenesisAsset {
+public struct GenesisAsset: Equatable {
     public let alias: String
     public let networkID: NetworkID
     public let blockchainID: BlockchainID

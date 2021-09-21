@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct UTXOID {
+public struct UTXOID: Equatable {
     public let transactionID: TransactionID
     public let utxoIndex: UInt32
     
@@ -31,7 +31,7 @@ extension UTXOID: AvalancheCodable {
     }
 }
 
-public struct TransferableOperation {
+public struct TransferableOperation: Equatable {
     public let assetID: AssetID
     public let utxoIDs: [UTXOID]
     public let transferOperation: Operation

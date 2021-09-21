@@ -7,8 +7,8 @@
 
 import Foundation
 
-public struct StakeableLockedOutput {
-    public static let typeID: TypeID = PChainTypeID.stakeableLockedOutput
+public struct StakeableLockedOutput: Equatable {
+    public static let typeID: PChainTypeID = .stakeableLockedOutput
     
     public let locktime: Date
     public let transferableOutput: TransferableOutput
@@ -21,6 +21,10 @@ public struct StakeableLockedOutput {
 
 extension StakeableLockedOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
+        let typeID: PChainTypeID = try decoder.decode()
+        guard typeID == Self.typeID else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         self.init(
             locktime: try decoder.decode(),
             transferableOutput: try decoder.decode()

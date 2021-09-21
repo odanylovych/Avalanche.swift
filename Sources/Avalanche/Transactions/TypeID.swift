@@ -15,7 +15,7 @@ extension TypeID where Self: RawRepresentable, RawValue: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         let rawValue: RawValue = try decoder.decode()
         guard let typeID = Self(rawValue: rawValue) else {
-            throw AvalancheDecoderError.dataCorrupted(rawValue, description: "Wrong TypeID")
+            throw AvalancheDecoderError.dataCorrupted(rawValue, description: "Cannot find such TypeID")
         }
         self = typeID
     }

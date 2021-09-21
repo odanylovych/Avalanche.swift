@@ -17,7 +17,7 @@ public struct NodeID: ID {
     }
 }
 
-public struct Validator {
+public struct Validator: Equatable {
     public let nodeID: NodeID
     public let startTime: Date
     public let endTime: Date
@@ -49,7 +49,7 @@ extension Validator: AvalancheCodable {
     }
 }
 
-public struct Stake {
+public struct Stake: Equatable {
     public let lockedOutputs: [TransferableOutput]
     
     public init(lockedOutputs: [TransferableOutput]) {
@@ -123,9 +123,18 @@ public class AddValidatorTransaction: BaseTransaction {
             .encode(rewardsOwner, name: "rewardsOwner")
             .encode(shares, name: "shares")
     }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return validator == rhs.validator
+            && stake == rhs.stake
+            && rewardsOwner == rhs.rewardsOwner
+            && shares == rhs.shares
+            && super.equalTo(rhs: rhs)
+    }
 }
 
-public struct SubnetAuth {
+public struct SubnetAuth: Equatable {
     public static let typeID: PChainTypeID = PChainTypeID.subnetAuth
     
     public let signatureIndices: [UInt32]
@@ -137,6 +146,10 @@ public struct SubnetAuth {
 
 extension SubnetAuth: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
+        let typeID: PChainTypeID = try decoder.decode()
+        guard typeID == Self.typeID else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         self.init(signatureIndices: try decoder.decode())
     }
     
@@ -197,6 +210,14 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
             .encode(subnetID, name: "subnetID")
             .encode(subnetAuth, name: "subnetAuth")
     }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return validator == rhs.validator
+            && subnetID == rhs.subnetID
+            && subnetAuth == rhs.subnetAuth
+            && super.equalTo(rhs: rhs)
+    }
 }
 
 public class AddDelegatorTransaction: BaseTransaction {
@@ -250,6 +271,14 @@ public class AddDelegatorTransaction: BaseTransaction {
             .encode(stake, name: "stake")
             .encode(rewardsOwner, name: "rewardsOwner")
     }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return validator == rhs.validator
+            && stake == rhs.stake
+            && rewardsOwner == rhs.rewardsOwner
+            && super.equalTo(rhs: rhs)
+    }
 }
 
 public class CreateSubnetTransaction: BaseTransaction {
@@ -292,6 +321,12 @@ public class CreateSubnetTransaction: BaseTransaction {
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(rewardsOwner, name: "rewardsOwner")
+    }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return rewardsOwner == rhs.rewardsOwner
+            && super.equalTo(rhs: rhs)
     }
 }
 

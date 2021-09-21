@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Operation: AvalancheEncodable, AvalancheDynamicDecodableTypeID {
+public class Operation: AvalancheEncodable, AvalancheDynamicDecodableTypeID, Equatable {
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public init() {}
@@ -22,6 +22,14 @@ public class Operation: AvalancheEncodable, AvalancheDynamicDecodableTypeID {
     
     public func encode(in encoder: AvalancheEncoder) throws {
         fatalError("Not supported")
+    }
+    
+    public func equalTo(rhs: Operation) -> Bool {
+        fatalError("Not supported")
+    }
+    
+    public static func == (lhs: Operation, rhs: Operation) -> Bool {
+        lhs.equalTo(rhs: rhs)
     }
 }
 
@@ -56,9 +64,16 @@ public class SECP256K1MintOperation: Operation, AvalancheDecodable {
             .encode(mintOutput, name: "mintOutput")
             .encode(transferOutput, name: "transferOutput")
     }
+    
+    override public func equalTo(rhs: Operation) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return addressIndices == rhs.addressIndices
+            && mintOutput == rhs.mintOutput
+            && transferOutput == rhs.transferOutput
+    }
 }
 
-public struct NFTMintOperationOutput {
+public struct NFTMintOperationOutput: Equatable {
     public let locktime: Date
     public let threshold: UInt32
     public let addresses: [Address]
@@ -136,9 +151,17 @@ public class NFTMintOperation: Operation, AvalancheDecodable {
             .encode(payload, name: "payload")
             .encode(outputs, name: "outputs")
     }
+    
+    override public func equalTo(rhs: Operation) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return addressIndices == rhs.addressIndices
+            && groupID == rhs.groupID
+            && payload == rhs.payload
+            && outputs == rhs.outputs
+    }
 }
 
-public struct NFTTransferOperationOutput {
+public struct NFTTransferOperationOutput: Equatable {
     public let groupID: UInt32
     public let payload: Data
     public let locktime: Date
@@ -215,5 +238,11 @@ public class NFTTransferOperation: Operation, AvalancheDecodable {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(addressIndices, name: "addressIndices")
             .encode(nftTransferOutput, name: "nftTransferOutput")
+    }
+    
+    override public func equalTo(rhs: Operation) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return addressIndices == rhs.addressIndices
+            && nftTransferOutput == rhs.nftTransferOutput
     }
 }

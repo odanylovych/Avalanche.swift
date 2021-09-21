@@ -17,7 +17,7 @@ public struct TransactionID: ID {
     }
 }
 
-public struct TransferableInput {
+public struct TransferableInput: Equatable {
     public let transactionID: TransactionID
     public let utxoIndex: UInt32
     public let assetID: AssetID

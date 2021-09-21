@@ -17,7 +17,7 @@ public struct AssetID: ID {
     }
 }
 
-public struct TransferableOutput {
+public struct TransferableOutput: Equatable {
     public let assetID: AssetID
     public let output: Output
     

@@ -44,6 +44,13 @@ public class SECP256K1MintOutput: Output, AvalancheDecodable {
             .encode(threshold, name: "threshold")
             .encode(addresses, name: "addresses")
     }
+    
+    override public func equalTo(rhs: Output) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return locktime == rhs.locktime
+            && threshold == rhs.threshold
+            && addresses == rhs.addresses
+    }
 }
 
 public class NFTTransferOutput: Output, AvalancheDecodable {
@@ -98,6 +105,15 @@ public class NFTTransferOutput: Output, AvalancheDecodable {
             .encode(threshold, name: "threshold")
             .encode(addresses, name: "addresses")
     }
+    
+    override public func equalTo(rhs: Output) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return groupID == rhs.groupID
+            && payload == rhs.payload
+            && locktime == rhs.locktime
+            && threshold == rhs.threshold
+            && addresses == rhs.addresses
+    }
 }
 
 public class NFTMintOutput: Output, AvalancheDecodable {
@@ -140,5 +156,13 @@ public class NFTMintOutput: Output, AvalancheDecodable {
             .encode(locktime, name: "locktime")
             .encode(threshold, name: "threshold")
             .encode(addresses, name: "addresses")
+    }
+    
+    override public func equalTo(rhs: Output) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return groupID == rhs.groupID
+            && locktime == rhs.locktime
+            && threshold == rhs.threshold
+            && addresses == rhs.addresses
     }
 }

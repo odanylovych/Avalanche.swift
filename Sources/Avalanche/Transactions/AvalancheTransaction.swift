@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodable, AvalancheDynamicDecodableTypeID {
+public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodable, AvalancheDynamicDecodableTypeID, Equatable {
     public typealias Addr = Address
     public typealias Signed = SignedAvalancheTransaction
     
@@ -34,9 +34,17 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
     public func encode(in encoder: AvalancheEncoder) throws {
         fatalError("Not supported")
     }
+    
+    public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        fatalError("Not supported")
+    }
+    
+    public static func == (lhs: UnsignedAvalancheTransaction, rhs: UnsignedAvalancheTransaction) -> Bool {
+        lhs.equalTo(rhs: rhs)
+    }
 }
 
-public struct SignedAvalancheTransaction {
+public struct SignedAvalancheTransaction: Equatable {
     public static let codecID: CodecID = .latest
 
     public let unsignedTransaction: UnsignedAvalancheTransaction
@@ -56,6 +64,10 @@ extension SignedAvalancheTransaction: SignedTransaction {
 
 extension SignedAvalancheTransaction: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
+        let codecID: CodecID = try decoder.decode()
+        guard codecID == Self.codecID else {
+            throw AvalancheDecoderError.dataCorrupted(codecID, description: "Wrong CodecID")
+        }
         self.init(
             unsignedTransaction: try decoder.dynamic(),
             credentials: try decoder.dynamic()
@@ -183,5 +195,14 @@ public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
             .encode(outputs, name: "outputs")
             .encode(inputs, name: "inputs")
             .encode(memo, name: "memo")
+    }
+    
+    override public func equalTo(rhs: UnsignedAvalancheTransaction) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return networkID == rhs.networkID
+            && blockchainID == rhs.blockchainID
+            && outputs == rhs.outputs
+            && inputs == rhs.inputs
+            && memo == rhs.memo
     }
 }
