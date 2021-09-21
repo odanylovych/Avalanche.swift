@@ -29,7 +29,7 @@ extension UTXO: AvalancheCodable {
             transactionID: try decoder.decode(),
             utxoIndex: try decoder.decode(),
             assetID: try decoder.decode(),
-            output: try Output.from(decoder: decoder)
+            output: try decoder.dynamic()
         )
     }
     

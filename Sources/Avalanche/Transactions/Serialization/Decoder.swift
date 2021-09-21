@@ -15,9 +15,14 @@ public protocol AvalancheFixedDecodable {
     init(from decoder: AvalancheDecoder, size: Int) throws
 }
 
+public protocol AvalancheDynamicDecodable {
+    static func from(decoder: AvalancheDecoder) throws -> Self
+}
+
 public protocol AvalancheDecoderContext {
     var hrp: String { get }
     var chainId: String { get }
+    var dynamicParser: DynamicTypeParser { get }
 }
 
 public protocol AvalancheDecoder {
@@ -27,6 +32,7 @@ public protocol AvalancheDecoder {
     
     func decode<T: AvalancheDecodable>() throws -> T
     func decode<T: AvalancheFixedDecodable>(size: Int) throws -> T
+    func dynamic<T: AvalancheDynamicDecodable>() throws -> T
     func read(count: Int) throws -> Data
 }
 
@@ -37,6 +43,10 @@ extension AvalancheDecoder {
     
     public func decode<T: AvalancheFixedDecodable>(_ type: T.Type, size: Int) throws -> T {
         return try self.decode(size: size)
+    }
+    
+    public func decode<T: AvalancheDynamicDecodable>(dynamic: T.Type) throws -> T {
+        return try self.dynamic()
     }
 }
 
@@ -57,6 +67,10 @@ class ADecoder: AvalancheDecoder {
     
     func decode<T: AvalancheFixedDecodable>(size: Int) throws -> T {
         return try T(from: self, size: size)
+    }
+    
+    func dynamic<T: AvalancheDynamicDecodable>() throws -> T {
+        return try T.from(decoder: self)
     }
     
     func read(count: Int) throws -> Data {

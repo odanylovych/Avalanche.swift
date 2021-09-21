@@ -7,27 +7,17 @@
 
 import Foundation
 
-public class Operation: AvalancheCodable {
+public class Operation: AvalancheEncodable, AvalancheDynamicDecodableTypeID {
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public init() {}
     
-    required public init(from decoder: AvalancheDecoder) throws {
+    required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         fatalError("Not supported")
     }
     
-    public static func from(decoder: AvalancheDecoder) throws -> Operation {
-        let typeID: UInt32 = try decoder.decode()
-        switch typeID {
-        case XChainTypeID.secp256K1MintOperation.rawValue:
-            return try decoder.decode(SECP256K1MintOperation.self)
-        case XChainTypeID.nftMintOperation.rawValue:
-            return try decoder.decode(NFTMintOperation.self)
-        case XChainTypeID.nftTransferOperation.rawValue:
-            return try decoder.decode(NFTTransferOperation.self)
-        default:
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Operation typeID")
-        }
+    public static func from(decoder: AvalancheDecoder) throws -> Self {
+        return try decoder.context.dynamicParser.decode(operation: decoder) as! Self
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
@@ -35,7 +25,7 @@ public class Operation: AvalancheCodable {
     }
 }
 
-public class SECP256K1MintOperation: Operation {
+public class SECP256K1MintOperation: Operation, AvalancheDecodable {
     override public class var typeID: TypeID { XChainTypeID.secp256K1MintOperation }
     
     public let addressIndices: [UInt32]
@@ -49,14 +39,17 @@ public class SECP256K1MintOperation: Operation {
         super.init()
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         self.init(
             addressIndices: try decoder.decode(),
             mintOutput: try decoder.decode(),
             transferOutput: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(addressIndices, name: "addressIndices")
@@ -101,7 +94,7 @@ extension NFTMintOperationOutput: AvalancheCodable {
     }
 }
 
-public class NFTMintOperation: Operation {
+public class NFTMintOperation: Operation, AvalancheDecodable {
     override public class var typeID: TypeID { XChainTypeID.nftMintOperation }
     
     public let addressIndices: [UInt32]
@@ -124,7 +117,10 @@ public class NFTMintOperation: Operation {
         super.init()
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         try self.init(
             addressIndices: try decoder.decode(),
             groupID: try decoder.decode(),
@@ -132,7 +128,7 @@ public class NFTMintOperation: Operation {
             outputs: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(addressIndices, name: "addressIndices")
@@ -193,7 +189,7 @@ extension NFTTransferOperationOutput: AvalancheCodable {
     }
 }
 
-public class NFTTransferOperation: Operation {
+public class NFTTransferOperation: Operation, AvalancheDecodable {
     override public class var typeID: TypeID { XChainTypeID.nftTransferOperation }
     
     public let addressIndices: [UInt32]
@@ -205,13 +201,16 @@ public class NFTTransferOperation: Operation {
         super.init()
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         self.init(
             addressIndices: try decoder.decode(),
             nftTransferOutput: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(addressIndices, name: "addressIndices")

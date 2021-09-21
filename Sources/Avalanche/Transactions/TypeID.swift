@@ -7,7 +7,9 @@
 
 import Foundation
 
-public protocol TypeID: AvalancheCodable {}
+public protocol TypeID: AvalancheCodable {
+    var rawValue: UInt32 { get }
+}
 
 extension TypeID where Self: RawRepresentable, RawValue: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {

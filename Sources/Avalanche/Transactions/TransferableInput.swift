@@ -37,7 +37,7 @@ extension TransferableInput: AvalancheCodable {
             transactionID: try decoder.decode(),
             utxoIndex: try decoder.decode(),
             assetID: try decoder.decode(),
-            input: try Input.from(decoder: decoder)
+            input: try decoder.dynamic()
         )
     }
     

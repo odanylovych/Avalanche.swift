@@ -31,7 +31,7 @@ extension TransferableOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
             assetID: try decoder.decode(),
-            output: try Output.from(decoder: decoder)
+            output: try decoder.dynamic()
         )
     }
     

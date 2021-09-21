@@ -40,7 +40,7 @@ extension InitialState: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
             featureExtensionID: try decoder.decode(),
-            outputs: try decoder.decode()
+            outputs: try decoder.dynamic()
         )
     }
     

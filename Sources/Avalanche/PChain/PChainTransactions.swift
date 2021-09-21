@@ -99,7 +99,10 @@ public class AddValidatorTransaction: BaseTransaction {
         )
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         try self.init(
             networkID: try decoder.decode(),
             blockchainID: try decoder.decode(),
@@ -112,7 +115,7 @@ public class AddValidatorTransaction: BaseTransaction {
             shares: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(validator, name: "validator")
@@ -123,7 +126,7 @@ public class AddValidatorTransaction: BaseTransaction {
 }
 
 public struct SubnetAuth {
-    public static let typeID: TypeID = PChainTypeID.subnetAuth
+    public static let typeID: PChainTypeID = PChainTypeID.subnetAuth
     
     public let signatureIndices: [UInt32]
     
@@ -172,7 +175,10 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
         )
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         try self.init(
             networkID: try decoder.decode(),
             blockchainID: try decoder.decode(),
@@ -184,7 +190,7 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
             subnetAuth: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(validator, name: "validator")
@@ -222,7 +228,10 @@ public class AddDelegatorTransaction: BaseTransaction {
         )
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         try self.init(
             networkID: try decoder.decode(),
             blockchainID: try decoder.decode(),
@@ -234,7 +243,7 @@ public class AddDelegatorTransaction: BaseTransaction {
             rewardsOwner: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(validator, name: "validator")
@@ -266,7 +275,10 @@ public class CreateSubnetTransaction: BaseTransaction {
         )
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         try self.init(
             networkID: try decoder.decode(),
             blockchainID: try decoder.decode(),
@@ -276,7 +288,7 @@ public class CreateSubnetTransaction: BaseTransaction {
             rewardsOwner: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try super.encode(in: encoder)
         try encoder.encode(rewardsOwner, name: "rewardsOwner")

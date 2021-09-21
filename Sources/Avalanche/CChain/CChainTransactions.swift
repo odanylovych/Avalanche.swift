@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class CChainExportTransaction: UnsignedAvalancheTransaction {
+public class CChainExportTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
     override public class var typeID: TypeID { CChainTypeID.exportTransaction }
     
     public let networkID: NetworkID
@@ -31,7 +31,10 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction {
         super.init()
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         self.init(
             networkID: try decoder.decode(),
             blockchainID: try decoder.decode(),
@@ -40,7 +43,7 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction {
             exportedOutputs: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")
@@ -51,7 +54,7 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction {
     }
 }
 
-public class CChainImportTransaction: UnsignedAvalancheTransaction {
+public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
     override public class var typeID: TypeID { CChainTypeID.importTransaction }
     
     public let networkID: NetworkID
@@ -75,7 +78,10 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction {
         super.init()
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         self.init(
             networkID: try decoder.decode(),
             blockchainID: try decoder.decode(),
@@ -84,7 +90,7 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction {
             outputs: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")

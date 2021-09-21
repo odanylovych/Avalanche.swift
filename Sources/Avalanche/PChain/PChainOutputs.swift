@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class SECP256K1OutputOwners: Output {
+public class SECP256K1OutputOwners: Output, AvalancheDecodable {
     override public class var typeID: TypeID { PChainTypeID.secp256K1OutputOwners }
     
     public let locktime: Date
@@ -27,14 +27,17 @@ public class SECP256K1OutputOwners: Output {
         super.init(addresses: addresses)
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         try self.init(
             locktime: try decoder.decode(),
             threshold: try decoder.decode(),
             addresses: try decoder.decode()
         )
     }
-
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(locktime, name: "locktime")

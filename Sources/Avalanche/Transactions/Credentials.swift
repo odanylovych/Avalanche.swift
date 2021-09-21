@@ -17,7 +17,7 @@ public struct Signature: ID {
     }
 }
 
-public class Credential: AvalancheCodable {
+public class Credential: AvalancheEncodable, AvalancheDynamicDecodableTypeID {
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public let signatures: [Signature]
@@ -26,20 +26,12 @@ public class Credential: AvalancheCodable {
         self.signatures = signatures
     }
     
-    required public init(from decoder: AvalancheDecoder) throws {
+    required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         fatalError("Not supported")
     }
     
-    public static func from(decoder: AvalancheDecoder) throws -> Credential {
-        let typeID: UInt32 = try decoder.decode()
-        switch typeID {
-        case CommonTypeID.secp256K1Credential.rawValue:
-            return try decoder.decode(SECP256K1Credential.self)
-        case XChainTypeID.nftCredential.rawValue:
-            return try decoder.decode(NFTCredential.self)
-        default:
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Credential typeID")
-        }
+    public static func from(decoder: AvalancheDecoder) throws -> Self {
+        return try decoder.context.dynamicParser.decode(credential: decoder) as! Self
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
@@ -48,10 +40,13 @@ public class Credential: AvalancheCodable {
     }
 }
 
-public class SECP256K1Credential: Credential {
+public class SECP256K1Credential: Credential, AvalancheDecodable {
     override public class var typeID: TypeID { CommonTypeID.secp256K1Credential }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         self.init(signatures: try decoder.decode())
     }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class Input: AvalancheCodable {
+public class Input: AvalancheEncodable, AvalancheDynamicDecodableTypeID {
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public let addressIndices: [UInt32]
@@ -16,18 +16,12 @@ public class Input: AvalancheCodable {
         self.addressIndices = addressIndices
     }
     
-    required public init(from decoder: AvalancheDecoder) throws {
+    required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         fatalError("Not supported")
     }
     
-    public static func from(decoder: AvalancheDecoder) throws -> Input {
-        let typeID: UInt32 = try decoder.decode()
-        switch typeID {
-        case CommonTypeID.secp256K1TransferInput.rawValue:
-            return try decoder.decode(SECP256K1TransferInput.self)
-        default:
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong Input typeID")
-        }
+    public static func from(decoder: AvalancheDecoder) throws -> Self {
+        return try decoder.context.dynamicParser.decode(input: decoder) as! Self
     }
     
     public func credentialType() -> Credential.Type {
@@ -39,7 +33,7 @@ public class Input: AvalancheCodable {
     }
 }
 
-public class SECP256K1TransferInput: Input {
+public class SECP256K1TransferInput: Input, AvalancheDecodable, Equatable {
     override public class var typeID: TypeID { CommonTypeID.secp256K1TransferInput }
     
     public let amount: UInt64
@@ -52,13 +46,16 @@ public class SECP256K1TransferInput: Input {
         super.init(addressIndices: addressIndices)
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         try self.init(
             amount: try decoder.decode(),
             addressIndices: try decoder.decode()
         )
     }
-
+    
     override public func credentialType() -> Credential.Type {
         SECP256K1Credential.self
     }
@@ -67,5 +64,9 @@ public class SECP256K1TransferInput: Input {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(amount, name: "amount")
             .encode(addressIndices, name: "addressIndices")
+    }
+    
+    public static func == (lhs: SECP256K1TransferInput, rhs: SECP256K1TransferInput) -> Bool {
+        lhs.amount == rhs.amount && lhs.addressIndices == rhs.addressIndices
     }
 }

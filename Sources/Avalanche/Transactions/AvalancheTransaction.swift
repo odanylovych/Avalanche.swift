@@ -7,7 +7,7 @@
 
 import Foundation
 
-public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheCodable {
+public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodable, AvalancheDynamicDecodableTypeID {
     public typealias Addr = Address
     public typealias Signed = SignedAvalancheTransaction
     
@@ -15,8 +15,12 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheCodable
     
     public init() {}
     
-    required public init(from decoder: AvalancheDecoder) throws {
+    required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         fatalError("Not supported")
+    }
+    
+    public static func from(decoder: AvalancheDecoder) throws -> Self {
+        return try decoder.context.dynamicParser.decode(transaction: decoder) as! Self
     }
     
     public func utxoAddressIndices() -> [(Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])] {
@@ -53,8 +57,8 @@ extension SignedAvalancheTransaction: SignedTransaction {
 extension SignedAvalancheTransaction: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            unsignedTransaction: try decoder.decode(),
-            credentials: try decoder.decode()
+            unsignedTransaction: try decoder.dynamic(),
+            credentials: try decoder.dynamic()
         )
     }
     
@@ -122,7 +126,7 @@ public struct BlockchainID: ID {
     }
 }
 
-public class BaseTransaction: UnsignedAvalancheTransaction {
+public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
     override public class var typeID: TypeID { CommonTypeID.baseTransaction }
     
     public let networkID: NetworkID
@@ -153,7 +157,10 @@ public class BaseTransaction: UnsignedAvalancheTransaction {
         super.init()
     }
     
-    convenience required public init(from decoder: AvalancheDecoder) throws {
+    convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
+        guard typeID == Self.typeID.rawValue else {
+            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+        }
         try self.init(
             networkID: try decoder.decode(),
             blockchainID: try decoder.decode(),
@@ -162,7 +169,7 @@ public class BaseTransaction: UnsignedAvalancheTransaction {
             memo: try decoder.decode()
         )
     }
-
+    
     override public func utxoAddressIndices() -> [
         (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
     ] {

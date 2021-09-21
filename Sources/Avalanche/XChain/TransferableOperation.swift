@@ -48,7 +48,7 @@ extension TransferableOperation: AvalancheCodable {
         self.init(
             assetID: try decoder.decode(),
             utxoIDs: try decoder.decode(),
-            transferOperation: try Operation.from(decoder: decoder)
+            transferOperation: try decoder.dynamic()
         )
     }
     

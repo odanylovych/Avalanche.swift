@@ -14,12 +14,14 @@ final class TransactionsTests: AvalancheTestCase {
     private let chainId = "X"
     
     struct TestAvalancheDecoderContext: AvalancheDecoderContext {
+        let dynamicParser: DynamicTypeParser
         let hrp: String
         let chainId: String
         
         init(hrp: String, chainId: String) {
             self.hrp = hrp
             self.chainId = chainId
+            dynamicParser = XChainDynamicTypeRegistry.instance
         }
     }
     
@@ -470,10 +472,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeSECP256K1TransferInput() throws {
-        try encodeTest(
-            actual: exampleSECP256K1TransferInput(),
-            expected: [
+    func testEncodeDecodeSECP256K1TransferInput() throws {
+        try encodeDecodeTest(
+            value: exampleSECP256K1TransferInput(),
+            bytes: [
                 // type id:
                 0x00, 0x00, 0x00, 0x05,
                 // amount:
