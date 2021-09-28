@@ -33,7 +33,10 @@ extension DynamicTypeRegistry {
     public func decode(input decoder: AvalancheDecoder) throws -> Input {
         let type = try decoder.decode(TID.self)
         guard let initializer = inputs[type] else {
-            throw AvalancheDecoderError.dataCorrupted(type, description: "Wrong Input type")
+            throw AvalancheDecoderError.dataCorrupted(
+                type,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong Input type")
+            )
         }
         return try initializer(decoder, type.rawValue)
     }
@@ -41,7 +44,10 @@ extension DynamicTypeRegistry {
     public func decode(output decoder: AvalancheDecoder) throws -> Output {
         let type = try decoder.decode(TID.self)
         guard let initializer = outputs[type] else {
-            throw AvalancheDecoderError.dataCorrupted(type, description: "Wrong Output type")
+            throw AvalancheDecoderError.dataCorrupted(
+                type,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong Output type")
+            )
         }
         return try initializer(decoder, type.rawValue)
     }
@@ -49,7 +55,10 @@ extension DynamicTypeRegistry {
     public func decode(operation decoder: AvalancheDecoder) throws -> Operation {
         let type = try decoder.decode(TID.self)
         guard let initializer = operations[type] else {
-            throw AvalancheDecoderError.dataCorrupted(type, description: "Wrong Operation type")
+            throw AvalancheDecoderError.dataCorrupted(
+                type,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong Operation type")
+            )
         }
         return try initializer(decoder, type.rawValue)
     }
@@ -57,7 +66,10 @@ extension DynamicTypeRegistry {
     public func decode(credential decoder: AvalancheDecoder) throws -> Credential {
         let type = try decoder.decode(TID.self)
         guard let initializer = credentials[type] else {
-            throw AvalancheDecoderError.dataCorrupted(type, description: "Wrong Credential type")
+            throw AvalancheDecoderError.dataCorrupted(
+                type,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong Credential type")
+            )
         }
         return try initializer(decoder, type.rawValue)
     }
@@ -65,7 +77,10 @@ extension DynamicTypeRegistry {
     public func decode(transaction decoder: AvalancheDecoder) throws -> UnsignedAvalancheTransaction {
         let type = try decoder.decode(TID.self)
         guard let initializer = transactions[type] else {
-            throw AvalancheDecoderError.dataCorrupted(type, description: "Wrong Transaction type")
+            throw AvalancheDecoderError.dataCorrupted(
+                type,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong Transaction type")
+            )
         }
         return try initializer(decoder, type.rawValue)
     }

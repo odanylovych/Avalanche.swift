@@ -1,5 +1,5 @@
 //
-//  EncoderError.swift
+//  CoderError.swift
 //  
 //
 //  Created by Ostap Danylovych on 26.08.2021.
@@ -22,7 +22,22 @@ public enum AvalancheEncoderError: Error {
     case wrongFixedArraySize(Any, actual: Int, expected: Int, Context)
 }
 
-struct AvalancheEncoderContext {
+public enum AvalancheDecoderError: Error {
+    public struct Context {
+        public let path: [String]
+        public let description: String
+        
+        public init(path: [String], description: String = "") {
+            self.path = path
+            self.description = description
+        }
+    }
+    
+    case noDataLeft(Context)
+    case dataCorrupted(Any, Context)
+}
+
+struct AvalancheCoderPath {
     var path: [String]
     
     init(_ path: [String] = []) {

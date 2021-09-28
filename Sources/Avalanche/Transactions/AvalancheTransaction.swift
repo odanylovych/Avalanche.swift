@@ -66,7 +66,10 @@ extension SignedAvalancheTransaction: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         let codecID: CodecID = try decoder.decode()
         guard codecID == Self.codecID else {
-            throw AvalancheDecoderError.dataCorrupted(codecID, description: "Wrong CodecID")
+            throw AvalancheDecoderError.dataCorrupted(
+                codecID,
+                AvalancheDecoderError.Context(path: decoder.path)
+            )
         }
         self.init(
             unsignedTransaction: try decoder.dynamic(),
@@ -171,7 +174,10 @@ public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
+            )
         }
         try self.init(
             networkID: try decoder.decode(),

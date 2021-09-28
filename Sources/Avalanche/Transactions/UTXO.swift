@@ -27,7 +27,10 @@ extension UTXO: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         let codecID: CodecID = try decoder.decode()
         guard codecID == Self.codecID else {
-            throw AvalancheDecoderError.dataCorrupted(codecID, description: "Wrong CodecID")
+            throw AvalancheDecoderError.dataCorrupted(
+                codecID,
+                AvalancheDecoderError.Context(path: decoder.path)
+            )
         }
         self.init(
             transactionID: try decoder.decode(),

@@ -15,7 +15,10 @@ extension CodecID: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         let rawValue: UInt16 = try decoder.decode()
         guard let codecID = Self(rawValue: rawValue) else {
-            throw AvalancheDecoderError.dataCorrupted(rawValue, description: "Wrong CodecID")
+            throw AvalancheDecoderError.dataCorrupted(
+                rawValue,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Cannot find such CodecID")
+            )
         }
         self = codecID
     }

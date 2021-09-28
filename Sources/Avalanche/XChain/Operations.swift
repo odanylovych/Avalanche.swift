@@ -49,7 +49,10 @@ public class SECP256K1MintOperation: Operation, AvalancheDecodable {
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
+            )
         }
         self.init(
             addressIndices: try decoder.decode(),
@@ -134,7 +137,10 @@ public class NFTMintOperation: Operation, AvalancheDecodable {
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
+            )
         }
         try self.init(
             addressIndices: try decoder.decode(),
@@ -226,7 +232,10 @@ public class NFTTransferOperation: Operation, AvalancheDecodable {
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
+            )
         }
         self.init(
             addressIndices: try decoder.decode(),

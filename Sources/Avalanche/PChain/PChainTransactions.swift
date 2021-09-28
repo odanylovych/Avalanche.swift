@@ -101,7 +101,10 @@ public class AddValidatorTransaction: BaseTransaction {
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
+            )
         }
         try self.init(
             networkID: try decoder.decode(),
@@ -148,7 +151,10 @@ extension SubnetAuth: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         let typeID: PChainTypeID = try decoder.decode()
         guard typeID == Self.typeID else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path)
+            )
         }
         self.init(signatureIndices: try decoder.decode())
     }
@@ -190,7 +196,10 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
+            )
         }
         try self.init(
             networkID: try decoder.decode(),
@@ -251,7 +260,10 @@ public class AddDelegatorTransaction: BaseTransaction {
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
+            )
         }
         try self.init(
             networkID: try decoder.decode(),
@@ -306,7 +318,10 @@ public class CreateSubnetTransaction: BaseTransaction {
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
+            )
         }
         try self.init(
             networkID: try decoder.decode(),

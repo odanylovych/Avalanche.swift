@@ -23,7 +23,10 @@ extension StakeableLockedOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         let typeID: PChainTypeID = try decoder.decode()
         guard typeID == Self.typeID else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path)
+            )
         }
         self.init(
             locktime: try decoder.decode(),

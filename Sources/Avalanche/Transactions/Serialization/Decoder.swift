@@ -26,6 +26,7 @@ public protocol AvalancheDecoderContext {
 }
 
 public protocol AvalancheDecoder {
+    var path: [String] { get }
     var context: AvalancheDecoderContext { get }
     
     init(context: AvalancheDecoderContext, data: Data)
@@ -54,28 +55,40 @@ class ADecoder: AvalancheDecoder {
     var context: AvalancheDecoderContext
     private let data: Data
     private var position: Int
+    private var decoderPath: AvalancheCoderPath
+    
+    var path: [String] {
+        return decoderPath.path
+    }
     
     required init(context: AvalancheDecoderContext, data: Data) {
         self.context = context
         self.data = data
         position = 0
+        decoderPath = AvalancheCoderPath()
     }
     
     func decode<T: AvalancheDecodable>() throws -> T {
+        decoderPath.push(T.self)
+        defer { decoderPath.pop() }
         return try T(from: self)
     }
     
     func decode<T: AvalancheFixedDecodable>(size: Int) throws -> T {
+        decoderPath.push(T.self, size: size)
+        defer { decoderPath.pop() }
         return try T(from: self, size: size)
     }
     
     func dynamic<T: AvalancheDynamicDecodable>() throws -> T {
+        decoderPath.push(T.self)
+        defer { decoderPath.pop() }
         return try T.from(decoder: self)
     }
     
     func read(count: Int) throws -> Data {
         guard count <= data.count - position else {
-            throw AvalancheDecoderError.noDataLeft
+            throw AvalancheDecoderError.noDataLeft(AvalancheDecoderError.Context(path: path))
         }
         let data = data.subdata(in: position..<position+count)
         position += count

@@ -27,34 +27,34 @@ public protocol AvalancheEncoder {
 
 class AEncoder: AvalancheEncoder {
     private(set) var output: Data
-    private var context: AvalancheEncoderContext
+    private var encoderPath: AvalancheCoderPath
     
     var path: [String] {
-        return context.path
+        return encoderPath.path
     }
     
     init() {
         output = Data()
-        context = AvalancheEncoderContext()
+        encoderPath = AvalancheCoderPath()
     }
     
     func encode(_ value: AvalancheEncodable) throws -> Self {
-        context.push(type(of: value))
-        defer { context.pop() }
+        encoderPath.push(type(of: value))
+        defer { encoderPath.pop() }
         try value.encode(in: self)
         return self
     }
     
     func encode(_ value: AvalancheEncodable, name: String) throws -> Self {
-        context.push(type(of: value), name: name)
-        defer { context.pop() }
+        encoderPath.push(type(of: value), name: name)
+        defer { encoderPath.pop() }
         try value.encode(in: self)
         return self
     }
     
     func encode(_ value: AvalancheFixedEncodable, size: Int) throws -> Self {
-        context.push(type(of: value), size: size)
-        defer { context.pop() }
+        encoderPath.push(type(of: value), size: size)
+        defer { encoderPath.pop() }
         try value.encode(in: self, size: size)
         return self
     }

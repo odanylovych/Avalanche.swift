@@ -12,7 +12,10 @@ extension String: AvalancheCodable {
         let count: UInt16 = try decoder.decode()
         let data: Data = try decoder.decode(size: Int(count))
         guard let string = String(data: data, encoding: .utf8) else {
-            throw AvalancheDecoderError.dataCorrupted(data, description: "Bad UTF8 string data")
+            throw AvalancheDecoderError.dataCorrupted(
+                data,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Bad UTF8 string data")
+            )
         }
         self = string
     }

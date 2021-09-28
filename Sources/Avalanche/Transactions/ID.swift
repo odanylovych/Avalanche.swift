@@ -50,7 +50,10 @@ extension ID {
     public init(from decoder: AvalancheDecoder) throws {
         let data: Data = try decoder.decode(size: Self.size)
         guard let id = Self(data: data) else {
-            throw AvalancheDecoderError.dataCorrupted(data, description: "Bad ID data")
+            throw AvalancheDecoderError.dataCorrupted(
+                data,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Bad ID data")
+            )
         }
         self = id
     }

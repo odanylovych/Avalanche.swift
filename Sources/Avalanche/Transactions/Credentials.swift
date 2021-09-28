@@ -49,7 +49,10 @@ public class SECP256K1Credential: Credential, AvalancheDecodable {
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
-            throw AvalancheDecoderError.dataCorrupted(typeID, description: "Wrong typeID")
+            throw AvalancheDecoderError.dataCorrupted(
+                typeID,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
+            )
         }
         self.init(signatures: try decoder.decode())
     }
