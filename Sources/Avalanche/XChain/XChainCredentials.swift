@@ -17,6 +17,6 @@ public class NFTCredential: Credential, AvalancheDecodable {
                 AvalancheDecoderError.Context(path: decoder.path, description: "Wrong typeID")
             )
         }
-        self.init(signatures: try decoder.decode())
+        self.init(signatures: try decoder.decode(name: "signatures"))
     }
 }

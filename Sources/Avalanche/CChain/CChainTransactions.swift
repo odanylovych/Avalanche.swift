@@ -39,11 +39,11 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction, AvalancheDec
             )
         }
         self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            destinationChain: try decoder.decode(),
-            inputs: try decoder.decode(),
-            exportedOutputs: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            destinationChain: try decoder.decode(name: "destinationChain"),
+            inputs: try decoder.decode(name: "inputs"),
+            exportedOutputs: try decoder.decode(name: "exportedOutputs")
         )
     }
     
@@ -98,11 +98,11 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDec
             )
         }
         self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            sourceChain: try decoder.decode(),
-            importedInputs: try decoder.decode(),
-            outputs: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            sourceChain: try decoder.decode(name: "sourceChain"),
+            importedInputs: try decoder.decode(name: "importedInputs"),
+            outputs: try decoder.decode(name: "outputs")
         )
     }
     

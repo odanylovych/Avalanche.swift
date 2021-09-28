@@ -31,7 +31,7 @@ public protocol DynamicTypeRegistry: DynamicTypeParser {
 
 extension DynamicTypeRegistry {
     public func decode(input decoder: AvalancheDecoder) throws -> Input {
-        let type = try decoder.decode(TID.self)
+        let type: TID = try decoder.decode()
         guard let initializer = inputs[type] else {
             throw AvalancheDecoderError.dataCorrupted(
                 type,
@@ -42,7 +42,7 @@ extension DynamicTypeRegistry {
     }
     
     public func decode(output decoder: AvalancheDecoder) throws -> Output {
-        let type = try decoder.decode(TID.self)
+        let type: TID = try decoder.decode()
         guard let initializer = outputs[type] else {
             throw AvalancheDecoderError.dataCorrupted(
                 type,
@@ -53,7 +53,7 @@ extension DynamicTypeRegistry {
     }
 
     public func decode(operation decoder: AvalancheDecoder) throws -> Operation {
-        let type = try decoder.decode(TID.self)
+        let type: TID = try decoder.decode()
         guard let initializer = operations[type] else {
             throw AvalancheDecoderError.dataCorrupted(
                 type,
@@ -64,7 +64,7 @@ extension DynamicTypeRegistry {
     }
 
     public func decode(credential decoder: AvalancheDecoder) throws -> Credential {
-        let type = try decoder.decode(TID.self)
+        let type: TID = try decoder.decode()
         guard let initializer = credentials[type] else {
             throw AvalancheDecoderError.dataCorrupted(
                 type,
@@ -75,7 +75,7 @@ extension DynamicTypeRegistry {
     }
 
     public func decode(transaction decoder: AvalancheDecoder) throws -> UnsignedAvalancheTransaction {
-        let type = try decoder.decode(TID.self)
+        let type: TID = try decoder.decode()
         guard let initializer = transactions[type] else {
             throw AvalancheDecoderError.dataCorrupted(
                 type,

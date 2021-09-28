@@ -30,8 +30,8 @@ public struct TransferableOutput: Equatable {
 extension TransferableOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            assetID: try decoder.decode(),
-            output: try decoder.dynamic()
+            assetID: try decoder.decode(name: "assetID"),
+            output: try decoder.dynamic(name: "output")
         )
     }
     

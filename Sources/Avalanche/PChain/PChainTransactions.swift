@@ -34,10 +34,10 @@ public struct Validator: Equatable {
 extension Validator: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            nodeID: try decoder.decode(),
-            startTime: try decoder.decode(),
-            endTime: try decoder.decode(),
-            weight: try decoder.decode()
+            nodeID: try decoder.decode(name: "nodeID"),
+            startTime: try decoder.decode(name: "startTime"),
+            endTime: try decoder.decode(name: "endTime"),
+            weight: try decoder.decode(name: "weight")
         )
     }
     
@@ -59,7 +59,7 @@ public struct Stake: Equatable {
 
 extension Stake: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        self.init(lockedOutputs: try decoder.decode())
+        self.init(lockedOutputs: try decoder.decode(name: "lockedOutputs"))
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
@@ -107,15 +107,15 @@ public class AddValidatorTransaction: BaseTransaction {
             )
         }
         try self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode(),
-            validator: try decoder.decode(),
-            stake: try decoder.decode(),
-            rewardsOwner: try decoder.decode(),
-            shares: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo"),
+            validator: try decoder.decode(name: "validator"),
+            stake: try decoder.decode(name: "stake"),
+            rewardsOwner: try decoder.decode(name: "rewardsOwner"),
+            shares: try decoder.decode(name: "shares")
         )
     }
     
@@ -149,14 +149,14 @@ public struct SubnetAuth: Equatable {
 
 extension SubnetAuth: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let typeID: PChainTypeID = try decoder.decode()
+        let typeID: PChainTypeID = try decoder.decode(name: "typeID")
         guard typeID == Self.typeID else {
             throw AvalancheDecoderError.dataCorrupted(
                 typeID,
                 AvalancheDecoderError.Context(path: decoder.path)
             )
         }
-        self.init(signatureIndices: try decoder.decode())
+        self.init(signatureIndices: try decoder.decode(name: "signatureIndices"))
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
@@ -202,14 +202,14 @@ public class AddSubnetValidatorTransaction: BaseTransaction {
             )
         }
         try self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode(),
-            validator: try decoder.decode(),
-            subnetID: try decoder.decode(),
-            subnetAuth: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo"),
+            validator: try decoder.decode(name: "validator"),
+            subnetID: try decoder.decode(name: "subnetID"),
+            subnetAuth: try decoder.decode(name: "subnetAuth")
         )
     }
     
@@ -266,14 +266,14 @@ public class AddDelegatorTransaction: BaseTransaction {
             )
         }
         try self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode(),
-            validator: try decoder.decode(),
-            stake: try decoder.decode(),
-            rewardsOwner: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo"),
+            validator: try decoder.decode(name: "validator"),
+            stake: try decoder.decode(name: "stake"),
+            rewardsOwner: try decoder.decode(name: "rewardsOwner")
         )
     }
     
@@ -324,12 +324,12 @@ public class CreateSubnetTransaction: BaseTransaction {
             )
         }
         try self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode(),
-            rewardsOwner: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo"),
+            rewardsOwner: try decoder.decode(name: "rewardsOwner")
         )
     }
     

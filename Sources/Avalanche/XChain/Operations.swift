@@ -55,9 +55,9 @@ public class SECP256K1MintOperation: Operation, AvalancheDecodable {
             )
         }
         self.init(
-            addressIndices: try decoder.decode(),
-            mintOutput: try decoder.decode(),
-            transferOutput: try decoder.decode()
+            addressIndices: try decoder.decode(name: "addressIndices"),
+            mintOutput: try decoder.decode(name: "mintOutput"),
+            transferOutput: try decoder.decode(name: "transferOutput")
         )
     }
     
@@ -99,9 +99,9 @@ public struct NFTMintOperationOutput: Equatable {
 extension NFTMintOperationOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            locktime: try decoder.decode(),
-            threshold: try decoder.decode(),
-            addresses: try decoder.decode()
+            locktime: try decoder.decode(name: "locktime"),
+            threshold: try decoder.decode(name: "threshold"),
+            addresses: try decoder.decode(name: "addresses")
         )
     }
 
@@ -143,10 +143,10 @@ public class NFTMintOperation: Operation, AvalancheDecodable {
             )
         }
         try self.init(
-            addressIndices: try decoder.decode(),
-            groupID: try decoder.decode(),
-            payload: try decoder.decode(),
-            outputs: try decoder.decode()
+            addressIndices: try decoder.decode(name: "addressIndices"),
+            groupID: try decoder.decode(name: "groupID"),
+            payload: try decoder.decode(name: "payload"),
+            outputs: try decoder.decode(name: "outputs")
         )
     }
     
@@ -201,11 +201,11 @@ public struct NFTTransferOperationOutput: Equatable {
 extension NFTTransferOperationOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            groupID: try decoder.decode(),
-            payload: try decoder.decode(),
-            locktime: try decoder.decode(),
-            threshold: try decoder.decode(),
-            addresses: try decoder.decode()
+            groupID: try decoder.decode(name: "groupID"),
+            payload: try decoder.decode(name: "payload"),
+            locktime: try decoder.decode(name: "locktime"),
+            threshold: try decoder.decode(name: "threshold"),
+            addresses: try decoder.decode(name: "addresses")
         )
     }
 
@@ -238,8 +238,8 @@ public class NFTTransferOperation: Operation, AvalancheDecodable {
             )
         }
         self.init(
-            addressIndices: try decoder.decode(),
-            nftTransferOutput: try decoder.decode()
+            addressIndices: try decoder.decode(name: "addressIndices"),
+            nftTransferOutput: try decoder.decode(name: "nftTransferOutput")
         )
     }
     

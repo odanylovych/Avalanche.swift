@@ -64,7 +64,7 @@ extension SignedAvalancheTransaction: SignedTransaction {
 
 extension SignedAvalancheTransaction: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let codecID: CodecID = try decoder.decode()
+        let codecID: CodecID = try decoder.decode(name: "codecID")
         guard codecID == Self.codecID else {
             throw AvalancheDecoderError.dataCorrupted(
                 codecID,
@@ -72,8 +72,8 @@ extension SignedAvalancheTransaction: AvalancheCodable {
             )
         }
         self.init(
-            unsignedTransaction: try decoder.dynamic(),
-            credentials: try decoder.dynamic()
+            unsignedTransaction: try decoder.dynamic(name: "unsignedTransaction"),
+            credentials: try decoder.dynamic(name: "credentials")
         )
     }
     
@@ -180,11 +180,11 @@ public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
             )
         }
         try self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo")
         )
     }
     

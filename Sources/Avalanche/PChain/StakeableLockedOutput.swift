@@ -21,7 +21,7 @@ public struct StakeableLockedOutput: Equatable {
 
 extension StakeableLockedOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let typeID: PChainTypeID = try decoder.decode()
+        let typeID: PChainTypeID = try decoder.decode(name: "typeID")
         guard typeID == Self.typeID else {
             throw AvalancheDecoderError.dataCorrupted(
                 typeID,
@@ -29,8 +29,8 @@ extension StakeableLockedOutput: AvalancheCodable {
             )
         }
         self.init(
-            locktime: try decoder.decode(),
-            transferableOutput: try decoder.decode()
+            locktime: try decoder.decode(name: "locktime"),
+            transferableOutput: try decoder.decode(name: "transferableOutput")
         )
     }
     

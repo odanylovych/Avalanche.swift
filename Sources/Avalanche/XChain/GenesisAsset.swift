@@ -89,16 +89,16 @@ public struct GenesisAsset: Equatable {
 extension GenesisAsset: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         try self.init(
-            alias: try decoder.decode(),
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode(),
-            name: try decoder.decode(),
-            symbol: try decoder.decode(),
-            denomination: try decoder.decode(),
-            initialStates: try decoder.decode()
+            alias: try decoder.decode(name: "alias"),
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo"),
+            name: try decoder.decode(name: "name"),
+            symbol: try decoder.decode(name: "symbol"),
+            denomination: try decoder.decode(name: "denomination"),
+            initialStates: try decoder.decode(name: "initialStates")
         )
     }
     

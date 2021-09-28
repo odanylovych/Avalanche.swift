@@ -22,9 +22,9 @@ public struct EVMOutput: Equatable {
 extension EVMOutput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            address: try decoder.decode(),
-            amount: try decoder.decode(),
-            assetID: try decoder.decode()
+            address: try decoder.decode(name: "address"),
+            amount: try decoder.decode(name: "amount"),
+            assetID: try decoder.decode(name: "assetID")
         )
     }
     

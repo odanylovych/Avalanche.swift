@@ -35,9 +35,9 @@ public class SECP256K1MintOutput: Output, AvalancheDecodable {
             )
         }
         try self.init(
-            locktime: try decoder.decode(),
-            threshold: try decoder.decode(),
-            addresses: try decoder.decode()
+            locktime: try decoder.decode(name: "locktime"),
+            threshold: try decoder.decode(name: "threshold"),
+            addresses: try decoder.decode(name: "addresses")
         )
     }
     
@@ -95,11 +95,11 @@ public class NFTTransferOutput: Output, AvalancheDecodable {
             )
         }
         try self.init(
-            groupID: try decoder.decode(),
-            payload: try decoder.decode(),
-            locktime: try decoder.decode(),
-            threshold: try decoder.decode(),
-            addresses: try decoder.decode()
+            groupID: try decoder.decode(name: "groupID"),
+            payload: try decoder.decode(name: "payload"),
+            locktime: try decoder.decode(name: "locktime"),
+            threshold: try decoder.decode(name: "threshold"),
+            addresses: try decoder.decode(name: "addresses")
         )
     }
     
@@ -152,10 +152,10 @@ public class NFTMintOutput: Output, AvalancheDecodable {
             )
         }
         try self.init(
-            groupID: try decoder.decode(),
-            locktime: try decoder.decode(),
-            threshold: try decoder.decode(),
-            addresses: try decoder.decode()
+            groupID: try decoder.decode(name: "groupID"),
+            locktime: try decoder.decode(name: "locktime"),
+            threshold: try decoder.decode(name: "threshold"),
+            addresses: try decoder.decode(name: "addresses")
         )
     }
     

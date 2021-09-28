@@ -32,8 +32,10 @@ public protocol AvalancheDecoder {
     init(context: AvalancheDecoderContext, data: Data)
     
     func decode<T: AvalancheDecodable>() throws -> T
+    func decode<T: AvalancheDecodable>(name: String) throws -> T
     func decode<T: AvalancheFixedDecodable>(size: Int) throws -> T
     func dynamic<T: AvalancheDynamicDecodable>() throws -> T
+    func dynamic<T: AvalancheDynamicDecodable>(name: String) throws -> T
     func read(count: Int) throws -> Data
 }
 
@@ -42,12 +44,20 @@ extension AvalancheDecoder {
         return try self.decode()
     }
     
+    public func decode<T: AvalancheDecodable>(_ type: T.Type, name: String) throws -> T {
+        return try self.decode(name: name)
+    }
+    
     public func decode<T: AvalancheFixedDecodable>(_ type: T.Type, size: Int) throws -> T {
         return try self.decode(size: size)
     }
     
     public func decode<T: AvalancheDynamicDecodable>(dynamic: T.Type) throws -> T {
         return try self.dynamic()
+    }
+    
+    public func decode<T: AvalancheDynamicDecodable>(dynamic: T.Type, name: String) throws -> T {
+        return try self.dynamic(name: name)
     }
 }
 
@@ -74,6 +84,12 @@ class ADecoder: AvalancheDecoder {
         return try T(from: self)
     }
     
+    public func decode<T: AvalancheDecodable>(name: String) throws -> T {
+        decoderPath.push(T.self, name: name)
+        defer { decoderPath.pop() }
+        return try T(from: self)
+    }
+    
     func decode<T: AvalancheFixedDecodable>(size: Int) throws -> T {
         decoderPath.push(T.self, size: size)
         defer { decoderPath.pop() }
@@ -82,6 +98,12 @@ class ADecoder: AvalancheDecoder {
     
     func dynamic<T: AvalancheDynamicDecodable>() throws -> T {
         decoderPath.push(T.self)
+        defer { decoderPath.pop() }
+        return try T.from(decoder: self)
+    }
+    
+    func dynamic<T: AvalancheDynamicDecodable>(name: String) throws -> T {
+        decoderPath.push(T.self, name: name)
         defer { decoderPath.pop() }
         return try T.from(decoder: self)
     }

@@ -25,7 +25,7 @@ public struct UTXO: Equatable {
 
 extension UTXO: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let codecID: CodecID = try decoder.decode()
+        let codecID: CodecID = try decoder.decode(name: "codecID")
         guard codecID == Self.codecID else {
             throw AvalancheDecoderError.dataCorrupted(
                 codecID,
@@ -33,10 +33,10 @@ extension UTXO: AvalancheCodable {
             )
         }
         self.init(
-            transactionID: try decoder.decode(),
-            utxoIndex: try decoder.decode(),
-            assetID: try decoder.decode(),
-            output: try decoder.dynamic()
+            transactionID: try decoder.decode(name: "transactionID"),
+            utxoIndex: try decoder.decode(name: "utxoIndex"),
+            assetID: try decoder.decode(name: "assetID"),
+            output: try decoder.dynamic(name: "output")
         )
     }
     

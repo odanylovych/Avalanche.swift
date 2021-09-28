@@ -42,8 +42,8 @@ public struct InitialState: Equatable {
 extension InitialState: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            featureExtensionID: try decoder.decode(),
-            outputs: try decoder.dynamic()
+            featureExtensionID: try decoder.decode(name: "featureExtensionID"),
+            outputs: try decoder.dynamic(name: "outputs")
         )
     }
     

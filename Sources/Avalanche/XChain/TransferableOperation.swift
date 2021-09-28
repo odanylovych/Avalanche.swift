@@ -20,8 +20,8 @@ public struct UTXOID: Equatable {
 extension UTXOID: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            transactionID: try decoder.decode(),
-            utxoIndex: try decoder.decode()
+            transactionID: try decoder.decode(name: "transactionID"),
+            utxoIndex: try decoder.decode(name: "utxoIndex")
         )
     }
     
@@ -46,9 +46,9 @@ public struct TransferableOperation: Equatable {
 extension TransferableOperation: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            assetID: try decoder.decode(),
-            utxoIDs: try decoder.decode(),
-            transferOperation: try decoder.dynamic()
+            assetID: try decoder.decode(name: "assetID"),
+            utxoIDs: try decoder.decode(name: "utxoIDs"),
+            transferOperation: try decoder.dynamic(name: "transferOperation")
         )
     }
     

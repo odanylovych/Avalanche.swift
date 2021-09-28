@@ -35,9 +35,9 @@ public class SECP256K1OutputOwners: Output, AvalancheDecodable {
             )
         }
         try self.init(
-            locktime: try decoder.decode(),
-            threshold: try decoder.decode(),
-            addresses: try decoder.decode()
+            locktime: try decoder.decode(name: "locktime"),
+            threshold: try decoder.decode(name: "threshold"),
+            addresses: try decoder.decode(name: "addresses")
         )
     }
     

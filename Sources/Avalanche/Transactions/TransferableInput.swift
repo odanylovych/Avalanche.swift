@@ -34,10 +34,10 @@ public struct TransferableInput: Equatable {
 extension TransferableInput: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
         self.init(
-            transactionID: try decoder.decode(),
-            utxoIndex: try decoder.decode(),
-            assetID: try decoder.decode(),
-            input: try decoder.dynamic()
+            transactionID: try decoder.decode(name: "transactionID"),
+            utxoIndex: try decoder.decode(name: "utxoIndex"),
+            assetID: try decoder.decode(name: "assetID"),
+            input: try decoder.dynamic(name: "input")
         )
     }
     

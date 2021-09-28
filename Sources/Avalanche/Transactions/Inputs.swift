@@ -62,8 +62,8 @@ public class SECP256K1TransferInput: Input, AvalancheDecodable {
             )
         }
         try self.init(
-            amount: try decoder.decode(),
-            addressIndices: try decoder.decode()
+            amount: try decoder.decode(name: "amount"),
+            addressIndices: try decoder.decode(name: "addressIndices")
         )
     }
     

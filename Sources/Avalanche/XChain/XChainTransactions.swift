@@ -47,15 +47,15 @@ public class CreateAssetTransaction: BaseTransaction {
             )
         }
         try self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode(),
-            name: try decoder.decode(),
-            symbol: try decoder.decode(),
-            denomination: try decoder.decode(),
-            initialStates: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo"),
+            name: try decoder.decode(name: "name"),
+            symbol: try decoder.decode(name: "symbol"),
+            denomination: try decoder.decode(name: "denomination"),
+            initialStates: try decoder.decode(name: "initialStates")
         )
     }
     
@@ -108,12 +108,12 @@ public class OperationTransaction: BaseTransaction {
             )
         }
         try self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode(),
-            operations: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo"),
+            operations: try decoder.decode(name: "operations")
         )
     }
     
@@ -163,13 +163,13 @@ public class ImportTransaction: BaseTransaction {
             )
         }
         try self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode(),
-            sourceChain: try decoder.decode(),
-            transferableInputs: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo"),
+            sourceChain: try decoder.decode(name: "sourceChain"),
+            transferableInputs: try decoder.decode(name: "transferableInputs")
         )
     }
     
@@ -221,13 +221,13 @@ public class ExportTransaction: BaseTransaction {
             )
         }
         try self.init(
-            networkID: try decoder.decode(),
-            blockchainID: try decoder.decode(),
-            outputs: try decoder.decode(),
-            inputs: try decoder.decode(),
-            memo: try decoder.decode(),
-            destinationChain: try decoder.decode(),
-            transferableOutputs: try decoder.decode()
+            networkID: try decoder.decode(name: "networkID"),
+            blockchainID: try decoder.decode(name: "blockchainID"),
+            outputs: try decoder.decode(name: "outputs"),
+            inputs: try decoder.decode(name: "inputs"),
+            memo: try decoder.decode(name: "memo"),
+            destinationChain: try decoder.decode(name: "destinationChain"),
+            transferableOutputs: try decoder.decode(name: "transferableOutputs")
         )
     }
     
