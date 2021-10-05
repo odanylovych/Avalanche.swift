@@ -17,18 +17,26 @@ public struct AssetID: ID {
     }
 }
 
-public struct TransferableOutput {
+public struct TransferableOutput: Equatable {
     public let assetID: AssetID
     public let output: Output
     
-    public init(assetId: AssetID, output: Output) {
-        self.assetID = assetId
+    public init(assetID: AssetID, output: Output) {
+        self.assetID = assetID
         self.output = output
     }
 }
 
-extension TransferableOutput: AvalancheEncodable {
+extension TransferableOutput: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            assetID: try decoder.decode(name: "assetID"),
+            output: try decoder.dynamic(name: "output")
+        )
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(assetID).encode(output)
+        try encoder.encode(assetID, name: "assetID")
+            .encode(output, name: "output")
     }
 }

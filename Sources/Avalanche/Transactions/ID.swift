@@ -7,7 +7,7 @@
 
 import Foundation
 
-public protocol ID: AvalancheEncodable, Hashable {
+public protocol ID: AvalancheCodable, Hashable {
     static var size: Int { get }
 
     var raw: Data { get }
@@ -47,6 +47,17 @@ extension ID {
 }
 
 extension ID {
+    public init(from decoder: AvalancheDecoder) throws {
+        let data: Data = try decoder.decode(size: Self.size)
+        guard let id = Self(data: data) else {
+            throw AvalancheDecoderError.dataCorrupted(
+                data,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Bad ID data")
+            )
+        }
+        self = id
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(raw, size: Self.size)
     }

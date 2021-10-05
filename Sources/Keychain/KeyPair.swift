@@ -26,7 +26,7 @@ public struct KeyPair {
     private let _sk: Data
     
     public init(sk: Data, chainCode: Data?) throws {
-        guard let pub = Algos.Secp256k1.privateToPublic(privateKey: sk) else {
+        guard let pub = Algos.Secp256k1.privateToPublic(privateKey: sk, compressed: true) else {
             throw Error.badPrivateKey
         }
         guard chainCode?.count ?? 32 == 32 else {

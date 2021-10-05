@@ -7,10 +7,28 @@
 
 import Foundation
 
-extension String: AvalancheEncodable {
+extension String: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        let count: UInt16 = try decoder.decode()
+        let data: Data = try decoder.decode(size: Int(count))
+        guard let string = String(data: data, encoding: .utf8) else {
+            throw AvalancheDecoderError.dataCorrupted(
+                data,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Bad UTF8 string data")
+            )
+        }
+        self = string
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         guard let data = data(using: .utf8) else {
-            throw AvalancheEncoderError.invalidValue(self)
+            throw AvalancheEncoderError.invalidValue(
+                self,
+                AvalancheEncoderError.Context(
+                    path: encoder.path,
+                    description: "Can't be encoded to UTF8"
+                )
+            )
         }
         try encoder.encode(UInt16(data.count)).encode(data, size: data.count)
     }
