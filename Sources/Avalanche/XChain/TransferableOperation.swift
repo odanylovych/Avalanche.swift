@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct UTXOID {
+public struct UTXOID: Equatable {
     public let transactionID: TransactionID
     public let utxoIndex: UInt32
     
@@ -17,13 +17,21 @@ public struct UTXOID {
     }
 }
 
-extension UTXOID: AvalancheEncodable {
+extension UTXOID: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            transactionID: try decoder.decode(name: "transactionID"),
+            utxoIndex: try decoder.decode(name: "utxoIndex")
+        )
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(transactionID).encode(utxoIndex)
+        try encoder.encode(transactionID, name: "transactionID")
+            .encode(utxoIndex, name: "utxoIndex")
     }
 }
 
-public struct TransferableOperation {
+public struct TransferableOperation: Equatable {
     public let assetID: AssetID
     public let utxoIDs: [UTXOID]
     public let transferOperation: Operation
@@ -35,10 +43,18 @@ public struct TransferableOperation {
     }
 }
 
-extension TransferableOperation: AvalancheEncodable {
+extension TransferableOperation: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            assetID: try decoder.decode(name: "assetID"),
+            utxoIDs: try decoder.decode(name: "utxoIDs"),
+            transferOperation: try decoder.dynamic(name: "transferOperation")
+        )
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(assetID)
-            .encode(utxoIDs)
-            .encode(transferOperation)
+        try encoder.encode(assetID, name: "assetID")
+            .encode(utxoIDs, name: "utxoIDs")
+            .encode(transferOperation, name: "transferOperation")
     }
 }

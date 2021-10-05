@@ -17,7 +17,7 @@ public struct TransactionID: ID {
     }
 }
 
-public struct TransferableInput {
+public struct TransferableInput: Equatable {
     public let transactionID: TransactionID
     public let utxoIndex: UInt32
     public let assetID: AssetID
@@ -31,11 +31,20 @@ public struct TransferableInput {
     }
 }
 
-extension TransferableInput: AvalancheEncodable {
+extension TransferableInput: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        self.init(
+            transactionID: try decoder.decode(name: "transactionID"),
+            utxoIndex: try decoder.decode(name: "utxoIndex"),
+            assetID: try decoder.decode(name: "assetID"),
+            input: try decoder.dynamic(name: "input")
+        )
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(transactionID)
-            .encode(utxoIndex)
-            .encode(assetID)
-            .encode(input)
+        try encoder.encode(transactionID, name: "transactionID")
+            .encode(utxoIndex, name: "utxoIndex")
+            .encode(assetID, name: "assetID")
+            .encode(input, name: "input")
     }
 }

@@ -7,11 +7,22 @@
 
 import Foundation
 
-public protocol TypeID: AvalancheEncodable {
+public protocol TypeID: AvalancheCodable {
     var rawValue: UInt32 { get }
 }
 
-extension TypeID {
+extension TypeID where Self: RawRepresentable, RawValue: AvalancheCodable {
+    public init(from decoder: AvalancheDecoder) throws {
+        let rawValue: RawValue = try decoder.decode()
+        guard let typeID = Self(rawValue: rawValue) else {
+            throw AvalancheDecoderError.dataCorrupted(
+                rawValue,
+                AvalancheDecoderError.Context(path: decoder.path, description: "Cannot find such TypeID")
+            )
+        }
+        self = typeID
+    }
+    
     public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(rawValue)
     }

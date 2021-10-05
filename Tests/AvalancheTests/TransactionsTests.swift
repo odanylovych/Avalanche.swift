@@ -10,9 +10,42 @@ import XCTest
 @testable import Avalanche
 
 final class TransactionsTests: AvalancheTestCase {
+    private static let hrp = "avax"
+    private static let chainId = "X"
+    
+    private static let xChainDecoderContext = TestAvalancheDecoderContext(
+        hrp: hrp,
+        chainId: "X",
+        dynamicParser: XChainDynamicTypeRegistry.instance
+    )
+    
+    private static let pChainDecoderContext = TestAvalancheDecoderContext(
+        hrp: hrp,
+        chainId: "P",
+        dynamicParser: PChainDynamicTypeRegistry.instance
+    )
+    
+    private static let cChainDecoderContext = TestAvalancheDecoderContext(
+        hrp: hrp,
+        chainId: "C",
+        dynamicParser: CChainDynamicTypeRegistry.instance
+    )
+    
+    struct TestAvalancheDecoderContext: AvalancheDecoderContext {
+        let dynamicParser: DynamicTypeParser
+        let hrp: String
+        let chainId: String
+        
+        init(hrp: String, chainId: String, dynamicParser: DynamicTypeParser) {
+            self.hrp = hrp
+            self.chainId = chainId
+            self.dynamicParser = dynamicParser
+        }
+    }
+    
     private func exampleTransferableOutput() throws -> TransferableOutput {
         try TransferableOutput(
-            assetId: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
+            assetID: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
             output: exampleSECP256K1TransferOutput()
         )
     }
@@ -23,8 +56,8 @@ final class TransactionsTests: AvalancheTestCase {
             locktime: Date(timeIntervalSince1970: 54321),
             threshold: 1,
             addresses: [
-                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: Self.hrp, chainId: Self.chainId),
+                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: Self.hrp, chainId: Self.chainId),
             ]
         )
     }
@@ -34,8 +67,8 @@ final class TransactionsTests: AvalancheTestCase {
             locktime: Date(timeIntervalSince1970: 54321),
             threshold: 1,
             addresses: [
-                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+                Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: Self.hrp, chainId: Self.chainId),
+                Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: Self.hrp, chainId: Self.chainId),
             ]
         )
     }
@@ -82,13 +115,13 @@ final class TransactionsTests: AvalancheTestCase {
                 addresses: [
                     Address(
                         raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!,
-                        hrp: "avax",
-                        chainId: "X"
+                        hrp: Self.hrp,
+                        chainId: Self.chainId
                     ),
                     Address(
                         raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!,
-                        hrp: "avax",
-                        chainId: "X"
+                        hrp: Self.hrp,
+                        chainId: Self.chainId
                     ),
                 ]
             )
@@ -123,13 +156,13 @@ final class TransactionsTests: AvalancheTestCase {
     
     private func examplePChainTransferableOutput() throws -> TransferableOutput {
         try TransferableOutput(
-            assetId: AssetID(hex: "0x6870b7d66ac32540311379e5b5dbad28ec7eb8ddbfc8f4d67299ebb48475907a")!,
+            assetID: AssetID(hex: "0x6870b7d66ac32540311379e5b5dbad28ec7eb8ddbfc8f4d67299ebb48475907a")!,
             output: SECP256K1TransferOutput(
                 amount: 3999000000,
                 locktime: Date(timeIntervalSince1970: 0),
                 threshold: 1,
                 addresses: [
-                    Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: "avax", chainId: "P")
+                    Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: Self.hrp, chainId: "P")
                 ]
             )
         )
@@ -151,7 +184,7 @@ final class TransactionsTests: AvalancheTestCase {
         try SECP256K1OutputOwners(
             locktime: Date(timeIntervalSince1970: 0),
             threshold: 1,
-            addresses: [Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: "avax", chainId: "P")]
+            addresses: [Address(raw: Data(hex: "0xda2bee01be82ecc00c34f361eda8eb30fb5a715c")!, hrp: Self.hrp, chainId: "P")]
         )
     }
     
@@ -164,56 +197,86 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    private func encodeTest(actual: AvalancheEncodable, expected: [UInt8]) throws {
-        let encoded = Array(try AEncoder().encode(actual).output)
-        XCTAssertEqual(encoded, expected)
+    private func exampleEVMInput() throws -> EVMInput {
+        try EVMInput(
+            address: EthAddress(hex: "0x8db97c7cece249c2b98bdc0226cc4c2a57bf52fc"),
+            amount: 2000000,
+            assetID: AssetID(hex: "0xdbcf890f77f49b96857648b72b77f9f82937f28a68704af05da0dc12ba53f2db")!,
+            nonce: 0
+        )
     }
     
-    private func encodeFixedTest(actual: AvalancheFixedEncodable, expected: [UInt8], size: Int) throws {
-        let encoded = Array(try AEncoder().encode(actual, size: size).output)
-        XCTAssertEqual(encoded, expected)
+    private func exampleEVMOutput() throws -> EVMOutput {
+        try EVMOutput(
+            address: EthAddress(hex: "0x0eb5ccb85c29009b6060decb353a38ea3b52cd20"),
+            amount: 500000000000,
+            assetID: AssetID(hex: "0xdbcf890f77f49b96857648b72b77f9f82937f28a68704af05da0dc12ba53f2db")!
+        )
     }
-
-    func testEncodeByte() throws {
-        try encodeTest(
-            actual: UInt8(0x01),
-            expected: [0x01]
+    
+    private func encodeDecodeTest<T: Equatable & AvalancheCodable>(
+        value: T,
+        bytes: [UInt8],
+        context: AvalancheDecoderContext = xChainDecoderContext
+    ) throws {
+        let encoded = Array(try AEncoder().encode(value).output)
+        XCTAssertEqual(encoded, bytes)
+        let decoded = try ADecoder(context: context, data: Data(bytes)).decode(T.self)
+        XCTAssertEqual(decoded, value)
+    }
+    
+    private func encodeDecodeFixedTest<T: Equatable & AvalancheFixedCodable>(
+        value: T,
+        bytes: [UInt8],
+        size: Int,
+        context: AvalancheDecoderContext = xChainDecoderContext
+    ) throws {
+        let encoded = Array(try AEncoder().encode(value, size: size).output)
+        XCTAssertEqual(encoded, bytes)
+        let decoded = try ADecoder(context: context, data: Data(bytes)).decode(T.self, size: size)
+        XCTAssertEqual(decoded, value)
+    }
+    
+    func testEncodeDecodeByte() throws {
+        try encodeDecodeTest(
+            value: UInt8(0x01),
+            bytes: [0x01]
         )
     }
 
-    func testEncodeShort() throws {
-        try encodeTest(
-            actual: UInt16(0x0102),
-            expected: [0x01, 0x02]
+    func testEncodeDecodeShort() throws {
+        try encodeDecodeTest(
+            value: UInt16(0x0102),
+            bytes: [0x01, 0x02]
         )
     }
 
-    func testEncodeInteger() throws {
-        try encodeTest(
-            actual: UInt32(0x01020304),
-            expected: [0x01, 0x02, 0x03, 0x04]
+    func testEncodeDecodeInteger() throws {
+        try encodeDecodeTest(
+            value: UInt32(0x01020304),
+            bytes: [0x01, 0x02, 0x03, 0x04]
         )
     }
 
-    func testEncodeLongInteger() throws {
-        try encodeTest(
-            actual: UInt64(0x0102030405060708),
-            expected: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
+    func testEncodeDecodeLongInteger() throws {
+        try encodeDecodeTest(
+            value: UInt64(0x0102030405060708),
+            bytes: [0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]
         )
     }
 
-    func testEncodeIPAddresses() throws {
-        try encodeTest(
-            actual: IPv4Address(host: (127, 0, 0, 1), port: 9650),
-            expected: [
+    func testEncodeDecodeIPAddresses() throws {
+        try encodeDecodeTest(
+            value: IPv4Address(host: (127, 0, 0, 1), port: 9650),
+            bytes: [
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x00, 0x00, 0x00, 0x00, 0x7f, 0x00, 0x00, 0x01,
                 0x25, 0xb2
             ]
         )
-        try encodeTest(
-            actual: IPv6Address(host: [0x2001, 0x0db8, 0xac10, 0xfe01, 0, 0, 0, 0], port: 12345),
-            expected: [
+        try encodeDecodeTest(
+            value: IPv6Address(host: [0x2001, 0x0db8, 0xac10, 0xfe01, 0, 0, 0, 0], port: 12345),
+            bytes: [
                 0x20, 0x01, 0x0d, 0xb8, 0xac, 0x10, 0xfe, 0x01,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                 0x30, 0x39
@@ -221,41 +284,41 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
 
-    func testEncodeFixedLengthArray() throws {
-        try encodeFixedTest(
-            actual: [UInt8(0x01), UInt8(0x02)],
-            expected: [0x01, 0x02],
+    func testEncodeDecodeFixedLengthArray() throws {
+        try encodeDecodeFixedTest(
+            value: [UInt8(0x01), UInt8(0x02)],
+            bytes: [0x01, 0x02],
             size: 2
         )
-        try encodeFixedTest(
-            actual: [UInt32(0x03040506)],
-            expected: [0x03, 0x04, 0x05, 0x06],
+        try encodeDecodeFixedTest(
+            value: [UInt32(0x03040506)],
+            bytes: [0x03, 0x04, 0x05, 0x06],
             size: 1
         )
     }
 
-    func testEncodeVariableLengthArray() throws {
-        try encodeTest(
-            actual: [UInt8(0x01), UInt8(0x02)],
-            expected: [0x00, 0x00, 0x00, 0x02, 0x01, 0x02]
+    func testEncodeDecodeVariableLengthArray() throws {
+        try encodeDecodeTest(
+            value: [UInt8(0x01), UInt8(0x02)],
+            bytes: [0x00, 0x00, 0x00, 0x02, 0x01, 0x02]
         )
-        try encodeTest(
-            actual: [UInt32(0x03040506)],
-            expected: [0x00, 0x00, 0x00, 0x01, 0x03, 0x04, 0x05, 0x06]
+        try encodeDecodeTest(
+            value: [UInt32(0x03040506)],
+            bytes: [0x00, 0x00, 0x00, 0x01, 0x03, 0x04, 0x05, 0x06]
         )
     }
 
-    func testEncodeString() throws {
-        try encodeTest(
-            actual: "Avax",
-            expected: [0x00, 0x04, 0x41, 0x76, 0x61, 0x78]
+    func testEncodeDecodeString() throws {
+        try encodeDecodeTest(
+            value: "Avax",
+            bytes: [0x00, 0x04, 0x41, 0x76, 0x61, 0x78]
         )
     }
     
-    func testEncodeTransferableOutput() throws {
-        try encodeTest(
-            actual: exampleTransferableOutput(),
-            expected: [
+    func testEncodeDecodeTransferableOutput() throws {
+        try encodeDecodeTest(
+            value: exampleTransferableOutput(),
+            bytes: [
                 // assetID:
                 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -274,11 +337,11 @@ final class TransactionsTests: AvalancheTestCase {
             ]
         )
     }
-    
-    func testEncodeSECP256K1TransferOutput() throws {
-        try encodeTest(
-            actual: exampleSECP256K1TransferOutput(),
-            expected: [
+
+    func testEncodeDecodeSECP256K1TransferOutput() throws {
+        try encodeDecodeTest(
+            value: exampleSECP256K1TransferOutput(),
+            bytes: [
                 // typeID:
                 0x00, 0x00, 0x00, 0x07,
                 // amount:
@@ -301,10 +364,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeSECP256K1MintOutput() throws {
-        try encodeTest(
-            actual: exampleSECP256K1MintOutput(),
-            expected: [
+    func testEncodeDecodeSECP256K1MintOutput() throws {
+        try encodeDecodeTest(
+            value: exampleSECP256K1MintOutput(),
+            bytes: [
                 // typeID:
                 0x00, 0x00, 0x00, 0x06,
                 // locktime:
@@ -325,19 +388,19 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeNFTTransferOutput() throws {
-        try encodeTest(
-            actual: NFTTransferOutput(
+    func testEncodeDecodeNFTTransferOutput() throws {
+        try encodeDecodeTest(
+            value: NFTTransferOutput(
                 groupID: 12345,
                 payload: Data(hex: "0x431100")!,
                 locktime: Date(timeIntervalSince1970: 54321),
                 threshold: 1,
                 addresses: [
-                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: Self.hrp, chainId: Self.chainId),
+                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: Self.hrp, chainId: Self.chainId),
                 ]
             ),
-            expected: [
+            bytes: [
                 // TypeID:
                 0x00, 0x00, 0x00, 0x0b,
                 // groupID:
@@ -364,18 +427,18 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeNFTMintOutput() throws {
-        try encodeTest(
-            actual: NFTMintOutput(
+    func testEncodeDecodeNFTMintOutput() throws {
+        try encodeDecodeTest(
+            value: NFTMintOutput(
                 groupID: 12345,
                 locktime: Date(timeIntervalSince1970: 54321),
                 threshold: 1,
                 addresses: [
-                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: "avax", chainId: "X"),
-                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: "avax", chainId: "X"),
+                    Address(raw: Data(hex: "0x51025c61fbcfc078f69334f834be6dd26d55a955")!, hrp: Self.hrp, chainId: Self.chainId),
+                    Address(raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!, hrp: Self.hrp, chainId: Self.chainId),
                 ]
             ),
-            expected: [
+            bytes: [
                 // TypeID
                 0x00, 0x00, 0x00, 0x0a,
                 // groupID:
@@ -398,10 +461,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeTransferableInput() throws {
-        try encodeTest(
-            actual: exampleTransferableInput(),
-            expected: [
+    func testEncodeDecodeTransferableInput() throws {
+        try encodeDecodeTest(
+            value: exampleTransferableInput(),
+            bytes: [
                 // txID:
                 0xf1, 0xe1, 0xd1, 0xc1, 0xb1, 0xa1, 0x91, 0x81,
                 0x71, 0x61, 0x51, 0x41, 0x31, 0x21, 0x11, 0x01,
@@ -422,10 +485,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeSECP256K1TransferInput() throws {
-        try encodeTest(
-            actual: exampleSECP256K1TransferInput(),
-            expected: [
+    func testEncodeDecodeSECP256K1TransferInput() throws {
+        try encodeDecodeTest(
+            value: exampleSECP256K1TransferInput(),
+            bytes: [
                 // type id:
                 0x00, 0x00, 0x00, 0x05,
                 // amount:
@@ -440,14 +503,14 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeSECP256K1MintOperation() throws {
-        try encodeTest(
-            actual: SECP256K1MintOperation(
+    func testEncodeDecodeSECP256K1MintOperation() throws {
+        try encodeDecodeTest(
+            value: SECP256K1MintOperation(
                 addressIndices: [0x00000003, 0x00000007],
                 mintOutput: exampleSECP256K1MintOutput(),
                 transferOutput: exampleSECP256K1TransferOutput()
             ),
-            expected: [
+            bytes: [
                 // typeID
                 0x00, 0x00, 0x00, 0x08,
                 // number of address_indices:
@@ -479,9 +542,9 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeNFTMintOperation() throws {
-        try encodeTest(
-            actual: NFTMintOperation(
+    func testEncodeDecodeNFTMintOperation() throws {
+        try encodeDecodeTest(
+            value: NFTMintOperation(
                 addressIndices: [0x00000003, 0x00000007],
                 groupID: 12345,
                 payload: Data(hex: "0x431100")!,
@@ -492,14 +555,14 @@ final class TransactionsTests: AvalancheTestCase {
                         addresses: [
                             Address(
                                 raw: Data(hex: "0xc3344128e060128ede3523a24a461c8943ab0859")!,
-                                hrp: "avax",
-                                chainId: "X"
+                                hrp: Self.hrp,
+                                chainId: Self.chainId
                             ),
                         ]
                     )
                 ]
             ),
-            expected: [
+            bytes: [
                 // Type ID
                 0x00, 0x00, 0x00, 0x0c,
                 // number of address indices:
@@ -531,10 +594,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeNFTTransferOperation() throws {
-        try encodeTest(
-            actual: exampleNFTTransferOperation(),
-            expected: [
+    func testEncodeDecodeNFTTransferOperation() throws {
+        try encodeDecodeTest(
+            value: exampleNFTTransferOperation(),
+            bytes: [
                 // Type ID
                 0x00, 0x00, 0x00, 0x0d,
                 // number of address indices:
@@ -567,10 +630,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeTransferableOperation() throws {
-        try encodeTest(
-            actual: exampleTransferableOperation(),
-            expected: [
+    func testEncodeDecodeTransferableOperation() throws {
+        try encodeDecodeTest(
+            value: exampleTransferableOperation(),
+            bytes: [
                 // assetID:
                 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
                 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
@@ -601,10 +664,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeInitialState() throws {
-        try encodeTest(
-            actual: exampleInitialState(),
-            expected: [
+    func testEncodeDecodeInitialState() throws {
+        try encodeDecodeTest(
+            value: exampleInitialState(),
+            bytes: [
                 // fxID:
                 0x00, 0x00, 0x00, 0x00,
                 // num outputs:
@@ -623,10 +686,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeSECP256K1Credential() throws {
-        try encodeTest(
-            actual: exampleSECP256K1Credential(),
-            expected: [
+    func testEncodeDecodeSECP256K1Credential() throws {
+        try encodeDecodeTest(
+            value: exampleSECP256K1Credential(),
+            bytes: [
                 // Type ID
                 0x00, 0x00, 0x00, 0x09,
                 // length:
@@ -655,13 +718,13 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeNFTCredential() throws {
-        try encodeTest(
-            actual: NFTCredential(signatures: [
+    func testEncodeDecodeNFTCredential() throws {
+        try encodeDecodeTest(
+            value: NFTCredential(signatures: [
                 Signature(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1e1d1f202122232425262728292a2b2c2e2d2f303132333435363738393a3b3c3d3e3f00")!,
                 Signature(hex: "0x404142434445464748494a4b4c4d4e4f505152535455565758595a5b5c5e5d5f606162636465666768696a6b6c6e6d6f707172737475767778797a7b7c7d7e7f00")!,
             ]),
-            expected: [
+            bytes: [
                 // Type ID
                 0x00, 0x00, 0x00, 0x0e,
                 // length:
@@ -690,10 +753,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeBaseTransaction() throws {
-        try encodeTest(
-            actual: exampleBaseTransaction(),
-            expected: [
+    func testEncodeDecodeBaseTransaction() throws {
+        try encodeDecodeTest(
+            value: exampleBaseTransaction(),
+            bytes: [
                 // typeID
                 0x00, 0x00, 0x00, 0x00,
                 // networkID:
@@ -742,9 +805,9 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
 
-    func testEncodeCreateAssetTransaction() throws {
-        try encodeTest(
-            actual: CreateAssetTransaction(
+    func testEncodeDecodeCreateAssetTransaction() throws {
+        try encodeDecodeTest(
+            value: CreateAssetTransaction(
                 networkID: NetworkID(4),
                 blockchainID: BlockchainID(
                     data: Data(hex: "0xffffffffeeeeeeeeddddddddccccccccbbbbbbbbaaaaaaaa9999999988888888")!
@@ -757,7 +820,7 @@ final class TransactionsTests: AvalancheTestCase {
                 denomination: 2,
                 initialStates: [exampleInitialState()]
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x04,
                 0xff, 0xff, 0xff, 0xff, 0xee, 0xee, 0xee, 0xee,
@@ -818,9 +881,9 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeOperationTransaction() throws {
-        try encodeTest(
-            actual: OperationTransaction(
+    func testEncodeDecodeOperationTransaction() throws {
+        try encodeDecodeTest(
+            value: OperationTransaction(
                 networkID: NetworkID(4),
                 blockchainID: BlockchainID(
                     data: Data(hex: "0xffffffffeeeeeeeeddddddddccccccccbbbbbbbbaaaaaaaa9999999988888888")!
@@ -830,7 +893,7 @@ final class TransactionsTests: AvalancheTestCase {
                 memo: Data(hex: "0x00010203")!,
                 operations: [exampleTransferableOperation()]
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x02,
                 0x00, 0x00, 0x00, 0x04, 0xff, 0xff, 0xff, 0xff,
@@ -891,9 +954,9 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeImportTransaction() throws {
-        try encodeTest(
-            actual: ImportTransaction(
+    func testEncodeDecodeImportTransaction() throws {
+        try encodeDecodeTest(
+            value: ImportTransaction(
                 networkID: NetworkID(4),
                 blockchainID: BlockchainID(
                     data: Data(hex: "0xffffffffeeeeeeeeddddddddccccccccbbbbbbbbaaaaaaaa9999999988888888")!
@@ -904,7 +967,7 @@ final class TransactionsTests: AvalancheTestCase {
                 sourceChain: BlockchainID(data: Data(count: 32))!,
                 transferableInputs: [exampleTransferableInput()]
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x03,
                 0x00, 0x00, 0x00, 0x04, 0xff, 0xff, 0xff, 0xff,
@@ -965,9 +1028,9 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeExportTransaction() throws {
-        try encodeTest(
-            actual: ExportTransaction(
+    func testEncodeDecodeExportTransaction() throws {
+        try encodeDecodeTest(
+            value: ExportTransaction(
                 networkID: NetworkID(4),
                 blockchainID: BlockchainID(
                     data: Data(hex: "0xffffffffeeeeeeeeddddddddccccccccbbbbbbbbaaaaaaaa9999999988888888")!
@@ -978,7 +1041,7 @@ final class TransactionsTests: AvalancheTestCase {
                 destinationChain: BlockchainID(data: Data(count: 32))!,
                 transferableOutputs: [exampleTransferableOutput()]
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x04,
                 0x00, 0x00, 0x00, 0x04, 0xff, 0xff, 0xff, 0xff,
@@ -1038,13 +1101,13 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeSignedAvalancheTransaction() throws {
-        try encodeTest(
-            actual: SignedAvalancheTransaction(
+    func testEncodeDecodeSignedAvalancheTransaction() throws {
+        try encodeDecodeTest(
+            value: SignedAvalancheTransaction(
                 unsignedTransaction: exampleBaseTransaction(),
                 credentials: [exampleSECP256K1Credential()]
             ),
-            expected: [
+            bytes: [
                 // Codec ID
                 0x00, 0x00,
                 // unsigned transaction:
@@ -1104,15 +1167,15 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeUTXO() throws {
-        try encodeTest(
-            actual: UTXO(
-                transactionId: TransactionID(hex: "0xf966750f438867c3c9828ddcdbe660e21ccdbb36a9276958f011ba472f75d4e7")!,
-                outputIndex: 0,
+    func testEncodeDecodeUTXO() throws {
+        try encodeDecodeTest(
+            value: UTXO(
+                transactionID: TransactionID(hex: "0xf966750f438867c3c9828ddcdbe660e21ccdbb36a9276958f011ba472f75d4e7")!,
+                utxoIndex: 0,
                 assetID: AssetID(hex: "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f")!,
                 output: exampleSECP256K1TransferOutput()
             ),
-            expected: [
+            bytes: [
                 // Codec ID:
                 0x00, 0x00,
                 // txID:
@@ -1141,9 +1204,9 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeGenesisAsset() throws {
-        try encodeTest(
-            actual: GenesisAsset(
+    func testEncodeDecodeGenesisAsset() throws {
+        try encodeDecodeTest(
+            value: GenesisAsset(
                 alias: "asset1",
                 networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
@@ -1155,7 +1218,7 @@ final class TransactionsTests: AvalancheTestCase {
                 denomination: 1,
                 initialStates: [exampleInitialState()]
             ),
-            expected: [
+            bytes: [
                 // asset alias len:
                 0x00, 0x06,
                 // asset alias:
@@ -1202,10 +1265,10 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeSECP256K1OutputOwners() throws {
-        try encodeTest(
-            actual: exampleSECP256K1OutputOwners(),
-            expected: [
+    func testEncodeDecodeSECP256K1OutputOwners() throws {
+        try encodeDecodeTest(
+            value: exampleSECP256K1OutputOwners(),
+            bytes: [
                 // type_id:
                 0x00, 0x00, 0x00, 0x0b,
                 // locktime:
@@ -1218,28 +1281,29 @@ final class TransactionsTests: AvalancheTestCase {
                 0xda, 0x2b, 0xee, 0x01, 0xbe, 0x82, 0xec, 0xc0,
                 0x0c, 0x34, 0xf3, 0x61, 0xed, 0xa8, 0xeb, 0x30,
                 0xfb, 0x5a, 0x71, 0x5c,
-            ]
+            ],
+            context: Self.pChainDecoderContext
         )
     }
     
-    func testEncodeAddValidatorTransaction() throws {
-        try encodeTest(
-            actual: AddValidatorTransaction(
+    func testEncodeDecodeAddValidatorTransaction() throws {
+        try encodeDecodeTest(
+            value: AddValidatorTransaction(
                 networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
                 inputs: [examplePChainTransferableInput()],
                 memo: Data(),
                 validator: exampleValidator(),
-                stake: Stake(lockedOuts: [
+                stake: Stake(lockedOutputs: [
                     TransferableOutput(
-                        assetId: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
+                        assetID: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
                         output: SECP256K1TransferOutput(
                             amount: 2000000000000,
                             locktime: Date(timeIntervalSince1970: 0),
                             threshold: 1,
                             addresses: [
-                                Address(raw: Data(hex: "0x3cb7d3842e8cee6a0ebd09f1fe884f6861e1b29c")!, hrp: "avax", chainId: "P")
+                                Address(raw: Data(hex: "0x3cb7d3842e8cee6a0ebd09f1fe884f6861e1b29c")!, hrp: Self.hrp, chainId: "P")
                             ]
                         )
                     )
@@ -1247,7 +1311,7 @@ final class TransactionsTests: AvalancheTestCase {
                 rewardsOwner: exampleSECP256K1OutputOwners(),
                 shares: 0x00000064
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x0c, 0x00, 0x00, 0x30, 0x39,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1309,13 +1373,14 @@ final class TransactionsTests: AvalancheTestCase {
                 0xed, 0xa8, 0xeb, 0x30, 0xfb, 0x5a, 0x71, 0x5c,
                 // Shares
                 0x00, 0x00, 0x00, 0x64,
-            ]
+            ],
+            context: Self.pChainDecoderContext
         )
     }
     
-    func testEncodeAddSubnetValidatorTransaction() throws {
-        try encodeTest(
-            actual: AddSubnetValidatorTransaction(
+    func testEncodeDecodeAddSubnetValidatorTransaction() throws {
+        try encodeDecodeTest(
+            value: AddSubnetValidatorTransaction(
                 networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
@@ -1325,7 +1390,7 @@ final class TransactionsTests: AvalancheTestCase {
                 subnetID: BlockchainID(hex: "0x58b1092871db85bc752742054e2e8be0adf8166ec1f0f0769f4779f14c71d7eb")!,
                 subnetAuth: SubnetAuth(signatureIndices: [0])
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x0d,
                 0x00, 0x00, 0x30, 0x39,
@@ -1380,35 +1445,36 @@ final class TransactionsTests: AvalancheTestCase {
                 0x00, 0x00, 0x00, 0x01,
                 // SigIndices
                 0x00, 0x00, 0x00, 0x00,
-            ]
+            ],
+            context: Self.pChainDecoderContext
         )
     }
     
-    func testEncodeAddDelegatorTransaction() throws {
-        try encodeTest(
-            actual: AddDelegatorTransaction(
+    func testEncodeDecodeAddDelegatorTransaction() throws {
+        try encodeDecodeTest(
+            value: AddDelegatorTransaction(
                 networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
                 inputs: [examplePChainTransferableInput()],
                 memo: Data(),
                 validator: exampleValidator(),
-                stake: Stake(lockedOuts: [
+                stake: Stake(lockedOutputs: [
                     TransferableOutput(
-                        assetId: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
+                        assetID: AssetID(hex: "0x39c33a499ce4c33a3b09cdd2cfa01ae70dbf2d18b2d7d168524440e55d550088")!,
                         output: SECP256K1TransferOutput(
                             amount: 2000000000000,
                             locktime: Date(timeIntervalSince1970: 0),
                             threshold: 1,
                             addresses: [
-                                Address(raw: Data(hex: "0x3cb7d3842e8cee6a0ebd09f1fe884f6861e1b29c")!, hrp: "avax", chainId: "P")
+                                Address(raw: Data(hex: "0x3cb7d3842e8cee6a0ebd09f1fe884f6861e1b29c")!, hrp: Self.hrp, chainId: "P")
                             ]
                         )
                     )
                 ]),
                 rewardsOwner: exampleSECP256K1OutputOwners()
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x0e, 0x00, 0x00, 0x30, 0x39,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1468,13 +1534,14 @@ final class TransactionsTests: AvalancheTestCase {
                 0x00, 0x00, 0x00, 0x01, 0xda, 0x2b, 0xee, 0x01,
                 0xbe, 0x82, 0xec, 0xc0, 0x0c, 0x34, 0xf3, 0x61,
                 0xed, 0xa8, 0xeb, 0x30, 0xfb, 0x5a, 0x71, 0x5c,
-            ]
+            ],
+            context: Self.pChainDecoderContext
         )
     }
     
-    func testEncodeCreateSubnetTransaction() throws {
-        try encodeTest(
-            actual: CreateSubnetTransaction(
+    func testEncodeDecodeCreateSubnetTransaction() throws {
+        try encodeDecodeTest(
+            value: CreateSubnetTransaction(
                 networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
@@ -1482,7 +1549,7 @@ final class TransactionsTests: AvalancheTestCase {
                 memo: Data(),
                 rewardsOwner: exampleSECP256K1OutputOwners()
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x30, 0x39,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1526,13 +1593,14 @@ final class TransactionsTests: AvalancheTestCase {
                 0xda, 0x2b, 0xee, 0x01,
                 0xbe, 0x82, 0xec, 0xc0, 0x0c, 0x34, 0xf3, 0x61,
                 0xed, 0xa8, 0xeb, 0x30, 0xfb, 0x5a, 0x71, 0x5c
-            ]
+            ],
+            context: Self.pChainDecoderContext
         )
     }
     
-    func testEncodePChainImportTransaction() throws {
-        try encodeTest(
-            actual: PChainImportTransaction(
+    func testEncodeDecodePChainImportTransaction() throws {
+        try encodeDecodeTest(
+            value: PChainImportTransaction(
                 networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
@@ -1541,7 +1609,7 @@ final class TransactionsTests: AvalancheTestCase {
                 sourceChain: BlockchainID(hex: "0x787cd3243c002e9bf5bbbaea8a42a16c1a19cc105047c66996807cbf16acee10")!,
                 transferableInputs: [examplePChainTransferableInput()]
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x11, 0x00, 0x00, 0x30, 0x39,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1596,13 +1664,14 @@ final class TransactionsTests: AvalancheTestCase {
                 0x00, 0x00, 0x00, 0x05, 0x00, 0x00, 0x00, 0x00,
                 0xee, 0x6b, 0x28, 0x00, 0x00, 0x00, 0x00, 0x01,
                 0x00, 0x00, 0x00, 0x00,
-            ]
+            ],
+            context: Self.pChainDecoderContext
         )
     }
     
-    func testEncodePChainExportTransaction() throws {
-        try encodeTest(
-            actual: PChainExportTransaction(
+    func testEncodeDecodePChainExportTransaction() throws {
+        try encodeDecodeTest(
+            value: PChainExportTransaction(
                 networkID: NetworkID(12345),
                 blockchainID: BlockchainID(data: Data(count: 32))!,
                 outputs: [examplePChainTransferableOutput()],
@@ -1611,7 +1680,7 @@ final class TransactionsTests: AvalancheTestCase {
                 destinationChain: BlockchainID(data: Data(count: 32))!,
                 transferableOutputs: [examplePChainTransferableOutput()]
             ),
-            expected: [
+            bytes: [
                 // base tx:
                 0x00, 0x00, 0x00, 0x12, 0x00, 0x00, 0x30, 0x39,
                 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1662,17 +1731,18 @@ final class TransactionsTests: AvalancheTestCase {
                 0x00, 0x00, 0x00, 0x01, 0xda, 0x2b, 0xee, 0x01,
                 0xbe, 0x82, 0xec, 0xc0, 0x0c, 0x34, 0xf3, 0x61,
                 0xed, 0xa8, 0xeb, 0x30, 0xfb, 0x5a, 0x71, 0x5c,
-            ]
+            ],
+            context: Self.pChainDecoderContext
         )
     }
     
-    func testEncodeStakeableLockedInput() throws {
-        try encodeTest(
-            actual: StakeableLockedInput(
+    func testEncodeDecodeStakeableLockedInput() throws {
+        try encodeDecodeTest(
+            value: StakeableLockedInput(
                 locktime: Date(timeIntervalSince1970: 54321),
                 transferableInput: examplePChainTransferableInput()
             ),
-            expected: [
+            bytes: [
                 // type_id:
                 0x00, 0x00, 0x00, 0x15,
                 // locktime:
@@ -1698,13 +1768,13 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    func testEncodeStakeableLockedOutput() throws {
-        try encodeTest(
-            actual: StakeableLockedOutput(
+    func testEncodeDecodeStakeableLockedOutput() throws {
+        try encodeDecodeTest(
+            value: StakeableLockedOutput(
                 locktime: Date(timeIntervalSince1970: 54321),
                 transferableOutput: examplePChainTransferableOutput()
             ),
-            expected: [
+            bytes: [
                 // type_id:
                 0x00, 0x00, 0x00, 0x16,
                 // locktime:
@@ -1722,6 +1792,176 @@ final class TransactionsTests: AvalancheTestCase {
                 0x00, 0x00, 0x00, 0x01, 0xda, 0x2b, 0xee, 0x01,
                 0xbe, 0x82, 0xec, 0xc0, 0x0c, 0x34, 0xf3, 0x61,
                 0xed, 0xa8, 0xeb, 0x30, 0xfb, 0x5a, 0x71, 0x5c,
+            ],
+            context: Self.pChainDecoderContext
+        )
+    }
+    
+    func testEncodeDecodeEVMInput() throws {
+        try encodeDecodeTest(
+            value: exampleEVMInput(),
+            bytes: [
+                // address:
+                0x8d, 0xb9, 0x7c, 0x7c, 0xec, 0xe2, 0x49, 0xc2,
+                0xb9, 0x8b, 0xdc, 0x02, 0x26, 0xcc, 0x4c, 0x2a,
+                0x57, 0xbf, 0x52, 0xfc,
+                // amount:
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x1e, 0x84, 0x80,
+                // assetID:
+                0xdb, 0xcf, 0x89, 0x0f, 0x77, 0xf4, 0x9b, 0x96,
+                0x85, 0x76, 0x48, 0xb7, 0x2b, 0x77, 0xf9, 0xf8,
+                0x29, 0x37, 0xf2, 0x8a, 0x68, 0x70, 0x4a, 0xf0,
+                0x5d, 0xa0, 0xdc, 0x12, 0xba, 0x53, 0xf2, 0xdb,
+                // nonce:
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+            ]
+        )
+    }
+    
+    func testEncodeDecodeEVMOutput() throws {
+        try encodeDecodeTest(
+            value: exampleEVMOutput(),
+            bytes: [
+                // address:
+                0x0e, 0xb5, 0xcc, 0xb8, 0x5c, 0x29, 0x00, 0x9b,
+                0x60, 0x60, 0xde, 0xcb, 0x35, 0x3a, 0x38, 0xea,
+                0x3b, 0x52, 0xcd, 0x20,
+                // amount:
+                0x00, 0x00, 0x00, 0x74, 0x6a, 0x52, 0x88, 0x00,
+                // assetID:
+                0xdb, 0xcf, 0x89, 0x0f, 0x77, 0xf4, 0x9b, 0x96,
+                0x85, 0x76, 0x48, 0xb7, 0x2b, 0x77, 0xf9, 0xf8,
+                0x29, 0x37, 0xf2, 0x8a, 0x68, 0x70, 0x4a, 0xf0,
+                0x5d, 0xa0, 0xdc, 0x12, 0xba, 0x53, 0xf2, 0xdb,
+            ]
+        )
+    }
+    
+    func testEncodeDecodeCChainExportTransaction() throws {
+        try encodeDecodeTest(
+            value: CChainExportTransaction(
+                networkID: NetworkID(12345),
+                blockchainID: BlockchainID(hex: "0x91060eabfb5a571720109b5896e5ff00010a1cfe6b103d585e6ebf27b97a1735")!,
+                destinationChain: BlockchainID(hex: "0xd891ad56056d9c01f18f43f58b5c784ad07a4a49cf3d1f11623804b5cba2c6bf")!,
+                inputs: [exampleEVMInput()],
+                exportedOutputs: [
+                    TransferableOutput(
+                        assetID: AssetID(hex: "0xdbcf890f77f49b96857648b72b77f9f82937f28a68704af05da0dc12ba53f2db")!,
+                        output: SECP256K1TransferOutput(
+                            amount: 1000000,
+                            locktime: Date(timeIntervalSince1970: 0),
+                            threshold: 1,
+                            addresses: [
+                                Address(raw: Data(hex: "0x66f90db6137a78f76b3693f7f2bc507956dae563")!, hrp: Self.hrp, chainId: "C")
+                            ]
+                        )
+                    )
+                ]
+            ),
+            bytes: [
+                // typeID:
+                0x00, 0x00, 0x00, 0x01,
+                // networkID:
+                0x00, 0x00, 0x30, 0x39,
+                // blockchainID:
+                0x91, 0x06, 0x0e, 0xab, 0xfb, 0x5a, 0x57, 0x17,
+                0x20, 0x10, 0x9b, 0x58, 0x96, 0xe5, 0xff, 0x00,
+                0x01, 0x0a, 0x1c, 0xfe, 0x6b, 0x10, 0x3d, 0x58,
+                0x5e, 0x6e, 0xbf, 0x27, 0xb9, 0x7a, 0x17, 0x35,
+                // destination_chain:
+                0xd8, 0x91, 0xad, 0x56, 0x05, 0x6d, 0x9c, 0x01,
+                0xf1, 0x8f, 0x43, 0xf5, 0x8b, 0x5c, 0x78, 0x4a,
+                0xd0, 0x7a, 0x4a, 0x49, 0xcf, 0x3d, 0x1f, 0x11,
+                0x62, 0x38, 0x04, 0xb5, 0xcb, 0xa2, 0xc6, 0xbf,
+                // inputs[] count:
+                0x00, 0x00, 0x00, 0x01,
+                // inputs[0]
+                0x8d, 0xb9, 0x7c, 0x7c, 0xec, 0xe2, 0x49, 0xc2,
+                0xb9, 0x8b, 0xdc, 0x02, 0x26, 0xcc, 0x4c, 0x2a,
+                0x57, 0xbf, 0x52, 0xfc, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x1e, 0x84, 0x80, 0xdb, 0xcf, 0x89, 0x0f,
+                0x77, 0xf4, 0x9b, 0x96, 0x85, 0x76, 0x48, 0xb7,
+                0x2b, 0x77, 0xf9, 0xf8, 0x29, 0x37, 0xf2, 0x8a,
+                0x68, 0x70, 0x4a, 0xf0, 0x5d, 0xa0, 0xdc, 0x12,
+                0xba, 0x53, 0xf2, 0xdb, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00,
+                // exportedOutputs[] count
+                0x00, 0x00, 0x00, 0x01,
+                // exportedOutputs[0]
+                0xdb, 0xcf, 0x89, 0x0f, 0x77, 0xf4, 0x9b, 0x96,
+                0x85, 0x76, 0x48, 0xb7, 0x2b, 0x77, 0xf9, 0xf8,
+                0x29, 0x37, 0xf2, 0x8a, 0x68, 0x70, 0x4a, 0xf0,
+                0x5d, 0xa0, 0xdc, 0x12, 0xba, 0x53, 0xf2, 0xdb,
+                0x00, 0x00, 0x00, 0x07, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x0f, 0x42, 0x40, 0x00, 0x00, 0x00, 0x00,
+                0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+                0x00, 0x00, 0x00, 0x01, 0x66, 0xf9, 0x0d, 0xb6,
+                0x13, 0x7a, 0x78, 0xf7, 0x6b, 0x36, 0x93, 0xf7,
+                0xf2, 0xbc, 0x50, 0x79, 0x56, 0xda, 0xe5, 0x63,
+            ],
+            context: Self.cChainDecoderContext
+        )
+    }
+    
+    func testEncodeDecodeCChainImportTransaction() throws {
+        try encodeDecodeTest(
+            value: CChainImportTransaction(
+                networkID: NetworkID(12345),
+                blockchainID: BlockchainID(hex: "0x91060eabfb5a571720109b5896e5ff00010a1cfe6b103d585e6ebf27b97a1735")!,
+                sourceChain: BlockchainID(hex: "0xd891ad56056d9c01f18f43f58b5c784ad07a4a49cf3d1f11623804b5cba2c6bf")!,
+                importedInputs: [
+                    TransferableInput(
+                        transactionID: TransactionID(hex: "0x6613a40dcdd8d22ea4aa99a4c84349056317cf550b6685e045e459954f258e59")!,
+                        utxoIndex: 1,
+                        assetID: AssetID(hex: "0xdbcf890f77f49b96857648b72b77f9f82937f28a68704af05da0dc12ba53f2db")!,
+                        input: SECP256K1TransferInput(
+                            amount: 500000000000,
+                            addressIndices: [0]
+                        )
+                    )
+                ],
+                outputs: [exampleEVMOutput()]
+            ),
+            bytes: [
+                // typeID:
+                0x00, 0x00, 0x00, 0x00,
+                // networkID:
+                0x00, 0x00, 0x30, 0x39,
+                // blockchainID:
+                0x91, 0x06, 0x0e, 0xab, 0xfb, 0x5a, 0x57, 0x17,
+                0x20, 0x10, 0x9b, 0x58, 0x96, 0xe5, 0xff, 0x00,
+                0x01, 0x0a, 0x1c, 0xfe, 0x6b, 0x10, 0x3d, 0x58,
+                0x5e, 0x6e, 0xbf, 0x27, 0xb9, 0x7a, 0x17, 0x35,
+                // sourceChain:
+                0xd8, 0x91, 0xad, 0x56, 0x05, 0x6d, 0x9c, 0x01,
+                0xf1, 0x8f, 0x43, 0xf5, 0x8b, 0x5c, 0x78, 0x4a,
+                0xd0, 0x7a, 0x4a, 0x49, 0xcf, 0x3d, 0x1f, 0x11,
+                0x62, 0x38, 0x04, 0xb5, 0xcb, 0xa2, 0xc6, 0xbf,
+                // importedInputs[] count:
+                0x00, 0x00, 0x00, 0x01,
+                // importedInputs[0]
+                0x66, 0x13, 0xa4, 0x0d, 0xcd, 0xd8, 0xd2, 0x2e,
+                0xa4, 0xaa, 0x99, 0xa4, 0xc8, 0x43, 0x49, 0x05,
+                0x63, 0x17, 0xcf, 0x55, 0x0b, 0x66, 0x85, 0xe0,
+                0x45, 0xe4, 0x59, 0x95, 0x4f, 0x25, 0x8e, 0x59,
+                0x00, 0x00, 0x00, 0x01, 0xdb, 0xcf, 0x89, 0x0f,
+                0x77, 0xf4, 0x9b, 0x96, 0x85, 0x76, 0x48, 0xb7,
+                0x2b, 0x77, 0xf9, 0xf8, 0x29, 0x37, 0xf2, 0x8a,
+                0x68, 0x70, 0x4a, 0xf0, 0x5d, 0xa0, 0xdc, 0x12,
+                0xba, 0x53, 0xf2, 0xdb, 0x00, 0x00, 0x00, 0x05,
+                0x00, 0x00, 0x00, 0x74, 0x6a, 0x52, 0x88, 0x00,
+                0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
+                // outs[] count
+                0x00, 0x00, 0x00, 0x01,
+                // outs[0]
+                0x0e, 0xb5, 0xcc, 0xb8, 0x5c, 0x29, 0x00, 0x9b,
+                0x60, 0x60, 0xde, 0xcb, 0x35, 0x3a, 0x38, 0xea,
+                0x3b, 0x52, 0xcd, 0x20, 0x00, 0x00, 0x00, 0x74,
+                0x6a, 0x52, 0x88, 0x00, 0xdb, 0xcf, 0x89, 0x0f,
+                0x77, 0xf4, 0x9b, 0x96, 0x85, 0x76, 0x48, 0xb7,
+                0x2b, 0x77, 0xf9, 0xf8, 0x29, 0x37, 0xf2, 0x8a,
+                0x68, 0x70, 0x4a, 0xf0, 0x5d, 0xa0, 0xdc, 0x12,
+                0xba, 0x53, 0xf2, 0xdb,
             ]
         )
     }
