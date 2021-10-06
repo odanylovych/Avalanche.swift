@@ -62,7 +62,7 @@ The library allows one to issue commands to the Avalanche node APIs.
   s.subspec 'RPC' do |ss|
     ss.source_files = 'Sources/RPC/**/*.swift'
 
-    ss.dependency 'TesseractWebSocket', '~> 0.0.7'
+    ss.dependency 'TesseractWebSocket', '~> 0.1.0'
     
     ss.test_spec 'RPCTests' do |test_spec|
       test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
