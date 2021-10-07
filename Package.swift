@@ -49,7 +49,7 @@ let package = Package(
             dependencies: ["WebSocket"]),
         .testTarget(
             name: "AvalancheTests",
-            dependencies: ["Avalanche", "AvalancheKeychain"]),
+            dependencies: ["Avalanche"]),
         .testTarget(
             name: "KeychainTests",
             dependencies: ["AvalancheKeychain"]),

@@ -6,7 +6,6 @@
 //
 
 import XCTest
-import CryptoKit
 @testable import Avalanche
 
 #if !COCOAPODS
@@ -25,13 +24,6 @@ final class KeyPairTests: XCTestCase {
             chainCode: nil
         )
         XCTAssertEqual(keyPair.publicKey.hex(), "0x033fad3644deb20d7a210d12757092312451c112d04773cee2699fbb59dc8bb2ef")
-        var sha256 = SHA256()
-        sha256.update(data: Data(hex: "0x09090909")!)
-        let message = Data(sha256.finalize())
-        let signature = keyPair.signAvalanche(message: message)!
-        XCTAssertEqual(signature.count, 65)
-        let address = keyPair.address(hrp: hrp, chainId: alias)
-        assert(address.verify(message: message, signature: Signature(data: signature)!))
     }
     
     func testBadPrivateKey() throws {
@@ -45,13 +37,6 @@ final class KeyPairTests: XCTestCase {
             chainCode: nil
         )
         XCTAssertEqual(keyPair.publicKey.hex(), "0x02486553b276cfe7abf0efbcd8d173e55db9c03da020c33d0b219df24124da18ee")
-        var sha256 = SHA256()
-        sha256.update(data: Data(hex: "0x09090909")!)
-        let message = Data(sha256.finalize())
-        let signature = keyPair.signAvalanche(message: message)!
-        XCTAssertEqual(signature.count, 65)
-        let address = keyPair.address(hrp: hrp, chainId: alias)
-        assert(address.verify(message: message, signature: Signature(data: signature)!))
     }
     
     func testRepeatable3() throws {
@@ -60,13 +45,6 @@ final class KeyPairTests: XCTestCase {
             chainCode: nil
         )
         XCTAssertEqual(keyPair.publicKey.hex(), "0x031475b91d4fcf52979f1cf107f058088cc2bea6edd51915790f27185a7586e2f2")
-        var sha256 = SHA256()
-        sha256.update(data: Data(hex: "0x09090909")!)
-        let message = Data(sha256.finalize())
-        let signature = keyPair.signAvalanche(message: message)!
-        XCTAssertEqual(signature.count, 65)
-        let address = keyPair.address(hrp: hrp, chainId: alias)
-        assert(address.verify(message: message, signature: Signature(data: signature)!))
     }
     
     func testCreationEmpty() throws {
@@ -76,12 +54,5 @@ final class KeyPairTests: XCTestCase {
         assert(!keyPair.address(hrp: hrp, chainId: alias).rawAddress.isEmpty)
         assert(!keyPair.publicKey.isEmpty)
         assert(!keyPair.publicString.isEmpty)
-        var sha256 = SHA256()
-        sha256.update(data: Data(hex: "0x09090909")!)
-        let message = Data(sha256.finalize())
-        let signature = keyPair.signAvalanche(message: message)!
-        XCTAssertEqual(signature.count, 65)
-        let address = keyPair.address(hrp: hrp, chainId: alias)
-        assert(address.verify(message: message, signature: Signature(data: signature)!))
     }
 }
