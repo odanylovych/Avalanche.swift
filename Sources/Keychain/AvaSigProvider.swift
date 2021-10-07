@@ -55,7 +55,7 @@ private extension AvalancheBip44Keychain {
                 cb(.failure(.signingFailed(address: addr.path, reason: "")))
                 return
             }
-            signatures[addr.address] = Signature(data: sig)
+            signatures[addr.address] = sig
         }
         do {
             let signed = try tx.toSigned(signatures: signatures)
@@ -131,7 +131,7 @@ extension AvalancheBip44Keychain: AvalancheSignatureProvider {
                 let sig = isEthereum
                     ? kp.signEthereum(message: message)
                     : kp.signAvalanche(message: message)
-                guard let sigData = sig, let signature = Signature(data: sigData) else {
+                guard let signature = sig else {
                     cb(.failure(.signingFailed(address: address.path, reason: "")))
                     return
                 }
