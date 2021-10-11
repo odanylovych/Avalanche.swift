@@ -95,6 +95,121 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         }
     }
     
+    public struct AddValidatorParams: Encodable {
+        public let nodeID: String
+        public let startTime: Int64
+        public let endTime: Int64
+        public let stakeAmount: UInt64
+        public let rewardAddress: String
+        public let delegationFeeRate: Float
+        public let from: [String]?
+        public let changeAddr: String?
+        public let username: String
+        public let password: String
+    }
+    
+    public struct AddValidatorResponse: Decodable {
+        public let txID: String
+        public let changeAddr: String
+    }
+    
+    public func addValidator(
+        nodeID: NodeID,
+        startTime: Date,
+        endTime: Date,
+        stakeAmount: UInt64,
+        reward: Address,
+        delegationFeeRate: Float,
+        from: [Address]? = nil,
+        change: Address? = nil,
+        credentials: AvalancheVmApiCredentials,
+        _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
+    ) {
+        switch credentials {
+        case .password(let username, let password):
+            let params = AddValidatorParams(
+                nodeID: nodeID.cb58(),
+                startTime: Int64(startTime.timeIntervalSince1970),
+                endTime: Int64(endTime.timeIntervalSince1970),
+                stakeAmount: stakeAmount,
+                rewardAddress: reward.bech,
+                delegationFeeRate: delegationFeeRate,
+                from: from?.map { $0.bech },
+                changeAddr: change?.bech,
+                username: username,
+                password: password
+            )
+            service.call(
+                method: "platform.addValidator",
+                params: params,
+                AddValidatorResponse.self,
+                SerializableValue.self
+            ) { res in
+                cb(res
+                    .mapError(AvalancheApiError.init)
+                    .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
+            }
+        case .account:
+            fatalError("Not implemented")
+        }
+    }
+    
+    public struct AddSubnetValidatorParams: Encodable {
+        public let nodeID: String
+        public let subnetID: String
+        public let startTime: Int64
+        public let endTime: Int64
+        public let weight: UInt64
+        public let from: [String]?
+        public let changeAddr: String?
+        public let username: String
+        public let password: String
+    }
+    
+    public struct AddSubnetValidatorResponse: Decodable {
+        public let txID: String
+        public let changeAddr: String
+    }
+    
+    public func addSubnetValidator(
+        nodeID: NodeID,
+        subnetID: BlockchainID,
+        startTime: Date,
+        endTime: Date,
+        weight: UInt64,
+        from: [Address]? = nil,
+        change: Address? = nil,
+        credentials: AvalancheVmApiCredentials,
+        _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
+    ) {
+        switch credentials {
+        case .password(let username, let password):
+            let params = AddSubnetValidatorParams(
+                nodeID: nodeID.cb58(),
+                subnetID: subnetID.cb58(),
+                startTime: Int64(startTime.timeIntervalSince1970),
+                endTime: Int64(endTime.timeIntervalSince1970),
+                weight: weight,
+                from: from?.map { $0.bech },
+                changeAddr: change?.bech,
+                username: username,
+                password: password
+            )
+            service.call(
+                method: "platform.addSubnetValidator",
+                params: params,
+                AddSubnetValidatorResponse.self,
+                SerializableValue.self
+            ) { res in
+                cb(res
+                    .mapError(AvalancheApiError.init)
+                    .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
+            }
+        case .account:
+            fatalError("Not implemented")
+        }
+    }
+    
     public struct CreateAddressParams: Encodable {
         public let username: String
         public let password: String
@@ -126,6 +241,156 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         }
     }
     
+    public struct CreateBlockchainParams: Encodable {
+        public let subnetID: String
+        public let vmID: String
+        public let name: String
+        public let genesisData: String
+        public let encoding: AvalancheEncoding?
+        public let from: [String]?
+        public let changeAddr: String?
+        public let username: String
+        public let password: String
+    }
+    
+    public struct CreateBlockchainResponse: Decodable {
+        public let txID: String
+        public let changeAddr: String
+    }
+    
+    public func createBlockchain(
+        subnetID: BlockchainID,
+        vmID: String,
+        name: String,
+        genesisData: String,
+        encoding: AvalancheEncoding? = nil,
+        from: [Address]? = nil,
+        change: Address? = nil,
+        credentials: AvalancheVmApiCredentials,
+        _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
+    ) {
+        switch credentials {
+        case .password(let username, let password):
+            let params = CreateBlockchainParams(
+                subnetID: subnetID.cb58(),
+                vmID: vmID,
+                name: name,
+                genesisData: genesisData,
+                encoding: encoding,
+                from: from?.map { $0.bech },
+                changeAddr: change?.bech,
+                username: username,
+                password: password
+            )
+            service.call(
+                method: "platform.createBlockchain",
+                params: params,
+                CreateBlockchainResponse.self,
+                SerializableValue.self
+            ) { res in
+                cb(res
+                    .mapError(AvalancheApiError.init)
+                    .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
+            }
+        case .account:
+            fatalError("Not implemented")
+        }
+    }
+    
+    public struct CreateSubnetParams: Encodable {
+        public let controlKeys: [String]
+        public let threshold: UInt32
+        public let from: [String]?
+        public let changeAddr: String?
+        public let username: String
+        public let password: String
+    }
+    
+    public struct CreateSubnetResponse: Decodable {
+        public let txID: String
+        public let changeAddr: String
+    }
+    
+    public func createSubnet(
+        controlKeys: [Address],
+        threshold: UInt32,
+        from: [Address]? = nil,
+        change: Address? = nil,
+        credentials: AvalancheVmApiCredentials,
+        _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
+    ) {
+        switch credentials {
+        case .password(let username, let password):
+            let params = CreateSubnetParams(
+                controlKeys: controlKeys.map { $0.bech },
+                threshold: threshold,
+                from: from?.map { $0.bech },
+                changeAddr: change?.bech,
+                username: username,
+                password: password
+            )
+            service.call(
+                method: "platform.createSubnet",
+                params: params,
+                CreateSubnetResponse.self,
+                SerializableValue.self
+            ) { res in
+                cb(res
+                    .mapError(AvalancheApiError.init)
+                    .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
+            }
+        case .account:
+            fatalError("Not implemented")
+        }
+    }
+    
+    public struct ExportAVAXParams: Encodable {
+        public let amount: UInt64
+        public let from: [String]?
+        public let to: String
+        public let changeAddr: String?
+        public let username: String
+        public let password: String
+    }
+    
+    public struct ExportAVAXResponse: Decodable {
+        public let txID: String
+        public let changeAddr: String
+    }
+    
+    public func exportAVAX(
+        to: Address,
+        amount: UInt64,
+        from: [Address]? = nil,
+        change: Address? = nil,
+        credentials: AvalancheVmApiCredentials,
+        _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
+    ) {
+        switch credentials {
+        case .password(let username, let password):
+            let params = ExportAVAXParams(
+                amount: amount,
+                from: from?.map { $0.bech },
+                to: to.bech,
+                changeAddr: change?.bech,
+                username: username,
+                password: password
+            )
+            service.call(
+                method: "platform.exportAVAX",
+                params: params,
+                ExportAVAXResponse.self,
+                SerializableValue.self
+            ) { res in
+                cb(res
+                    .mapError(AvalancheApiError.init)
+                    .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
+            }
+        case .account:
+            fatalError("Not implemented")
+        }
+    }
+    
     public struct GetUTXOParams: Encodable {
         public struct Index {
             public let address: String
@@ -148,6 +413,89 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     
     public func getUTXOs(addresses: [Address], limit: UInt32?, startIndex: UTXOIndex?, sourceChain: String?, result: @escaping ApiCallback<(fetched: UInt32, utxos: [UTXO], endIndex: UTXOIndex)>) {
         
+    }
+    
+    public struct ImportAVAXParams: Encodable {
+        public let from: [String]?
+        public let to: String
+        public let changeAddr: String?
+        public let sourceChain: String
+        public let username: String
+        public let password: String
+    }
+    
+    public struct ImportAVAXResponse: Decodable {
+        public let txID: String
+        public let changeAddr: String
+    }
+    
+    public func importAVAX(
+        from: [Address]? = nil,
+        to: Address,
+        change: Address? = nil,
+        source: BlockchainID,
+        credentials: AvalancheVmApiCredentials,
+        _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
+    ) {
+        switch credentials {
+        case .password(let username, let password):
+            let params = ImportAVAXParams(
+                from: from?.map { $0.bech },
+                to: to.bech,
+                changeAddr: change?.bech,
+                sourceChain: source.cb58(),
+                username: username,
+                password: password
+            )
+            service.call(
+                method: "platform.importAVAX",
+                params: params,
+                ImportAVAXResponse.self,
+                SerializableValue.self
+            ) { res in
+                cb(res
+                    .mapError(AvalancheApiError.init)
+                    .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
+            }
+        case .account:
+            fatalError("Not implemented")
+        }
+    }
+    
+    public struct IssueTxParams: Encodable {
+        public let tx: String
+        public let encoding: AvalancheEncoding?
+    }
+    
+    public struct IssueTxResponse: Decodable {
+        public let txID: String
+    }
+    
+    public func issueTx(
+        tx: String,
+        encoding: AvalancheEncoding? = nil,
+        credentials: AvalancheVmApiCredentials,
+        _ cb: @escaping ApiCallback<TransactionID>
+    ) {
+        switch credentials {
+        case .password:
+            let params = IssueTxParams(
+                tx: tx,
+                encoding: encoding
+            )
+            service.call(
+                method: "platform.issueTx",
+                params: params,
+                IssueTxResponse.self,
+                SerializableValue.self
+            ) { res in
+                cb(res
+                    .mapError(AvalancheApiError.init)
+                    .map { TransactionID(cb58: $0.txID)! })
+            }
+        case .account:
+            fatalError("Not implemented")
+        }
     }
 }
 
