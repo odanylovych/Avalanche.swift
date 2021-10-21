@@ -30,11 +30,12 @@ public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
     }
 }
 
-public class AvalancheXChainApi: AvalancheApi {
+public class AvalancheXChainApi: AvalancheVMApi {
     public typealias Info = AvalancheXChainApiInfo
+    public typealias Keychain = AvalancheXChainApiAddressManager
     
-    public let keychain: AvalancheAddressManager?
-    
+    private let addressManager: AvalancheAddressManager?
+    private let utxoProvider: AvalancheUtxoProvider
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
@@ -42,13 +43,19 @@ public class AvalancheXChainApi: AvalancheApi {
     private let service: Client
     private let vmService: Client
     
+    public var keychain: AvalancheXChainApiAddressManager? {
+        addressManager.map {
+            AvalancheXChainApiAddressManager(manager: $0, api: self)
+        }
+    }
 
     public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         self.networkID = networkID
         self.hrp = hrp
         self.info = info
+        addressManager = avalanche.addressManager
+        utxoProvider = avalanche.utxoProvider
         
-        self.keychain = avalanche.addressManager
         let settings = avalanche.settings
         
         self.service = JsonRpc(.http(url: avalanche.url(path: info.apiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
@@ -83,6 +90,7 @@ public class AvalancheXChainApi: AvalancheApi {
         initialHolders: [(address: Address, amount: UInt64)],
         from: [Address]? = nil,
         change: Address? = nil,
+        memo: Data? = nil,
         credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<(assetID: AssetID, change: Address)>
     ) {
@@ -427,6 +435,79 @@ public class AvalancheXChainApi: AvalancheApi {
         }
     }
     
+    public func getTransaction(
+        id: TransactionID,
+        result: @escaping ApiCallback<SignedAvalancheTransaction>
+    ) {
+        fatalError("Not implemented")
+    }
+    
+    public struct GetUTXOsParams: Encodable {
+        public let addresses: [String]
+        public let limit: UInt32?
+        public let startIndex: UTXOIndex?
+        public let sourceChain: String?
+        public let encoding: AvalancheEncoding?
+    }
+    
+    public struct GetUTXOsResponse: Decodable {
+        public let numFetched: UInt32
+        public let utxos: [String]
+        public let endIndex: UTXOIndex
+        public let sourceChain: String?
+        public let encoding: AvalancheEncoding
+    }
+    
+    public func getUTXOs(
+        addresses: [Address],
+        limit: UInt32? = nil,
+        startIndex: UTXOIndex? = nil,
+        sourceChain: BlockchainID? = nil,
+        encoding: AvalancheEncoding? = nil,
+        _ cb: @escaping ApiCallback<(
+            fetched: UInt32,
+            utxos: [UTXO],
+            endIndex: UTXOIndex,
+            encoding: AvalancheEncoding
+        )>
+    ) {
+        let params = GetUTXOsParams(
+            addresses: addresses.map { $0.bech },
+            limit: limit,
+            startIndex: startIndex,
+            sourceChain: sourceChain?.cb58(),
+            encoding: encoding
+        )
+        service.call(
+            method: "avm.getUTXOs",
+            params: params,
+            GetUTXOsResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res
+                .mapError(AvalancheApiError.init)
+                .map {
+                    let context = DefaultAvalancheDecoderContext(
+                        hrp: self.hrp,
+                        chainId: self.info.chainId,
+                        dynamicParser: XChainDynamicTypeRegistry.instance
+                    )
+                    return (
+                        fetched: $0.numFetched,
+                        utxos: $0.utxos.map {
+                            let decoder = ADecoder(
+                                context: context,
+                                data: Algos.Base58.from(cb58: $0)!
+                            )
+                            return try! UTXO(from: decoder)
+                        },
+                        endIndex: $0.endIndex,
+                        encoding: $0.encoding
+                    )
+                })
+        }
+    }
+
     public struct ImportParams: Encodable {
         public let to: String
         public let sourceChain: String
@@ -699,7 +780,6 @@ public class AvalancheXChainApi: AvalancheApi {
             fatalError("Not implemented")
         }
     }
-    
 }
 
 extension AvalancheCore {

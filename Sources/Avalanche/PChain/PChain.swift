@@ -411,8 +411,20 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         
     }
     
-    public func getUTXOs(addresses: [Address], limit: UInt32?, startIndex: UTXOIndex?, sourceChain: String?, result: @escaping ApiCallback<(fetched: UInt32, utxos: [UTXO], endIndex: UTXOIndex)>) {
-        
+    public func getUTXOs(
+        addresses: [Address],
+        limit: UInt32? = nil,
+        startIndex: UTXOIndex? = nil,
+        sourceChain: BlockchainID? = nil,
+        encoding: AvalancheEncoding? = nil,
+        _ cb: @escaping ApiCallback<(
+            fetched: UInt32,
+            utxos: [UTXO],
+            endIndex: UTXOIndex,
+            encoding: AvalancheEncoding
+        )>
+    ) {
+        fatalError("Not implemented")
     }
     
     public struct ImportAVAXParams: Encodable {

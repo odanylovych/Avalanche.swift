@@ -7,7 +7,7 @@
 
 import Foundation
 
-public enum AvalancheEncoding: String, Encodable {
+public enum AvalancheEncoding: String, Encodable, Decodable {
     case cb58 = "cb58"
     case hex = "hex"
 }

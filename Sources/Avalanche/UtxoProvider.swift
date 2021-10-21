@@ -9,7 +9,7 @@ import Foundation
 
 public protocol AvalancheUtxoProviderIterator {
     func next(
-        limit: Int,
+        limit: UInt32,
         result: @escaping ApiCallback<(utxos: [UTXO],
                                        iterator: AvalancheUtxoProviderIterator?)>)
 }
@@ -22,6 +22,11 @@ public protocol AvalancheUtxoProvider: AnyObject {
     func utxos<A: AvalancheVMApi>(api: A,
                                   addresses: [A.Keychain.Acct.Addr],
                                   forceUpdate: Bool) -> AvalancheUtxoProviderIterator
+    
+    func utxos<A: AvalancheVMApi>(api: A,
+                                  limit: UInt32,
+                                  addresses: [A.Keychain.Acct.Addr],
+                                  result: @escaping ApiCallback<[UTXO]>)
 }
 
 public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
@@ -37,11 +42,22 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
         }
         
         func next(
-            limit: Int,
+            limit: UInt32,
             result: @escaping ApiCallback<(utxos: [UTXO],
                                            iterator: AvalancheUtxoProviderIterator?)>)
         {
-            //TODO: Implement. Call API, check does it have more. Call result with iterator
+            api.getUTXOs(
+                addresses: addresses,
+                limit: limit,
+                startIndex: index,
+                sourceChain: api.info.blockchainID,
+                encoding: AvalancheEncoding.cb58
+            ) { res in
+                result(res.map { (
+                    utxos: $0.utxos,
+                    iterator: $0.fetched < limit ? nil : Self(api: api, addresses: addresses, index: $0.endIndex)
+                ) })
+            }
         }
     }
     
@@ -59,8 +75,48 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
     }
     
     public func utxos<A: AvalancheVMApi>(
-        api: A, addresses: [A.Keychain.Acct.Addr],
-        forceUpdate: Bool) -> AvalancheUtxoProviderIterator
+        api: A,
+        limit: UInt32,
+        addresses: [A.Keychain.Acct.Addr],
+        result: @escaping ApiCallback<[UTXO]>
+    ) {
+        let iterator = utxos(api: api, addresses: addresses, forceUpdate: true)
+        allUtxos(limit: limit, iterator: iterator, all: []) { res in
+            do {
+                let res = try res.get()
+                if res.last {
+                    result(.success(res.utxos))
+                }
+            } catch {
+                result(.failure(error as! AvalancheApiError))
+            }
+        }
+    }
+    
+    private func allUtxos(
+        limit: UInt32,
+        iterator: AvalancheUtxoProviderIterator,
+        all: [UTXO],
+        result: @escaping ApiCallback<(utxos: [UTXO], last: Bool)>
+    ) {
+        iterator.next(limit: limit) { res in
+            result(res.map { utxos, iterator in
+                var all = all
+                all += utxos
+                if let iterator = iterator {
+                    self.allUtxos(limit: limit, iterator: iterator, all: all, result: result)
+                    return (utxos: all, last: false)
+                }
+                return (utxos: all, last: true)
+            })
+        }
+    }
+    
+    public func utxos<A: AvalancheVMApi>(
+        api: A,
+        addresses: [A.Keychain.Acct.Addr],
+        forceUpdate: Bool
+    ) -> AvalancheUtxoProviderIterator
     {
         return Iterator(api: api, addresses: addresses, index: nil)
     }

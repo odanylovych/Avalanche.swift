@@ -41,11 +41,15 @@ public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
         addresses: [Keychain.Acct.Addr],
         limit: UInt32?,
         startIndex: UTXOIndex?,
-        sourceChain: String?,
-        result: @escaping ApiCallback<(fetched: UInt32,
-                                       utxos: [UTXO],
-                                       endIndex: UTXOIndex)>)
-    
+        sourceChain: BlockchainID?,
+        encoding: AvalancheEncoding?,
+        _ cb: @escaping ApiCallback<(
+            fetched: UInt32,
+            utxos: [UTXO],
+            endIndex: UTXOIndex,
+            encoding: AvalancheEncoding
+        )>
+    )
 }
 
 public protocol AvalancheVMApiInfo: AvalancheApiInfo {

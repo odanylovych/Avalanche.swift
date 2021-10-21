@@ -25,6 +25,12 @@ public protocol AvalancheDecoderContext {
     var dynamicParser: DynamicTypeParser { get }
 }
 
+public struct DefaultAvalancheDecoderContext: AvalancheDecoderContext {
+    public let hrp: String
+    public let chainId: String
+    public let dynamicParser: DynamicTypeParser
+}
+
 public protocol AvalancheDecoder {
     var path: [String] { get }
     var context: AvalancheDecoderContext { get }
