@@ -396,53 +396,6 @@ public class AvalancheXChainApi: AvalancheVMApi {
         }
     }
     
-    public struct ExportAVAXParams: Encodable {
-        public let to: String
-        public let amount: UInt64
-        public let from: [String]?
-        public let changeAddr: String?
-        public let username: String
-        public let password: String
-    }
-    
-    public struct ExportAVAXResponse: Decodable {
-        public let txID: String
-        public let changeAddr: String
-    }
-    
-    public func exportAVAX(
-        to: Address,
-        amount: UInt64,
-        from: [Address]? = nil,
-        change: Address? = nil,
-        credentials: AvalancheVmApiCredentials,
-        _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
-    ) {
-        switch credentials {
-        case .password(let username, let password):
-            let params = ExportAVAXParams(
-                to: to.bech,
-                amount: amount,
-                from: from?.map { $0.bech },
-                changeAddr: change?.bech,
-                username: username,
-                password: password
-            )
-            service.call(
-                method: "avm.exportAVAX",
-                params: params,
-                ExportAVAXResponse.self,
-                SerializableValue.self
-            ) { res in
-                cb(res
-                    .mapError(AvalancheApiError.init)
-                    .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
-            }
-        case .account:
-            fatalError("Not implemented")
-        }
-    }
-    
     public struct GetAllBalancesParams: Encodable {
         public let address: String
     }
@@ -621,46 +574,6 @@ public class AvalancheXChainApi: AvalancheVMApi {
                 method: "avm.import",
                 params: params,
                 ImportResponse.self,
-                SerializableValue.self
-            ) { res in
-                cb(res
-                    .mapError(AvalancheApiError.init)
-                    .map { TransactionID(cb58: $0.txID)! })
-            }
-        case .account:
-            fatalError("Not implemented")
-        }
-    }
-    
-    public struct ImportAVAXParams: Encodable {
-        public let to: String
-        public let sourceChain: String
-        public let username: String
-        public let password: String
-    }
-    
-    public struct ImportAVAXResponse: Decodable {
-        public let txID: String
-    }
-    
-    public func importAVAX(
-        to: Address,
-        source: BlockchainID,
-        credentials: AvalancheVmApiCredentials,
-        _ cb: @escaping ApiCallback<TransactionID>
-    ) {
-        switch credentials {
-        case .password(let username, let password):
-            let params = ImportAVAXParams(
-                to: to.bech,
-                sourceChain: source.cb58(),
-                username: username,
-                password: password
-            )
-            service.call(
-                method: "avm.importAVAX",
-                params: params,
-                ImportAVAXResponse.self,
                 SerializableValue.self
             ) { res in
                 cb(res
