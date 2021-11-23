@@ -48,6 +48,14 @@ public class AvalancheXChainApi: AvalancheVMApi {
             AvalancheXChainApiAddressManager(manager: $0, api: self)
         }
     }
+    
+    private var context: AvalancheDecoderContext {
+        DefaultAvalancheDecoderContext(
+            hrp: hrp,
+            chainId: info.chainId,
+            dynamicParser: XChainDynamicTypeRegistry.instance
+        )
+    }
 
     public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         self.networkID = networkID
@@ -435,11 +443,60 @@ public class AvalancheXChainApi: AvalancheVMApi {
         }
     }
     
+    public enum GetTransactionEncoding: String, Codable {
+        case cb58 = "cb58"
+        case hex = "hex"
+        case json = "json"
+    }
+    
+    public struct GetTxParams: Encodable {
+        public let txID: String
+        public let encoding: GetTransactionEncoding?
+    }
+    
+    public struct GetTxResponse: Decodable {
+        public let tx: String
+        public let encoding: GetTransactionEncoding
+    }
+    
+    public func getTx(
+        id: TransactionID,
+        encoding: GetTransactionEncoding?,
+        _ cb: @escaping ApiCallback<SignedAvalancheTransaction>
+    ) {
+        let params = GetTxParams(
+            txID: id.cb58(),
+            encoding: encoding
+        )
+        service.call(
+            method: "avm.getTx",
+            params: params,
+            GetTxResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res.mapError(AvalancheApiError.init).map { response in
+                let transactionData: Data
+                switch response.encoding {
+                case .cb58: transactionData = Algos.Base58.from(cb58: response.tx)!
+                case .hex: transactionData = Data(hex: response.tx)!
+                case .json:
+                    // TODO: handle error
+                    fatalError("Not implemented")
+                }
+                let decoder = ADecoder(
+                    context: self.context,
+                    data: transactionData
+                )
+                return try! decoder.decode()
+            })
+        }
+    }
+    
     public func getTransaction(
         id: TransactionID,
         result: @escaping ApiCallback<SignedAvalancheTransaction>
     ) {
-        fatalError("Not implemented")
+        getTx(id: id, encoding: .cb58, result)
     }
     
     public struct GetUTXOsParams: Encodable {
@@ -487,16 +544,11 @@ public class AvalancheXChainApi: AvalancheVMApi {
             cb(res
                 .mapError(AvalancheApiError.init)
                 .map {
-                    let context = DefaultAvalancheDecoderContext(
-                        hrp: self.hrp,
-                        chainId: self.info.chainId,
-                        dynamicParser: XChainDynamicTypeRegistry.instance
-                    )
                     return (
                         fetched: $0.numFetched,
                         utxos: $0.utxos.map {
                             let decoder = ADecoder(
-                                context: context,
+                                context: self.context,
                                 data: Algos.Base58.from(cb58: $0)!
                             )
                             return try! UTXO(from: decoder)
