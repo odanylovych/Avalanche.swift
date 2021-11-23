@@ -449,7 +449,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     
     public struct Balance: Decodable {
         public let asset: String
-        public let balance: Int
+        public let balance: UInt64
     }
     
     public struct GetAllBalancesResponse: Decodable {
@@ -458,7 +458,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     
     public func getAllBalances(
         address: Address,
-        _ cb: @escaping ApiCallback<[(asset: AssetID, balance: Int)]>
+        _ cb: @escaping ApiCallback<[(asset: AssetID, balance: UInt64)]>
     ) {
         let params = GetAllBalancesParams(
             address: address.bech
