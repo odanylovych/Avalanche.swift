@@ -583,7 +583,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 context: self.context,
                                 data: Algos.Base58.from(cb58: $0)!
                             )
-                            return try! UTXO(from: decoder)
+                            return try! decoder.decode()
                         },
                         endIndex: $0.endIndex,
                         encoding: $0.encoding

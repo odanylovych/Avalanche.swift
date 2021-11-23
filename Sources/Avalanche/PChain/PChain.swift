@@ -443,20 +443,19 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         getTx(id: id, encoding: .cb58, result)
     }
     
-    public struct GetUTXOParams: Encodable {
-        public struct Index {
-            public let address: String
-            public let utxo: String
-        }
-        
+    public struct GetUTXOsParams: Encodable {
         public let addresses: [String]
         public let limit: UInt32?
-        public let sourceChain: String
-        public let encoding: String
+        public let startIndex: UTXOIndex?
+        public let sourceChain: String?
+        public let encoding: AvalancheEncoding?
     }
     
-    public struct GetUTXOResponse {
-        public let address: String
+    public struct GetUTXOsResponse: Decodable {
+        public let numFetched: UInt32
+        public let utxos: [String]
+        public let endIndex: UTXOIndex
+        public let encoding: AvalancheEncoding
     }
     
     public func getUTXOs(
@@ -472,9 +471,38 @@ public struct AvalanchePChainApi: AvalancheVMApi {
             encoding: AvalancheEncoding
         )>
     ) {
-        fatalError("Not implemented")
+        let params = GetUTXOsParams(
+            addresses: addresses.map { $0.bech },
+            limit: limit,
+            startIndex: startIndex,
+            sourceChain: sourceChain?.cb58(),
+            encoding: encoding
+        )
+        service.call(
+            method: "platform.getUTXOs",
+            params: params,
+            GetUTXOsResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res
+                .mapError(AvalancheApiError.init)
+                .map {
+                    return (
+                        fetched: $0.numFetched,
+                        utxos: $0.utxos.map {
+                            let decoder = ADecoder(
+                                context: self.context,
+                                data: Algos.Base58.from(cb58: $0)!
+                            )
+                            return try! decoder.decode()
+                        },
+                        endIndex: $0.endIndex,
+                        encoding: $0.encoding
+                    )
+                })
+        }
     }
-    
+
     public struct ImportAVAXParams: Encodable {
         public let from: [String]?
         public let to: String
