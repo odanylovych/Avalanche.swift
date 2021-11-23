@@ -30,6 +30,14 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         }
     }
     
+    private var context: AvalancheDecoderContext {
+        DefaultAvalancheDecoderContext(
+            hrp: hrp,
+            chainId: info.chainId,
+            dynamicParser: PChainDynamicTypeRegistry.instance
+        )
+    }
+
     public init(avalanche: AvalancheCore,
                 networkID: NetworkID,
                 hrp: String,
@@ -391,6 +399,50 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         }
     }
     
+    public struct GetTxParams: Encodable {
+        public let txID: String
+        public let encoding: AvalancheEncoding?
+    }
+    
+    public struct GetTxResponse: Decodable {
+        public let tx: String
+        public let encoding: AvalancheEncoding
+    }
+    
+    public func getTx(
+        id: TransactionID,
+        encoding: AvalancheEncoding?,
+        _ cb: @escaping ApiCallback<SignedAvalancheTransaction>
+    ) {
+        let params = GetTxParams(
+            txID: id.cb58(),
+            encoding: encoding
+        )
+        service.call(
+            method: "platform.getTx",
+            params: params,
+            GetTxResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res.mapError(AvalancheApiError.init).map { response in
+                let transactionData: Data
+                switch response.encoding {
+                case .cb58: transactionData = Algos.Base58.from(cb58: response.tx)!
+                case .hex: transactionData = Data(hex: response.tx)!
+                }
+                let decoder = ADecoder(
+                    context: self.context,
+                    data: transactionData
+                )
+                return try! decoder.decode()
+            })
+        }
+    }
+    
+    public func getTransaction(id: TransactionID, result: @escaping ApiCallback<SignedAvalancheTransaction>) {
+        getTx(id: id, encoding: .cb58, result)
+    }
+    
     public struct GetUTXOParams: Encodable {
         public struct Index {
             public let address: String
@@ -405,10 +457,6 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     
     public struct GetUTXOResponse {
         public let address: String
-    }
-    
-    public func getTransaction(id: TransactionID, result: @escaping ApiCallback<SignedAvalancheTransaction>) {
-        
     }
     
     public func getUTXOs(
