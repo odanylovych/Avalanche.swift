@@ -443,6 +443,38 @@ public class AvalancheXChainApi: AvalancheVMApi {
         }
     }
     
+    public struct GetAllBalancesParams: Encodable {
+        public let address: String
+    }
+    
+    public struct Balance: Decodable {
+        public let asset: String
+        public let balance: Int
+    }
+    
+    public struct GetAllBalancesResponse: Decodable {
+        public let balances: [Balance]
+    }
+    
+    public func getAllBalances(
+        address: Address,
+        _ cb: @escaping ApiCallback<[(asset: AssetID, balance: Int)]>
+    ) {
+        let params = GetAllBalancesParams(
+            address: address.bech
+        )
+        service.call(
+            method: "avm.getAllBalances",
+            params: params,
+            GetAllBalancesResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res.mapError(AvalancheApiError.init).map { response in
+                response.balances.map { (asset: AssetID(cb58: $0.asset)!, balance: $0.balance) }
+            })
+        }
+    }
+    
     public enum GetTransactionEncoding: String, Codable {
         case cb58 = "cb58"
         case hex = "hex"
