@@ -244,7 +244,9 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                     cb(.failure(.nilAddressManager))
                     return
                 }
-                cb(.success(kc.newAddress(for: account)))
+                cb(Result { try kc.newAddress(for: account) }.mapError {
+                    AvalancheApiError.custom(description: "Cannot create new address", cause: $0)
+                })
             }
         }
     }

@@ -52,58 +52,43 @@ public protocol AvalancheAddressManager: AnyObject {
 
 public protocol AvalancheApiAddressManager {
     associatedtype Acct: AccountProtocol
-  
+    
     func accounts(result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void)
-    func accounts(forceUpdate: Bool,
-                  result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void)
     func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended]
 }
 
 public protocol AvalancheApiUTXOAddressManager: AvalancheApiAddressManager {
-    func addresses(for account: Acct, change: Bool) -> [Acct.Addr]
+    func new(for account: Acct, change: Bool, count: Int) throws -> [Acct.Addr]
+    func newAddress(for account: Acct) throws -> Acct.Addr
+    func newChange(for account: Acct) throws -> Acct.Addr
+    func randomChange(for account: Acct) throws -> Acct.Addr
     
-    func newAddress(for account: Acct) -> Acct.Addr
+    func get(cached account: Acct) throws -> [Acct.Addr]
+    func get(for account: Acct, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void)
     
-    func newChange(for account: Acct) -> Acct.Addr
-    func randomChange(for account: Acct) -> Acct.Addr
+    func fetch(for accounts: [Acct], _ cb: @escaping (Result<Void, Error>) -> Void)
+    func fetch(_ cb: @escaping (Result<Void, Error>) -> Void)
     
-    func newAddresses(for account: Acct, change: Bool, count: Int) -> [Acct.Addr]
-    
-    func fetchAddresses(for account: Acct,
-                        result: ApiCallback<[Acct.Addr]>?)
-    func fetchAddresses(for account: Acct, change: Bool,
-                        result: ApiCallback<[Acct.Addr]>?)
+    func fetchedAccounts() -> [Acct]
 }
 
 public extension AvalancheApiUTXOAddressManager {
-    func newAddress(for account: Acct) -> Acct.Addr {
-        newAddresses(for: account, change: false, count: 1)[0]
+    func newAddress(for account: Acct) throws -> Acct.Addr {
+        try new(for: account, change: false, count: 1)[0]
     }
     
-    func newChange(for account: Acct) -> Acct.Addr {
-        newAddresses(for: account, change: true, count: 1)[0]
+    func newChange(for account: Acct) throws -> Acct.Addr {
+        try new(for: account, change: true, count: 1)[0]
     }
     
-    func randomChange(for account: Acct) -> Acct.Addr {
-        let addresses = self.addresses(for: account, change: true)
+    func randomChange(for account: Acct) throws -> Acct.Addr {
+        let addresses = try self.extended(for: try self.get(cached: account)).filter {
+            $0.isChange
+        }.map { $0.address }
         if addresses.count == 0 {
-            return newChange(for: account)
+            return try newChange(for: account)
         }
         return addresses.randomElement()!
-    }
-    
-    func fetchAddresses(for account: Acct,
-                        result: ApiCallback<[Acct.Addr]>?)
-    {
-        fetchAddresses(for: account, change: false) {
-            switch $0 {
-            case .failure(let err): result?(.failure(err))
-            case .success(let addresses):
-                fetchAddresses(for: account, change: true) {
-                    result?($0.map{ addresses + $0 })
-                }
-            }
-        }
     }
 }
 
