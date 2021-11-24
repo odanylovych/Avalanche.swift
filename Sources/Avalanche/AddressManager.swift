@@ -93,6 +93,8 @@ public extension AvalancheApiUTXOAddressManager {
 }
 
 public class AvalancheDefaultAddressManager: AvalancheAddressManager {
+    private static let fetchChunkSize = 20
+    
     public private (set) weak var avalanche: AvalancheCore!
 
     public let signer: AvalancheSignatureProvider
@@ -184,19 +186,101 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
         }
     }
     
+    private func getAllUtxos(iterator: AvalancheUtxoProviderIterator,
+                             all: [UTXO],
+                             _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
+        iterator.next(limit: nil) { res in
+            switch res {
+            case .success((let utxos, let iterator)):
+                guard let iterator = iterator else {
+                    cb(.success(all + utxos))
+                    return
+                }
+                self.getAllUtxos(iterator: iterator, all: all + utxos, cb)
+            case .failure(let error):
+                cb(.failure(error))
+            }
+        }
+    }
+    
+    private func fetchNext<A: AvalancheVMApi>(avm api: A,
+                           for account: Account,
+                           index: Int,
+                           all: [(ExtendedAddress, Bool)],
+                           change: Bool,
+                           _ cb: @escaping (Result<[ExtendedAddress], Error>) -> Void) {
+        let addresses: [ExtendedAddress]
+        do {
+            addresses = try (0..<Self.fetchChunkSize).map { offset in
+                try account.derive(
+                    index: UInt32(index + offset),
+                    change: change,
+                    hrp: api.hrp,
+                    chainId: api.info.chainId
+                )
+            }
+        } catch {
+            cb(.failure(error))
+            return
+        }
+        let iterator = avalanche.utxoProvider.utxos(api: api, addresses: addresses.map { $0.address }, forceUpdate: true)
+        getAllUtxos(iterator: iterator, all: []) { res in
+            switch res {
+            case .success(let utxos):
+                let addressesInUtxos = Set(utxos.flatMap { $0.output.addresses })
+                let addresses = addresses.map { ($0, addressesInUtxos.contains($0.address)) }
+                let all = all + addresses
+                guard let lastNotEmpty = all.lastIndex(where: { $0.1 }) else {
+                    cb(.success([]))
+                    return
+                }
+                if all.count - lastNotEmpty > Self.fetchChunkSize {
+                    cb(.success(all.dropLast(all.count - lastNotEmpty - 1).map { $0.0 }))
+                } else {
+                    self.fetchNext(
+                        avm: api,
+                        for: account,
+                        index: index + Self.fetchChunkSize,
+                        all: all,
+                        change: change,
+                        cb
+                    )
+                }
+            case .failure(let error):
+                cb(.failure(error))
+            }
+        }
+    }
+    
     public func fetch<A: AvalancheVMApi>(avm api: A,
                                          for accounts: [Account],
                                          _ cb: @escaping (Result<Void, Error>) -> Void) {
-        fatalError("Not implemented")
-//        let from = lastAddressIndex(
-//            avm: account, chainId: api.info.chainId, hrp: api.hrp, change: change
-//        ) + 1
-//
-//        // TODO: IMPLEMENT. Should fetch addresses till 20 empty addresses.
-//        let iterator = avalanche.utxoProvider.utxos(api: api, addresses: [], forceUpdate: true)
-//        iterator.next(limit: 100) { _ in
-//
-//        }
+        [true, false].asyncMap { change, mapped in
+            accounts.asyncMap { account, mapped in
+                self.fetchNext(
+                    avm: api,
+                    for: account,
+                    index: self.lastAddressIndex(
+                        avm: account,
+                        chainId: api.info.chainId,
+                        hrp: api.hrp,
+                        change: change
+                    ) + 1,
+                    all: [],
+                    change: change
+                ) { res in
+                    mapped(res.map { addresses in
+                        self.syncQueue.sync {
+                            var cacheAddresses = self.addresses[account] ?? [:]
+                            addresses.forEach { extended in
+                                cacheAddresses[extended.address] = extended.path
+                            }
+                            self.addresses[account] = cacheAddresses
+                        }
+                    })
+                }
+            }.exec(mapped)
+        }.exec { cb($0.map { _ in }) }
     }
     
     public func fetch<A: AvalancheVMApi>(avm api: A,

@@ -38,7 +38,7 @@ public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
                         result: @escaping ApiCallback<SignedAvalancheTransaction>)
     
     func getUTXOs(
-        addresses: [Keychain.Acct.Addr],
+        addresses: [Address],
         limit: UInt32?,
         startIndex: UTXOIndex?,
         sourceChain: BlockchainID?,

@@ -9,7 +9,7 @@ import Foundation
 
 public protocol AvalancheUtxoProviderIterator {
     func next(
-        limit: UInt32,
+        limit: UInt32?,
         result: @escaping ApiCallback<(utxos: [UTXO],
                                        iterator: AvalancheUtxoProviderIterator?)>)
 }
@@ -20,29 +20,29 @@ public protocol AvalancheUtxoProvider: AnyObject {
                                   result: @escaping ApiCallback<[UTXO]>)
     
     func utxos<A: AvalancheVMApi>(api: A,
-                                  addresses: [A.Keychain.Acct.Addr],
+                                  addresses: [Address],
                                   forceUpdate: Bool) -> AvalancheUtxoProviderIterator
     
     func utxos<A: AvalancheVMApi>(api: A,
                                   limit: UInt32,
-                                  addresses: [A.Keychain.Acct.Addr],
+                                  addresses: [Address],
                                   result: @escaping ApiCallback<[UTXO]>)
 }
 
 public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
     private struct Iterator<A: AvalancheVMApi>: AvalancheUtxoProviderIterator {
         let api: A
-        let addresses: [A.Keychain.Acct.Addr]
+        let addresses: [Address]
         let index: UTXOIndex?
         
-        init(api: A, addresses: [A.Keychain.Acct.Addr], index: UTXOIndex?) {
+        init(api: A, addresses: [Address], index: UTXOIndex?) {
             self.api = api
             self.addresses = addresses
             self.index = index
         }
         
         func next(
-            limit: UInt32,
+            limit: UInt32? = nil,
             result: @escaping ApiCallback<(utxos: [UTXO],
                                            iterator: AvalancheUtxoProviderIterator?)>)
         {
@@ -55,7 +55,7 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
             ) { res in
                 result(res.map { (
                     utxos: $0.utxos,
-                    iterator: $0.fetched < limit ? nil : Self(api: api, addresses: addresses, index: $0.endIndex)
+                    iterator: Self(api: api, addresses: addresses, index: $0.endIndex)
                 ) })
             }
         }
@@ -77,7 +77,7 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
     public func utxos<A: AvalancheVMApi>(
         api: A,
         limit: UInt32,
-        addresses: [A.Keychain.Acct.Addr],
+        addresses: [Address],
         result: @escaping ApiCallback<[UTXO]>
     ) {
         let iterator = utxos(api: api, addresses: addresses, forceUpdate: true)
@@ -114,7 +114,7 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
     
     public func utxos<A: AvalancheVMApi>(
         api: A,
-        addresses: [A.Keychain.Acct.Addr],
+        addresses: [Address],
         forceUpdate: Bool
     ) -> AvalancheUtxoProviderIterator
     {
