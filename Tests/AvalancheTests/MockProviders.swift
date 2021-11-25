@@ -89,3 +89,136 @@ class AddressManagerMock: AvalancheAddressManager {
         try extendedEthMock!(addresses)
     }
 }
+
+class UtxoProviderMock: AvalancheUtxoProvider {
+    var utxosIdsMock: ((Any, [(txID: TransactionID, index: UInt32)], @escaping ApiCallback<[UTXO]>) -> Void)?
+    var utxosAddressesMock: ((Any, [Address]) -> AvalancheUtxoProviderIterator)?
+    
+    func utxos<A: AvalancheVMApi>(api: A, ids: [(txID: TransactionID, index: UInt32)], result: @escaping ApiCallback<[UTXO]>) {
+        utxosIdsMock!(api, ids, result)
+    }
+    
+    func utxos<A: AvalancheVMApi>(api: A, addresses: [Address]) -> AvalancheUtxoProviderIterator {
+        utxosAddressesMock!(api, addresses)
+    }
+}
+
+struct AvalancheApiUTXOAddressManagerMock: AvalancheApiUTXOAddressManager {
+    public typealias Acct = Account
+    
+    public let manager: AvalancheAddressManager
+    public let api: AvalancheVMApiMock
+    
+    public init(manager: AvalancheAddressManager, api: AvalancheVMApiMock) {
+        self.manager = manager
+        self.api = api
+    }
+    
+    public func accounts(result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void) {
+        manager.accounts(type: .avalancheOnly) {
+            result($0.map { $0.avalanche })
+        }
+    }
+    
+    public func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended] {
+        try manager.extended(avm: addresses)
+    }
+    
+    public func new(for account: Acct, change: Bool, count: Int) throws -> [Acct.Addr] {
+        try manager.new(avm: api, for: account, change: change, count: count)
+    }
+    
+    public func get(cached account: Acct) throws -> [Acct.Addr] {
+        try manager.get(avm: api, cached: account)
+    }
+    
+    public func get(for account: Acct, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void) {
+        manager.get(avm: api, for: account, cb)
+    }
+    
+    public func fetch(for accounts: [Acct], _ cb: @escaping (Result<Void, Error>) -> Void) {
+        manager.fetch(avm: api, for: accounts, cb)
+    }
+    
+    public func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {
+        manager.fetch(avm: api, cb)
+    }
+    
+    public func fetchedAccounts() -> [Acct] {
+        manager.fetchedAccounts().avalanche
+    }
+}
+
+class AvalancheVMApiInfoMock: AvalancheVMApiInfo {
+    let blockchainID: BlockchainID
+    let alias: String?
+    let vm: String
+    let apiPath: String
+    
+    init(blockchainID: BlockchainID, alias: String?, vm: String, apiPath: String) {
+        self.blockchainID = blockchainID
+        self.alias = alias
+        self.vm = vm
+        self.apiPath = apiPath
+    }
+}
+
+struct AvalancheVMApiMock: AvalancheVMApi {
+    var getTransactionMock: ((TransactionID, @escaping ApiCallback<SignedAvalancheTransaction>) -> Void)?
+    var getUTXOsMock: ((
+        [Address],
+        UInt32?,
+        UTXOIndex?,
+        BlockchainID?,
+        AvalancheEncoding?,
+        @escaping ApiCallback<(
+            fetched: UInt32,
+            utxos: [UTXO],
+            endIndex: UTXOIndex,
+            encoding: AvalancheEncoding
+        )>
+    ) -> Void)?
+    
+    typealias Keychain = AvalancheApiUTXOAddressManagerMock
+    typealias Info = AvalancheVMApiInfoMock
+    
+    let avalanche: AvalancheCore
+    let addressManager: AvalancheAddressManager?
+    let networkID: NetworkID
+    let hrp: String
+    let info: AvalancheVMApiInfoMock
+    
+    public var keychain: AvalancheApiUTXOAddressManagerMock? {
+        addressManager.map {
+            AvalancheApiUTXOAddressManagerMock(manager: $0, api: self)
+        }
+    }
+    
+    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheVMApiInfoMock) {
+        self.avalanche = avalanche
+        addressManager = avalanche.addressManager
+        self.networkID = networkID
+        self.hrp = hrp
+        self.info = info
+    }
+    
+    func getTransaction(id: TransactionID, result: @escaping ApiCallback<SignedAvalancheTransaction>) {
+        getTransactionMock!(id, result)
+    }
+    
+    func getUTXOs(
+        addresses: [Address],
+        limit: UInt32?,
+        startIndex: UTXOIndex?,
+        sourceChain: BlockchainID?,
+        encoding: AvalancheEncoding?,
+        _ cb: @escaping ApiCallback<(
+            fetched: UInt32,
+            utxos: [UTXO],
+            endIndex: UTXOIndex,
+            encoding: AvalancheEncoding
+        )>
+    ) {
+        getUTXOsMock!(addresses, limit, startIndex, sourceChain, encoding, cb)
+    }
+}
