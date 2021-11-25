@@ -19,14 +19,7 @@ public protocol AvalancheUtxoProvider: AnyObject {
                                   ids: [(txID: TransactionID, index: UInt32)],
                                   result: @escaping ApiCallback<[UTXO]>)
     
-    func utxos<A: AvalancheVMApi>(api: A,
-                                  addresses: [Address],
-                                  forceUpdate: Bool) -> AvalancheUtxoProviderIterator
-    
-    func utxos<A: AvalancheVMApi>(api: A,
-                                  limit: UInt32,
-                                  addresses: [Address],
-                                  result: @escaping ApiCallback<[UTXO]>)
+    func utxos<A: AvalancheVMApi>(api: A, addresses: [Address]) -> AvalancheUtxoProviderIterator
 }
 
 public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
@@ -63,36 +56,6 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
     
     public init() {}
     
-    public func utxos<A: AvalancheVMApi>(api: A,
-                                         ids: [(txID: TransactionID, index: UInt32)],
-                                         result: @escaping ApiCallback<[UTXO]>) {
-        let txIds: Dictionary<TransactionID, [UInt32]> = ids.reduce([:], { dict, id in
-            var dict = dict
-            dict[id.txID] = (dict[id.txID] ?? []) + [id.index]
-            return dict
-        })
-        // TODO: Recursive call VMAPI method
-    }
-    
-    public func utxos<A: AvalancheVMApi>(
-        api: A,
-        limit: UInt32,
-        addresses: [Address],
-        result: @escaping ApiCallback<[UTXO]>
-    ) {
-        let iterator = utxos(api: api, addresses: addresses, forceUpdate: true)
-        allUtxos(limit: limit, iterator: iterator, all: []) { res in
-            do {
-                let res = try res.get()
-                if res.last {
-                    result(.success(res.utxos))
-                }
-            } catch {
-                result(.failure(error as! AvalancheApiError))
-            }
-        }
-    }
-    
     private func allUtxos(
         limit: UInt32,
         iterator: AvalancheUtxoProviderIterator,
@@ -112,11 +75,18 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
         }
     }
     
-    public func utxos<A: AvalancheVMApi>(
-        api: A,
-        addresses: [Address],
-        forceUpdate: Bool
-    ) -> AvalancheUtxoProviderIterator
+    public func utxos<A: AvalancheVMApi>(api: A,
+                                         ids: [(txID: TransactionID, index: UInt32)],
+                                         result: @escaping ApiCallback<[UTXO]>) {
+        let txIds: Dictionary<TransactionID, [UInt32]> = ids.reduce([:], { dict, id in
+            var dict = dict
+            dict[id.txID] = (dict[id.txID] ?? []) + [id.index]
+            return dict
+        })
+        // TODO: Recursive call VMAPI method
+    }
+    
+    public func utxos<A: AvalancheVMApi>(api: A, addresses: [Address]) -> AvalancheUtxoProviderIterator
     {
         return Iterator(api: api, addresses: addresses, index: nil)
     }

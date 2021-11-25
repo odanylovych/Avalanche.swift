@@ -223,7 +223,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
             cb(.failure(error))
             return
         }
-        let iterator = avalanche.utxoProvider.utxos(api: api, addresses: addresses.map { $0.address }, forceUpdate: true)
+        let iterator = avalanche.utxoProvider.utxos(api: api, addresses: addresses.map { $0.address })
         getAllUtxos(iterator: iterator, all: []) { res in
             switch res {
             case .success(let utxos):
