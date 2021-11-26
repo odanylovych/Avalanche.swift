@@ -230,18 +230,20 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
                 let addressesInUtxos = Set(utxos.flatMap { $0.output.addresses })
                 let addresses = addresses.map { ($0, addressesInUtxos.contains($0.address)) }
                 let all = all + addresses
-                guard let lastNotEmpty = all.lastIndex(where: { $0.1 }) else {
+                guard let lastInAll = all.lastIndex(where: { $0.1 }) else {
                     cb(.success([]))
                     return
                 }
-                if all.count - lastNotEmpty > Self.fetchChunkSize {
-                    cb(.success(all.dropLast(all.count - lastNotEmpty - 1).map { $0.0 }))
+                let dropEmpty = { all.dropLast(all.count - lastInAll - 1) }
+                if all.count - lastInAll > Self.fetchChunkSize {
+                    cb(.success(dropEmpty().map { $0.0 }))
                 } else {
+                    let lastInNewAddresses = addresses.lastIndex(where: { $0.1 })!
                     self.fetchNext(
                         avm: api,
                         for: account,
-                        index: index + Self.fetchChunkSize,
-                        all: all,
+                        index: index + lastInNewAddresses + 1,
+                        all: Array(dropEmpty()),
                         change: change,
                         cb
                     )
