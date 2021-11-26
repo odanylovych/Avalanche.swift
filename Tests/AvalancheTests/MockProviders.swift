@@ -8,6 +8,65 @@
 import Foundation
 import Avalanche
 
+struct NetworkInfoProviderMock: AvalancheNetworkInfoProvider {
+    var infoMock: ((NetworkID) -> AvalancheNetworkInfo?)?
+    var setInfoMock: ((AvalancheNetworkInfo, NetworkID) -> Void)?
+    
+    func info(for net: NetworkID) -> AvalancheNetworkInfo? {
+        infoMock!(net)
+    }
+    
+    func setInfo(info: AvalancheNetworkInfo, for net: NetworkID) {
+        setInfoMock!(info, net)
+    }
+}
+
+class AvalancheCoreMock: AvalancheCore {
+    var getAPIMock: (() throws -> Any)?
+    var createAPIMock: ((NetworkID, String, Any) -> Any)?
+    var urlMock: ((String) -> URL)?
+    
+    var networkID: NetworkID
+    var networkInfoProvider: AvalancheNetworkInfoProvider
+    var settings: AvalancheSettings
+    var addressManager: AvalancheAddressManager?
+    var utxoProvider: AvalancheUtxoProvider
+    
+    init(
+        networkID: NetworkID,
+        networkInfoProvider: AvalancheNetworkInfoProvider,
+        settings: AvalancheSettings,
+        addressManager: AvalancheAddressManager?,
+        utxoProvider: AvalancheUtxoProvider
+    ) {
+        self.networkID = networkID
+        self.networkInfoProvider = networkInfoProvider
+        self.settings = settings
+        self.addressManager = addressManager
+        self.utxoProvider = utxoProvider
+    }
+    
+    static let `default` = AvalancheCoreMock(
+        networkID: NetworkID.local,
+        networkInfoProvider:  NetworkInfoProviderMock(),
+        settings:  AvalancheSettings.default,
+        addressManager:  AddressManagerMock(),
+        utxoProvider:  UtxoProviderMock()
+    )
+    
+    func getAPI<A: AvalancheApi>() throws -> A {
+        try getAPIMock!() as! A
+    }
+    
+    func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A {
+        createAPIMock!(networkID, hrp, info) as! A
+    }
+    
+    func url(path: String) -> URL {
+        urlMock!(path)
+    }
+}
+
 class SignatureProviderMock: AvalancheSignatureProvider {
     var accountsMock: ((
         AvalancheSignatureProviderAccountRequestType,
@@ -94,6 +153,14 @@ class UtxoProviderMock: AvalancheUtxoProvider {
     var utxosIdsMock: ((Any, [(txID: TransactionID, index: UInt32)], @escaping ApiCallback<[UTXO]>) -> Void)?
     var utxosAddressesMock: ((Any, [Address]) -> AvalancheUtxoProviderIterator)?
     
+    struct IteratorMock: AvalancheUtxoProviderIterator {
+        let nextMock: ((UInt32?, @escaping ApiCallback<(utxos: [UTXO], iterator: AvalancheUtxoProviderIterator?)>) -> Void)?
+        
+        func next(limit: UInt32?, result: @escaping ApiCallback<(utxos: [UTXO], iterator: AvalancheUtxoProviderIterator?)>) {
+            nextMock!(limit, result)
+        }
+    }
+    
     func utxos<A: AvalancheVMApi>(api: A, ids: [(txID: TransactionID, index: UInt32)], result: @escaping ApiCallback<[UTXO]>) {
         utxosIdsMock!(api, ids, result)
     }
@@ -104,47 +171,47 @@ class UtxoProviderMock: AvalancheUtxoProvider {
 }
 
 struct AvalancheApiUTXOAddressManagerMock: AvalancheApiUTXOAddressManager {
-    public typealias Acct = Account
+    typealias Acct = Account
     
-    public let manager: AvalancheAddressManager
-    public let api: AvalancheVMApiMock
+    let manager: AvalancheAddressManager
+    let api: AvalancheVMApiMock
     
-    public init(manager: AvalancheAddressManager, api: AvalancheVMApiMock) {
+    init(manager: AvalancheAddressManager, api: AvalancheVMApiMock) {
         self.manager = manager
         self.api = api
     }
     
-    public func accounts(result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void) {
+    func accounts(result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void) {
         manager.accounts(type: .avalancheOnly) {
             result($0.map { $0.avalanche })
         }
     }
     
-    public func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended] {
+    func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended] {
         try manager.extended(avm: addresses)
     }
     
-    public func new(for account: Acct, change: Bool, count: Int) throws -> [Acct.Addr] {
+    func new(for account: Acct, change: Bool, count: Int) throws -> [Acct.Addr] {
         try manager.new(avm: api, for: account, change: change, count: count)
     }
     
-    public func get(cached account: Acct) throws -> [Acct.Addr] {
+    func get(cached account: Acct) throws -> [Acct.Addr] {
         try manager.get(avm: api, cached: account)
     }
     
-    public func get(for account: Acct, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void) {
+    func get(for account: Acct, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void) {
         manager.get(avm: api, for: account, cb)
     }
     
-    public func fetch(for accounts: [Acct], _ cb: @escaping (Result<Void, Error>) -> Void) {
+    func fetch(for accounts: [Acct], _ cb: @escaping (Result<Void, Error>) -> Void) {
         manager.fetch(avm: api, for: accounts, cb)
     }
     
-    public func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {
+    func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {
         manager.fetch(avm: api, cb)
     }
     
-    public func fetchedAccounts() -> [Acct] {
+    func fetchedAccounts() -> [Acct] {
         manager.fetchedAccounts().avalanche
     }
 }
@@ -161,6 +228,13 @@ class AvalancheVMApiInfoMock: AvalancheVMApiInfo {
         self.vm = vm
         self.apiPath = apiPath
     }
+    
+    static let `default` = AvalancheVMApiInfoMock(
+        blockchainID: BlockchainID(data: Data(count: BlockchainID.size))!,
+        alias: nil,
+        vm: "vm",
+        apiPath: "apiPath"
+    )
 }
 
 struct AvalancheVMApiMock: AvalancheVMApi {
@@ -182,11 +256,11 @@ struct AvalancheVMApiMock: AvalancheVMApi {
     typealias Keychain = AvalancheApiUTXOAddressManagerMock
     typealias Info = AvalancheVMApiInfoMock
     
-    let avalanche: AvalancheCore
-    let addressManager: AvalancheAddressManager?
-    let networkID: NetworkID
-    let hrp: String
-    let info: AvalancheVMApiInfoMock
+    var avalanche: AvalancheCore
+    var addressManager: AvalancheAddressManager?
+    var networkID: NetworkID
+    var hrp: String
+    var info: AvalancheVMApiInfoMock
     
     public var keychain: AvalancheApiUTXOAddressManagerMock? {
         addressManager.map {
@@ -201,6 +275,13 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         self.hrp = hrp
         self.info = info
     }
+    
+    static let `default` = AvalancheVMApiMock(
+        avalanche: AvalancheCoreMock.default,
+        networkID: NetworkID.local,
+        hrp: "hrp",
+        info: AvalancheVMApiInfoMock.default
+    )
     
     func getTransaction(id: TransactionID, result: @escaping ApiCallback<SignedAvalancheTransaction>) {
         getTransactionMock!(id, result)
