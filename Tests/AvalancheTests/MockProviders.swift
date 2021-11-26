@@ -33,11 +33,11 @@ class AvalancheCoreMock: AvalancheCore {
     var utxoProvider: AvalancheUtxoProvider
     
     init(
-        networkID: NetworkID,
-        networkInfoProvider: AvalancheNetworkInfoProvider,
-        settings: AvalancheSettings,
-        addressManager: AvalancheAddressManager?,
-        utxoProvider: AvalancheUtxoProvider
+        networkID: NetworkID = NetworkID.local,
+        networkInfoProvider: AvalancheNetworkInfoProvider = NetworkInfoProviderMock(),
+        settings: AvalancheSettings = AvalancheSettings.default,
+        addressManager: AvalancheAddressManager? = AddressManagerMock(),
+        utxoProvider: AvalancheUtxoProvider = UtxoProviderMock()
     ) {
         self.networkID = networkID
         self.networkInfoProvider = networkInfoProvider
@@ -268,20 +268,18 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         }
     }
     
-    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheVMApiInfoMock) {
+    init(
+        avalanche: AvalancheCore,
+        networkID: NetworkID = NetworkID.local,
+        hrp: String = "hrp",
+        info: AvalancheVMApiInfoMock = AvalancheVMApiInfoMock.default
+    ) {
         self.avalanche = avalanche
         addressManager = avalanche.addressManager
         self.networkID = networkID
         self.hrp = hrp
         self.info = info
     }
-    
-    static let `default` = AvalancheVMApiMock(
-        avalanche: AvalancheCoreMock.default,
-        networkID: NetworkID.local,
-        hrp: "hrp",
-        info: AvalancheVMApiInfoMock.default
-    )
     
     func getTransaction(id: TransactionID, result: @escaping ApiCallback<SignedAvalancheTransaction>) {
         getTransactionMock!(id, result)

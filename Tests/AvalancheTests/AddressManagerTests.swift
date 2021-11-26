@@ -10,6 +10,9 @@ import XCTest
 import Avalanche
 
 final class AddressManagerTests: XCTestCase {
+    private var avalanche: AvalancheCore!
+    private var api: AvalancheVMApiMock!
+    
     private var testAvalancheAccount: Account!
     private var testExtendedAvalancheAddress: ExtendedAddress!
     private var testAvalancheAddress: Address!
@@ -20,6 +23,8 @@ final class AddressManagerTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
+        avalanche = AvalancheCoreMock(utxoProvider: utxoProvider)
+        api = AvalancheVMApiMock(avalanche: avalanche)
         testAvalancheAccount = try! Account(
             pubKey: Data(hex: "0x02ccbf163222a621523a477389b2b6318b9c43b424bdf4b74340e9b45443cc0506")!,
             chainCode: Data(count: 32),
@@ -57,8 +62,6 @@ final class AddressManagerTests: XCTestCase {
         )
     }
     
-    private let avalanche = AvalancheCoreMock.default
-    
     private var signer: AvalancheSignatureProvider {
         let signer = SignatureProviderMock()
         signer.accountsMock = { type, cb in
@@ -82,12 +85,6 @@ final class AddressManagerTests: XCTestCase {
         return utxoProvider
     }
     
-    private var api: AvalancheVMApiMock {
-        let api = AvalancheVMApiMock.default
-        api.avalanche.utxoProvider = utxoProvider
-        return api
-    }
-
     func testStart() throws {
         let addressManager = AvalancheDefaultAddressManager(signer: signer)
         assert(addressManager.avalanche !== avalanche)
@@ -154,13 +151,48 @@ final class AddressManagerTests: XCTestCase {
     }
     
     func testFetch() throws {
+        let testAddresses = (0..<50).map { index in
+            try! testAvalancheAccount.derive(
+                index: index,
+                change: false,
+                hrp: api.hrp,
+                chainId: api.info.chainId
+            ).address
+        }
+        let addressUtxo = { address in
+            (address, UTXO(
+                transactionID: TransactionID(data: Data(count: TransactionID.size))!,
+                utxoIndex: 1,
+                assetID: AssetID(data: Data(count: AssetID.size))!,
+                output: try! SECP256K1TransferOutput(
+                    amount: 1,
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: 0,
+                    addresses: [address]
+                )
+            ))
+        }
+        let addressUtxoMap = Dictionary(uniqueKeysWithValues: [
+            addressUtxo(testAddresses[0]),
+            addressUtxo(testAddresses[5]),
+            addressUtxo(testAddresses[20]),
+            addressUtxo(testAddresses[49])
+        ])
+        let utxoProvider = UtxoProviderMock()
+        utxoProvider.utxosAddressesMock = { api, addresses in
+            let utxos = addresses.compactMap { addressUtxoMap[$0] }
+            return UtxoProviderMock.IteratorMock(nextMock: { limit, result in
+                result(.success((utxos, nil)))
+            })
+        }
+        avalanche.utxoProvider = utxoProvider
         let success = expectation(description: "success")
         let addressManager = AvalancheDefaultAddressManager(signer: signer)
         addressManager.start(avalanche: avalanche)
         addressManager.fetch(avm: api, for: [self.testAvalancheAccount]) { res in
             try! res.get()
             let addresses = try! addressManager.get(avm: self.api, cached: self.testAvalancheAccount)
-            XCTAssertEqual(addresses, [self.testAvalancheAddress])
+            XCTAssertEqual(Set(addresses), Set(testAddresses.prefix(21)))
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
