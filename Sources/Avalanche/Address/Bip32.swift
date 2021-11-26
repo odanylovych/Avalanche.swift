@@ -72,7 +72,7 @@ extension Bip32Path {
     public var isValidAvalancheAccount: Bool {
         path.count == 3 &&
             Array(path.prefix(2)) == Self.prefixAvalanche.path &&
-            path[3] >= Self.hard
+            path[2] >= Self.hard
     }
     
     public var isValidAvalancheAddress: Bool {
