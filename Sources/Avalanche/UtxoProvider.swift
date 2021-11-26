@@ -24,6 +24,8 @@ public protocol AvalancheUtxoProvider: AnyObject {
 
 public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
     private struct Iterator<A: AvalancheVMApi>: AvalancheUtxoProviderIterator {
+        let defaultLimit: UInt32 = 1024
+        
         let api: A
         let addresses: [Address]
         let index: UTXOIndex?
@@ -36,9 +38,8 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
         
         func next(
             limit: UInt32? = nil,
-            result: @escaping ApiCallback<(utxos: [UTXO],
-                                           iterator: AvalancheUtxoProviderIterator?)>)
-        {
+            result: @escaping ApiCallback<(utxos: [UTXO], iterator: AvalancheUtxoProviderIterator?)>
+        ) {
             api.getUTXOs(
                 addresses: addresses,
                 limit: limit,
@@ -46,10 +47,13 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
                 sourceChain: api.info.blockchainID,
                 encoding: AvalancheEncoding.cb58
             ) { res in
-                result(res.map { (
-                    utxos: $0.utxos,
-                    iterator: Self(api: api, addresses: addresses, index: $0.endIndex)
-                ) })
+                result(res.map {
+                    let isMore = $0.fetched == limit ?? defaultLimit || $0.fetched == defaultLimit
+                    return (
+                        utxos: $0.utxos,
+                        iterator: isMore ? Self(api: api, addresses: addresses, index: $0.endIndex) : nil
+                    )
+                })
             }
         }
     }
@@ -60,18 +64,19 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
         limit: UInt32,
         iterator: AvalancheUtxoProviderIterator,
         all: [UTXO],
-        result: @escaping ApiCallback<(utxos: [UTXO], last: Bool)>
+        result: @escaping ApiCallback<[UTXO]>
     ) {
         iterator.next(limit: limit) { res in
-            result(res.map { utxos, iterator in
-                var all = all
-                all += utxos
-                if let iterator = iterator {
-                    self.allUtxos(limit: limit, iterator: iterator, all: all, result: result)
-                    return (utxos: all, last: false)
+            switch res {
+            case .success(let (utxos, iterator)):
+                guard let iterator = iterator else {
+                    result(.success(all + utxos))
+                    return
                 }
-                return (utxos: all, last: true)
-            })
+                self.allUtxos(limit: limit, iterator: iterator, all: all + utxos, result: result)
+            case .failure(let error):
+                result(.failure(error))
+            }
         }
     }
     
