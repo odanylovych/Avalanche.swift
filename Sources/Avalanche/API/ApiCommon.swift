@@ -16,7 +16,7 @@ public enum AvalancheApiError: Error {
     case networkBodyIsEmpty
     case networkReply(method: String, params: Any,
                       error: ResponseError<SerializableValue>)
-    case custom(description: String, cause: Error?)
+    case custom(description: String? = nil, cause: Error?)
     case malformed(field: String, description: String)
     case cb58DecodingFailed(field: String)
     case addressNotFound(address: String)

@@ -7,6 +7,10 @@
 
 import Foundation
 
+public enum AvalancheUtxoProviderError: Error {
+    case noOutputs(transaction: UnsignedAvalancheTransaction)
+}
+
 public protocol AvalancheUtxoProviderIterator {
     func next(
         limit: UInt32?,
@@ -60,26 +64,6 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
     
     public init() {}
     
-    private func allUtxos(
-        limit: UInt32,
-        iterator: AvalancheUtxoProviderIterator,
-        all: [UTXO],
-        result: @escaping ApiCallback<[UTXO]>
-    ) {
-        iterator.next(limit: limit) { res in
-            switch res {
-            case .success(let (utxos, iterator)):
-                guard let iterator = iterator else {
-                    result(.success(all + utxos))
-                    return
-                }
-                self.allUtxos(limit: limit, iterator: iterator, all: all + utxos, result: result)
-            case .failure(let error):
-                result(.failure(error))
-            }
-        }
-    }
-    
     public func utxos<A: AvalancheVMApi>(api: A,
                                          ids: [(txID: TransactionID, index: UInt32)],
                                          result: @escaping ApiCallback<[UTXO]>) {
@@ -88,7 +72,33 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
             dict[id.txID] = (dict[id.txID] ?? []) + [id.index]
             return dict
         })
-        // TODO: Recursive call VMAPI method
+        txIds.asyncMap { element, mapped in
+            let (id, indexes) = element
+            api.getTransaction(id: id) { res in
+                switch res {
+                case .success(let transaction):
+                    guard let baseTransaction = transaction.unsignedTransaction as? BaseTransaction else {
+                        mapped(.failure(.custom(
+                            cause: AvalancheUtxoProviderError.noOutputs(transaction: transaction.unsignedTransaction)
+                        )))
+                        return
+                    }
+                    mapped(.success(indexes.map { index in
+                        let output = baseTransaction.outputs[Int(index)]
+                        return UTXO(
+                            transactionID: id,
+                            utxoIndex: index,
+                            assetID: output.assetID,
+                            output: output.output
+                        )
+                    }))
+                case .failure(let error):
+                    mapped(.failure(error))
+                }
+            }
+        }.exec { (res: Result<[[UTXO]], AvalancheApiError>) in
+            result(res.map { utxos in utxos.flatMap { $0 } })
+        }
     }
     
     public func utxos<A: AvalancheVMApi>(api: A, addresses: [Address]) -> AvalancheUtxoProviderIterator
