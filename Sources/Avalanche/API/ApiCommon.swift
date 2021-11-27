@@ -46,7 +46,7 @@ public enum ApiDataEncoding: String, Encodable, Decodable {
     case hex = "hex"
 }
 
-public struct UTXOIndex: Codable {
+public struct UTXOIndex: Codable, Equatable {
     public let address: String
     public let utxo: String
 }
