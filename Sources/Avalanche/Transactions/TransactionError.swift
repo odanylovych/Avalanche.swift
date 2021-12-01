@@ -12,6 +12,11 @@ public enum MalformedTransactionError: Error {
     case outOfRange(Any, expected: ClosedRange<Int>, name: String, description: String = "")
 }
 
+public enum TransactionBuilderError: Error {
+    case insufficientFunds
+    case gooseEggCheckError
+}
+
 public enum ExtendedAvalancheTransactionError: Error {
     case noSuchUtxo(TransactionID, utxoIndex: UInt32, in: [UTXO])
     case noSuchSignature(Address, in: [Address: Signature])

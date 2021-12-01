@@ -20,6 +20,15 @@ public class Output: AvalancheEncodable, AvalancheDynamicDecodableTypeID, Equata
         fatalError("Not supported")
     }
     
+    required public init(
+        amount: UInt64,
+        locktime: Date,
+        threshold: UInt32,
+        addresses: [Address]
+    ) throws {
+        fatalError("Not supported")
+    }
+    
     public static func from(decoder: AvalancheDecoder) throws -> Self {
         return try decoder.context.dynamicParser.decode(output: decoder) as! Self
     }
@@ -44,7 +53,7 @@ public class SECP256K1TransferOutput: Output, AvalancheDecodable {
     public let locktime: Date
     public let threshold: UInt32
     
-    public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
+    required public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard amount > 0 else {
             throw MalformedTransactionError.wrongValue(amount, name: "Amount", message: "Must be positive")
         }

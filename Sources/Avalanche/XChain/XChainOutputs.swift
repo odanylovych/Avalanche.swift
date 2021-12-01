@@ -27,6 +27,10 @@ public class SECP256K1MintOutput: Output, AvalancheDecodable {
         super.init(addresses: addresses)
     }
     
+    convenience required public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
+        try self.init(locktime: locktime, threshold: threshold, addresses: addresses)
+    }
+    
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
             throw AvalancheDecoderError.dataCorrupted(
@@ -87,6 +91,10 @@ public class NFTTransferOutput: Output, AvalancheDecodable {
         super.init(addresses: addresses)
     }
     
+    convenience required public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
+        try self.init(groupID: 0, payload: Data(), locktime: locktime, threshold: threshold, addresses: addresses)
+    }
+    
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
             throw AvalancheDecoderError.dataCorrupted(
@@ -142,6 +150,10 @@ public class NFTMintOutput: Output, AvalancheDecodable {
         self.locktime = locktime
         self.threshold = threshold
         super.init(addresses: addresses)
+    }
+    
+    convenience required public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
+        try self.init(groupID: 0, locktime: locktime, threshold: threshold, addresses: addresses)
     }
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {

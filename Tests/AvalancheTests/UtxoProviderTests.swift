@@ -69,24 +69,6 @@ final class UtxoProviderTests: XCTestCase {
         wait(for: [success], timeout: 10)
     }
     
-    private func getUtxos(iterator: AvalancheUtxoProviderIterator,
-                          limit: UInt32? = nil,
-                          all: [UTXO],
-                          _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
-        iterator.next(limit: limit) { res in
-            switch res {
-            case .success(let (utxos, iterator)):
-                guard let iterator = iterator else {
-                    cb(.success(all + utxos))
-                    return
-                }
-                self.getUtxos(iterator: iterator, limit: limit, all: all + utxos, cb)
-            case .failure(let error):
-                cb(.failure(error))
-            }
-        }
-    }
-    
     func testUtxosAddresses() throws {
         let success = expectation(description: "success")
         let account = try Account(
@@ -157,7 +139,7 @@ final class UtxoProviderTests: XCTestCase {
         }
         let utxoProvider = AvalancheDefaultUtxoProvider()
         let iterator = utxoProvider.utxos(api: api, addresses: testAddresses)
-        getUtxos(iterator: iterator, limit: 1, all: []) { res in
+        UTXOHelper.getAll(iterator: iterator, limit: 1) { res in
             let utxos = try! res.get()
             XCTAssertEqual(utxos, testUtxos)
             success.fulfill()

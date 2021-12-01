@@ -27,6 +27,10 @@ public class SECP256K1OutputOwners: Output, AvalancheDecodable {
         super.init(addresses: addresses)
     }
     
+    convenience required public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
+        fatalError("Not supported")
+    }
+    
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
             throw AvalancheDecoderError.dataCorrupted(
