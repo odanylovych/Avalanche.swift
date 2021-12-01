@@ -17,6 +17,7 @@ public class Avalanche: AvalancheCore {
     private var _settings: AvalancheSettings
     private var _addressManager: AvalancheAddressManager?
     private var _utxoProvider: AvalancheUtxoProvider
+    private var _signatureProvider: AvalancheSignatureProvider?
     
     public var networkID: NetworkID {
         get { _networkID }
@@ -69,11 +70,22 @@ public class Avalanche: AvalancheCore {
         }
     }
     
+    public var signatureProvider: AvalancheSignatureProvider? {
+        get { _signatureProvider }
+        set {
+            _lock.lock()
+            _signatureProvider = newValue
+            _apis = [:]
+            _lock.unlock()
+        }
+    }
+    
     public init(url: URL, networkID: NetworkID,
                 networkInfo: AvalancheNetworkInfoProvider = AvalancheDefaultNetworkInfoProvider.default,
                 settings: AvalancheSettings = .default,
                 utxoProvider: AvalancheUtxoProvider = AvalancheDefaultUtxoProvider(),
-                addressManager: AvalancheAddressManager? = nil) {
+                addressManager: AvalancheAddressManager? = nil,
+                signatureProvider: AvalancheSignatureProvider? = nil) {
         self._url = url
         self._apis = [:]
         self._lock = NSRecursiveLock()
@@ -82,6 +94,7 @@ public class Avalanche: AvalancheCore {
         self._networkInfoProvider = networkInfo
         self._settings = settings
         self._utxoProvider = utxoProvider
+        self._signatureProvider = signatureProvider
         addressManager?.start(avalanche: self)
     }
     
@@ -122,7 +135,8 @@ extension Avalanche {
         self.init(
             url: url, networkID: networkID,
             networkInfo: networkInfo, settings: settings,
-            addressManager: AvalancheDefaultAddressManager(signer: signer)
+            addressManager: AvalancheDefaultAddressManager(signer: signer),
+            signatureProvider: signer
         )
     }
     
@@ -133,17 +147,18 @@ extension Avalanche {
         self.init(
             url: url, networkID: networkID, hrp: hrp,
             apiInfo: apiInfo, settings: settings,
-            addressManager: AvalancheDefaultAddressManager(signer: signer)
+            addressManager: AvalancheDefaultAddressManager(signer: signer), signer: signer
         )
     }
     
     public convenience init(url: URL, networkID: NetworkID,
                             hrp: String, apiInfo: AvalancheApiInfoProvider,
                             settings: AvalancheSettings,
-                            addressManager: AvalancheAddressManager? = nil) {
+                            addressManager: AvalancheAddressManager? = nil,
+                            signer: AvalancheSignatureProvider) {
         let provider = AvalancheDefaultNetworkInfoProvider()
         let netInfo = AvalancheDefaultNetworkInfo(hrp: hrp, apiInfo: apiInfo)
         provider.setInfo(info: netInfo, for: networkID)
-        self.init(url: url, networkID: networkID, networkInfo: provider, settings: settings, addressManager: addressManager)
+        self.init(url: url, networkID: networkID, networkInfo: provider, settings: settings, addressManager: addressManager, signatureProvider: signer)
     }
 }

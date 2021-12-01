@@ -69,6 +69,10 @@ extension Data {
         return String(bytes: result, encoding: .ascii)!
     }
     
+    public func cb58() -> String {
+        Algos.Base58.cb58(data: self)
+    }
+    
     public func setLengthLeft(_ toBytes: UInt64, isNegative:Bool = false ) -> Data? {
         let existingLength = UInt64(self.count)
         if (existingLength == toBytes) {

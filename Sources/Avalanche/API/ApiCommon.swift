@@ -22,6 +22,7 @@ public enum AvalancheApiError: Error {
     case addressNotFound(address: String)
     case methodIsNotSupported(method: String)
     case nilAddressManager
+    case nilSignatureProvider
     
     public init<P: Encodable>(request: RequestError<P, SerializableValue>) {
         switch request {

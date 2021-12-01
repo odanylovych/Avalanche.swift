@@ -34,8 +34,10 @@ public class AvalancheXChainApi: AvalancheVMApi {
     public typealias Info = AvalancheXChainApiInfo
     public typealias Keychain = AvalancheXChainApiAddressManager
     
+    private let queue: DispatchQueue
     private let addressManager: AvalancheAddressManager?
     private let utxoProvider: AvalancheUtxoProvider
+    private let signer: AvalancheSignatureProvider?
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
@@ -63,9 +65,10 @@ public class AvalancheXChainApi: AvalancheVMApi {
         self.info = info
         addressManager = avalanche.addressManager
         utxoProvider = avalanche.utxoProvider
+        signer = avalanche.signatureProvider
         
         let settings = avalanche.settings
-        
+        queue = settings.queue
         self.service = JsonRpc(.http(url: avalanche.url(path: info.apiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
         self.vmService = JsonRpc(.http(url: avalanche.url(path: info.vmApiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
     }
@@ -78,7 +81,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     public struct CreateFixedCapAssetParams: Encodable {
         public let name: String
         public let symbol: String
-        public let denomination: UInt32?
+        public let denomination: UInt8?
         public let initialHolders: [InitialHolder]
         public let from: [String]?
         public let changeAddr: String?
@@ -94,7 +97,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     public func createFixedCapAsset(
         name: String,
         symbol: String,
-        denomination: UInt32? = nil,
+        denomination: UInt8? = nil,
         initialHolders: [(address: Address, amount: UInt64)],
         from: [Address]? = nil,
         change: Address? = nil,
@@ -126,8 +129,142 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     .mapError(AvalancheApiError.init)
                     .map { (AssetID(cb58: $0.assetID)!, try! Address(bech: $0.changeAddr)) })
             }
-        case .account:
-            fatalError("Not implemented")
+        case .account(let account):
+            guard let keychain = keychain else {
+                queue.async { cb(.failure(.nilAddressManager)) }
+                return
+            }
+            guard let signer = signer else {
+                queue.async { cb(.failure(.nilSignatureProvider)) }
+                return
+            }
+            let addresses: [Address]
+            do {
+                addresses = try from ?? keychain.get(cached: account)
+            } catch {
+                queue.async { cb(.failure(.custom(cause: error))) }
+                return
+            }
+            let utxoIterator = utxoProvider.utxos(api: self, addresses: addresses)
+            UTXOHelper.getAll(iterator: utxoIterator) { res in
+                switch res {
+                case .success(let utxos):
+                    self.getAssetDescription(assetID: "AVAX") { res in
+                        switch res {
+                        case .success((let avaxAssetID, _, _, _)):
+                            var aad = AssetAmountDestination(
+                                senders: addresses,
+                                destinations: addresses,
+                                changeAddresses: change != nil ? [change!] : addresses
+                            )
+                            let fee = UInt64(self.info.creationTxFee)
+                            aad.assetAmounts[avaxAssetID] = AssetAmount(assetID: avaxAssetID, amount: 0, burn: fee)
+                            let inputs: [TransferableInput]
+                            let outputs: [TransferableOutput]
+                            do {
+                                let spendable = try UTXOHelper.getMinimumSpendable(aad: aad, utxos: utxos)
+                                inputs = spendable.inputs
+                                outputs = spendable.outputs + spendable.change
+                            } catch {
+                                self.queue.async { cb(.failure(.custom(cause: error))) }
+                                return
+                            }
+                            let initialStates: [InitialState]
+                            do {
+                                initialStates = try initialHolders.map { address, amount in
+                                    InitialState(
+                                        featureExtensionID: .secp256K1,
+                                        outputs: [
+                                            try SECP256K1TransferOutput(
+                                                amount: amount,
+                                                locktime: Date(timeIntervalSince1970: 0),
+                                                threshold: 1,
+                                                addresses: [address]
+                                            ),
+                                            try SECP256K1MintOutput(
+                                                locktime: Date(timeIntervalSince1970: 0),
+                                                threshold: 1,
+                                                addresses: [address]
+                                            )
+                                        ]
+                                    )
+                                }
+                            } catch {
+                                self.queue.async { cb(.failure(.custom(cause: error))) }
+                                return
+                            }
+                            let transaction: CreateAssetTransaction
+                            do {
+                                transaction = try CreateAssetTransaction(
+                                    networkID: self.networkID,
+                                    blockchainID: self.info.blockchainID,
+                                    outputs: outputs,
+                                    inputs: inputs,
+                                    memo: memo ?? Data(),
+                                    name: name,
+                                    symbol: symbol,
+                                    denomination: denomination ?? 0,
+                                    initialStates: initialStates
+                                )
+                            }
+                            catch {
+                                self.queue.async { cb(.failure(.custom(cause: error))) }
+                                return
+                            }
+                            guard TransactionHelper.checkGooseEgg(
+                                avax: avaxAssetID,
+                                transaction: transaction,
+                                outputTotal: UInt64(self.info.creationTxFee)
+                            ) else {
+                                self.queue.async {
+                                    cb(.failure(.custom(cause: TransactionBuilderError.gooseEggCheckError)))
+                                }
+                                return
+                            }
+                            let pathes: [Address: Bip32Path]
+                            do {
+                                let extended = try keychain.extended(for: addresses)
+                                pathes = Dictionary(uniqueKeysWithValues: extended.map { ($0.address, $0.path) })
+                            } catch {
+                                self.queue.async { cb(.failure(.custom(cause: error))) }
+                                return
+                            }
+                            let extendedTransaction: ExtendedAvalancheTransaction
+                            do {
+                                extendedTransaction = try ExtendedAvalancheTransaction(
+                                    transaction: transaction,
+                                    utxos: utxos,
+                                    pathes: pathes
+                                )
+                            } catch {
+                                self.queue.async { cb(.failure(.custom(cause: error))) }
+                                return
+                            }
+                            signer.sign(transaction: extendedTransaction) { res in
+                                switch res {
+                                case .success(let signed):
+                                    let tx: String
+                                    do {
+                                        tx = try AEncoder().encode(signed).output.cb58()
+                                    } catch {
+                                        self.queue.async { cb(.failure(.custom(cause: error))) }
+                                        return
+                                    }
+                                    self.issueTx(tx: tx, encoding: AvalancheEncoding.cb58) { transactionID in
+                                        fatalError("Not implemented")
+                                    }
+                                case .failure(let error):
+                                    self.queue.async { cb(.failure(.custom(cause: error))) }
+                                }
+                            }
+                        case .failure(let error):
+                            self.queue.async { cb(.failure(.custom(cause: error))) }
+                        }
+                    }
+                case .failure(let error):
+                    self.queue.async { cb(.failure(.custom(cause: error))) }
+                }
+            }
         }
     }
     
@@ -428,6 +565,46 @@ public class AvalancheXChainApi: AvalancheVMApi {
         }
     }
     
+    public struct GetAssetDescriptionParams: Encodable {
+        public let assetID: String
+    }
+    
+    public struct GetAssetDescriptionResponse: Decodable {
+        public let assetID: String
+        public let name: String
+        public let symbol: String
+        public let denomination: UInt32
+    }
+    
+    public func getAssetDescription(
+        assetID: String,
+        _ cb: @escaping ApiCallback<(
+            assetID: AssetID,
+            name: String,
+            symbol: String,
+            denomination: UInt32
+        )>
+    ) {
+        let params = GetAssetDescriptionParams(
+            assetID: assetID
+        )
+        service.call(
+            method: "avm.getAssetDescription",
+            params: params,
+            GetAssetDescriptionResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res.mapError(AvalancheApiError.init).map {
+                (
+                    assetID: AssetID(cb58: $0.assetID)!,
+                    name: $0.name,
+                    symbol: $0.symbol,
+                    denomination: $0.denomination
+                )
+            })
+        }
+    }
+    
     public enum GetTransactionEncoding: String, Codable {
         case cb58 = "cb58"
         case hex = "hex"
@@ -597,27 +774,21 @@ public class AvalancheXChainApi: AvalancheVMApi {
     public func issueTx(
         tx: String,
         encoding: AvalancheEncoding? = nil,
-        credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
-        switch credentials {
-        case .password:
-            let params = IssueTxParams(
-                tx: tx,
-                encoding: encoding
-            )
-            service.call(
-                method: "avm.issueTx",
-                params: params,
-                IssueTxResponse.self,
-                SerializableValue.self
-            ) { res in
-                cb(res
-                    .mapError(AvalancheApiError.init)
-                    .map { TransactionID(cb58: $0.txID)! })
-            }
-        case .account:
-            fatalError("Not implemented")
+        let params = IssueTxParams(
+            tx: tx,
+            encoding: encoding
+        )
+        service.call(
+            method: "avm.issueTx",
+            params: params,
+            IssueTxResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res
+                .mapError(AvalancheApiError.init)
+                .map { TransactionID(cb58: $0.txID)! })
         }
     }
     

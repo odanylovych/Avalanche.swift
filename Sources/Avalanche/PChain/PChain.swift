@@ -564,27 +564,21 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     public func issueTx(
         tx: String,
         encoding: AvalancheEncoding? = nil,
-        credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
-        switch credentials {
-        case .password:
-            let params = IssueTxParams(
-                tx: tx,
-                encoding: encoding
-            )
-            service.call(
-                method: "platform.issueTx",
-                params: params,
-                IssueTxResponse.self,
-                SerializableValue.self
-            ) { res in
-                cb(res
-                    .mapError(AvalancheApiError.init)
-                    .map { TransactionID(cb58: $0.txID)! })
-            }
-        case .account:
-            fatalError("Not implemented")
+        let params = IssueTxParams(
+            tx: tx,
+            encoding: encoding
+        )
+        service.call(
+            method: "platform.issueTx",
+            params: params,
+            IssueTxResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res
+                .mapError(AvalancheApiError.init)
+                .map { TransactionID(cb58: $0.txID)! })
         }
     }
 }

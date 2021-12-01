@@ -31,19 +31,22 @@ class AvalancheCoreMock: AvalancheCore {
     var settings: AvalancheSettings
     var addressManager: AvalancheAddressManager?
     var utxoProvider: AvalancheUtxoProvider
+    var signatureProvider: AvalancheSignatureProvider?
     
     init(
         networkID: NetworkID = NetworkID.local,
         networkInfoProvider: AvalancheNetworkInfoProvider = NetworkInfoProviderMock(),
         settings: AvalancheSettings = AvalancheSettings.default,
         addressManager: AvalancheAddressManager? = AddressManagerMock(),
-        utxoProvider: AvalancheUtxoProvider = UtxoProviderMock()
+        utxoProvider: AvalancheUtxoProvider = UtxoProviderMock(),
+        signatureProvider: AvalancheSignatureProvider = SignatureProviderMock()
     ) {
         self.networkID = networkID
         self.networkInfoProvider = networkInfoProvider
         self.settings = settings
         self.addressManager = addressManager
         self.utxoProvider = utxoProvider
+        self.signatureProvider = signatureProvider
     }
     
     static let `default` = AvalancheCoreMock(
