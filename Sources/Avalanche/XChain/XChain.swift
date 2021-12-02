@@ -224,14 +224,14 @@ public class AvalancheXChainApi: AvalancheVMApi {
                 handleError(.nilAddressManager, cb)
                 return
             }
-            let addresses: [Address]
+            let fromAddresses: [Address]
             do {
-                addresses = try from ?? keychain.get(cached: account)
+                fromAddresses = try from ?? keychain.get(cached: account)
             } catch {
                 handleError(error, cb)
                 return
             }
-            let utxoIterator = utxoProvider.utxos(api: self, addresses: addresses)
+            let utxoIterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
             UTXOHelper.getAll(iterator: utxoIterator) { res in
                 switch res {
                 case .success(let utxos):
@@ -250,8 +250,8 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             do {
                                 (inputs, outputs) = try self.getInputsOutputs(
                                     assetID: avaxAssetID,
-                                    from: addresses,
-                                    to: addresses,
+                                    from: fromAddresses,
+                                    to: fromAddresses,
                                     change: [changeAddress],
                                     utxos: utxos,
                                     fee: fee
@@ -275,7 +275,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                         try SECP256K1MintOutput(
                                             locktime: Date(timeIntervalSince1970: 0),
                                             threshold: 1,
-                                            addresses: addresses
+                                            addresses: fromAddresses
                                         )
                                     ]
                                 )]
@@ -309,7 +309,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                                 return
                             }
-                            self.signAndSend(transaction, with: addresses, using: utxos) { res in
+                            self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                                 cb(res.map { transactionID in
                                     fatalError("Not implemented")
                                 })
@@ -376,14 +376,14 @@ public class AvalancheXChainApi: AvalancheVMApi {
                 handleError(.nilAddressManager, cb)
                 return
             }
-            let addresses: [Address]
+            let fromAddresses: [Address]
             do {
-                addresses = try from ?? keychain.get(cached: account)
+                fromAddresses = try from ?? keychain.get(cached: account)
             } catch {
                 handleError(error, cb)
                 return
             }
-            let iterator = utxoProvider.utxos(api: self, addresses: addresses)
+            let iterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
             UTXOHelper.getAll(iterator: iterator) { res in
                 switch res {
                 case .success(let utxos):
@@ -394,7 +394,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             amount: amount,
                             locktime: Date(timeIntervalSince1970: 0),
                             threshold: 1,
-                            addresses: addresses
+                            addresses: fromAddresses
                         )
                     } catch {
                         self.handleError(error, cb)
@@ -412,7 +412,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     do {
                         (inputs, outputs) = try self.getInputsOutputs(
                             assetID: assetID,
-                            from: addresses,
+                            from: fromAddresses,
                             to: [to],
                             change: [changeAddress],
                             utxos: utxos,
@@ -423,7 +423,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         return
                     }
                     let mintOutput = utxo.output as! SECP256K1MintOutput
-                    let addressIndices = mintOutput.getAddressIndices(for: addresses)
+                    let addressIndices = mintOutput.getAddressIndices(for: fromAddresses)
                     let mintOperation = SECP256K1MintOperation(
                         addressIndices: addressIndices,
                         mintOutput: mintOutput,
@@ -460,7 +460,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                         return
                     }
-                    self.signAndSend(transaction, with: addresses, using: utxos) { res in
+                    self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                         cb(res.map { transactionID in
                             fatalError("Not implemented")
                         })
@@ -533,14 +533,14 @@ public class AvalancheXChainApi: AvalancheVMApi {
                 handleError(.nilAddressManager, cb)
                 return
             }
-            let addresses: [Address]
+            let fromAddresses: [Address]
             do {
-                addresses = try from ?? keychain.get(cached: account)
+                fromAddresses = try from ?? keychain.get(cached: account)
             } catch {
                 handleError(error, cb)
                 return
             }
-            let utxoIterator = utxoProvider.utxos(api: self, addresses: addresses)
+            let utxoIterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
             UTXOHelper.getAll(iterator: utxoIterator) { res in
                 switch res {
                 case .success(let utxos):
@@ -559,8 +559,8 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             do {
                                 (inputs, outputs) = try self.getInputsOutputs(
                                     assetID: avaxAssetID,
-                                    from: addresses,
-                                    to: addresses,
+                                    from: fromAddresses,
+                                    to: fromAddresses,
                                     change: [changeAddress],
                                     utxos: utxos,
                                     fee: fee
@@ -611,7 +611,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                                 return
                             }
-                            self.signAndSend(transaction, with: addresses, using: utxos) { res in
+                            self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                                 cb(res.map { transactionID in
                                     fatalError("Not implemented")
                                 })
@@ -680,14 +680,14 @@ public class AvalancheXChainApi: AvalancheVMApi {
                 handleError(.nilAddressManager, cb)
                 return
             }
-            let addresses: [Address]
+            let fromAddresses: [Address]
             do {
-                addresses = try from ?? keychain.get(cached: account)
+                fromAddresses = try from ?? keychain.get(cached: account)
             } catch {
                 handleError(error, cb)
                 return
             }
-            let iterator = utxoProvider.utxos(api: self, addresses: addresses)
+            let iterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
             UTXOHelper.getAll(iterator: iterator) { res in
                 switch res {
                 case .success(let utxos):
@@ -706,8 +706,8 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             do {
                                 (inputs, outputs) = try self.getInputsOutputs(
                                     assetID: avaxAssetID,
-                                    from: addresses,
-                                    to: addresses,
+                                    from: fromAddresses,
+                                    to: fromAddresses,
                                     change: [changeAddress],
                                     utxos: utxos,
                                     fee: fee
@@ -758,7 +758,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                                 return
                             }
-                            self.signAndSend(transaction, with: addresses, using: utxos) { res in
+                            self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                                 cb(res.map { transactionID in
                                     fatalError("Not implemented")
                                 })
@@ -828,14 +828,14 @@ public class AvalancheXChainApi: AvalancheVMApi {
                 handleError(.nilAddressManager, cb)
                 return
             }
-            let addresses: [Address]
+            let fromAddresses: [Address]
             do {
-                addresses = try from ?? keychain.get(cached: account)
+                fromAddresses = try from ?? keychain.get(cached: account)
             } catch {
                 handleError(error, cb)
                 return
             }
-            let iterator = utxoProvider.utxos(api: self, addresses: addresses)
+            let iterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
             UTXOHelper.getAll(iterator: iterator) { res in
                 switch res {
                 case .success(let utxos):
@@ -845,7 +845,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         outputOwners = try NFTMintOperationOutput(
                             locktime: Date(timeIntervalSince1970: 0),
                             threshold: 1,
-                            addresses: addresses
+                            addresses: fromAddresses
                         )
                     } catch {
                         self.handleError(error, cb)
@@ -863,7 +863,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     do {
                         (inputs, outputs) = try self.getInputsOutputs(
                             assetID: assetID,
-                            from: addresses,
+                            from: fromAddresses,
                             to: [to],
                             change: [changeAddress],
                             utxos: utxos,
@@ -874,7 +874,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         return
                     }
                     let mintOutput = utxo.output as! NFTMintOutput
-                    let addressIndices = mintOutput.getAddressIndices(for: addresses)
+                    let addressIndices = mintOutput.getAddressIndices(for: fromAddresses)
                     let nftMintOperation: Operation
                     do {
                         nftMintOperation = try NFTMintOperation(
@@ -918,7 +918,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                         return
                     }
-                    self.signAndSend(transaction, with: addresses, using: utxos) { res in
+                    self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                         cb(res.map { transactionID in
                             fatalError("Not implemented")
                         })
