@@ -238,7 +238,13 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     self.getAvaxAssetID { res in
                         switch res {
                         case .success(let avaxAssetID):
-                            let change = change != nil ? [change!] : addresses
+                            let changeAddress: Address
+                            do {
+                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
                             let fee = UInt64(self.info.creationTxFee)
                             let (inputs, outputs): ([TransferableInput], [TransferableOutput])
                             do {
@@ -246,7 +252,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                     assetID: avaxAssetID,
                                     from: addresses,
                                     to: addresses,
-                                    change: change,
+                                    change: [changeAddress],
                                     utxos: utxos,
                                     fee: fee
                                 )
@@ -394,15 +400,21 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         self.handleError(error, cb)
                         return
                     }
-                    let change = change != nil ? [change!] : addresses
+                    let changeAddress: Address
+                    do {
+                        changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                    } catch {
+                        self.handleError(error, cb)
+                        return
+                    }
                     let fee = UInt64(self.info.txFee)
                     let (inputs, outputs): ([TransferableInput], [TransferableOutput])
                     do {
                         (inputs, outputs) = try self.getInputsOutputs(
                             assetID: assetID,
                             from: addresses,
-                            to: to,
-                            change: change,
+                            to: [to],
+                            change: [changeAddress],
                             utxos: utxos,
                             fee: fee
                         )
@@ -535,7 +547,13 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     self.getAvaxAssetID { res in
                         switch res {
                         case .success(let avaxAssetID):
-                            let change = change != nil ? [change!] : addresses
+                            let changeAddress: Address
+                            do {
+                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
                             let fee = UInt64(self.info.creationTxFee)
                             let (inputs, outputs): ([TransferableInput], [TransferableOutput])
                             do {
@@ -543,7 +561,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                     assetID: avaxAssetID,
                                     from: addresses,
                                     to: addresses,
-                                    change: change,
+                                    change: [changeAddress],
                                     utxos: utxos,
                                     fee: fee
                                 )
@@ -676,7 +694,13 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     self.getAvaxAssetID { res in
                         switch res {
                         case .success(let avaxAssetID):
-                            let change = change != nil ? [change!] : addresses
+                            let changeAddress: Address
+                            do {
+                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
                             let fee = UInt64(self.info.creationTxFee)
                             let (inputs, outputs): ([TransferableInput], [TransferableOutput])
                             do {
@@ -684,7 +708,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                     assetID: avaxAssetID,
                                     from: addresses,
                                     to: addresses,
-                                    change: change,
+                                    change: [changeAddress],
                                     utxos: utxos,
                                     fee: fee
                                 )
@@ -827,15 +851,21 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         self.handleError(error, cb)
                         return
                     }
-                    let change = change != nil ? [change!] : addresses
+                    let changeAddress: Address
+                    do {
+                        changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                    } catch {
+                        self.handleError(error, cb)
+                        return
+                    }
                     let fee = UInt64(self.info.txFee)
                     let (inputs, outputs): ([TransferableInput], [TransferableOutput])
                     do {
                         (inputs, outputs) = try self.getInputsOutputs(
                             assetID: assetID,
                             from: addresses,
-                            to: addresses,
-                            change: change,
+                            to: [to],
+                            change: [changeAddress],
                             utxos: utxos,
                             fee: fee
                         )
@@ -845,12 +875,18 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     }
                     let mintOutput = utxo.output as! NFTMintOutput
                     let addressIndices = mintOutput.getAddressIndices(for: addresses)
-                    let nftMintOperation = NFTMintOperation(
-                        addressIndices: addressIndices,
-                        groupID: 0,
-                        payload: Data(hex: payload)!,
-                        outputs: [outputOwners]
-                    )
+                    let nftMintOperation: Operation
+                    do {
+                        nftMintOperation = try NFTMintOperation(
+                            addressIndices: addressIndices,
+                            groupID: 0,
+                            payload: Data(hex: payload)!,
+                            outputs: [outputOwners]
+                        )
+                    } catch {
+                        self.handleError(error, cb)
+                        return
+                    }
                     let transferableOperation = TransferableOperation(
                         assetID: utxo.assetID,
                         utxoIDs: [
