@@ -99,7 +99,6 @@ public struct UTXOHelper {
     
     public static func getMinimumSpendable(
         aad: AssetAmountDestination,
-        asOf: Date = Date(),
         locktime: Date = Date(timeIntervalSince1970: 0),
         threshold: UInt32 = 1,
         utxos: [UTXO]
@@ -116,12 +115,7 @@ public struct UTXOHelper {
             && aad.assetAmounts.keys.contains($0.assetID)
         }) {
             let output = utxo.output as! SECP256K1TransferOutput
-            let addressIndices = asOf > locktime ? Array(
-                output.addresses.enumerated()
-                    .filter { aad.senders.contains($0.element) }
-                    .map { UInt32($0.offset) }
-                    .prefix(Int(output.threshold))
-            ) : []
+            let addressIndices = output.getAddressIndices(for: aad.senders)
             let assetAmount = aad.assetAmounts[utxo.assetID]!
             if addressIndices.count == output.threshold && !assetAmount.finished {
                 outputTypes[utxo.assetID] = type(of: output)
