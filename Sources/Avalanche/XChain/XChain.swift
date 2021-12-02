@@ -93,6 +93,25 @@ public class AvalancheXChainApi: AvalancheVMApi {
         }
     }
     
+    private func getInputsOutputs(
+        avax assetID: AssetID,
+        addresses: [Address],
+        change: [Address],
+        utxos: [UTXO],
+        fee: UInt64
+    ) throws -> ([TransferableInput], [TransferableOutput]) {
+        var aad = AssetAmountDestination(
+            senders: addresses,
+            destinations: addresses,
+            changeAddresses: change
+        )
+        aad.assetAmounts[assetID] = AssetAmount(assetID: assetID, amount: 0, burn: fee)
+        let spendable = try UTXOHelper.getMinimumSpendable(aad: aad, utxos: utxos)
+        let inputs = spendable.inputs
+        let outputs = spendable.outputs + spendable.change
+        return (inputs, outputs)
+    }
+    
     private func signAndSend(_ transaction: UnsignedAvalancheTransaction,
                              with addresses: [Address],
                              using utxos: [UTXO],
@@ -219,19 +238,16 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         switch res {
                         case .success(let avaxAssetID):
                             let change = change != nil ? [change!] : addresses
-                            var aad = AssetAmountDestination(
-                                senders: addresses,
-                                destinations: addresses,
-                                changeAddresses: change
-                            )
                             let fee = UInt64(self.info.creationTxFee)
-                            aad.assetAmounts[avaxAssetID] = AssetAmount(assetID: avaxAssetID, amount: 0, burn: fee)
-                            let inputs: [TransferableInput]
-                            let outputs: [TransferableOutput]
+                            let (inputs, outputs): ([TransferableInput], [TransferableOutput])
                             do {
-                                let spendable = try UTXOHelper.getMinimumSpendable(aad: aad, utxos: utxos)
-                                inputs = spendable.inputs
-                                outputs = spendable.outputs + spendable.change
+                                (inputs, outputs) = try self.getInputsOutputs(
+                                    avax: avaxAssetID,
+                                    addresses: addresses,
+                                    change: change,
+                                    utxos: utxos,
+                                    fee: fee
+                                )
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -375,23 +391,20 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         self.handleError(error, cb)
                         return
                     }
-                    let fee = UInt64(self.info.txFee)
                     self.getAvaxAssetID { res in
                         switch res {
                         case .success(let avaxAssetID):
                             let change = change != nil ? [change!] : addresses
-                            var aad = AssetAmountDestination(
-                                senders: addresses,
-                                destinations: addresses,
-                                changeAddresses: change
-                            )
-                            aad.assetAmounts[avaxAssetID] = AssetAmount(assetID: avaxAssetID, amount: 0, burn: fee)
-                            let inputs: [TransferableInput]
-                            let outputs: [TransferableOutput]
+                            let fee = UInt64(self.info.txFee)
+                            let (inputs, outputs): ([TransferableInput], [TransferableOutput])
                             do {
-                                let spendable = try UTXOHelper.getMinimumSpendable(aad: aad, utxos: utxos)
-                                inputs = spendable.inputs
-                                outputs = spendable.outputs + spendable.change
+                                (inputs, outputs) = try self.getInputsOutputs(
+                                    avax: avaxAssetID,
+                                    addresses: addresses,
+                                    change: change,
+                                    utxos: utxos,
+                                    fee: fee
+                                )
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -526,19 +539,16 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         switch res {
                         case .success(let avaxAssetID):
                             let change = change != nil ? [change!] : addresses
-                            var aad = AssetAmountDestination(
-                                senders: addresses,
-                                destinations: addresses,
-                                changeAddresses: change
-                            )
                             let fee = UInt64(self.info.creationTxFee)
-                            aad.assetAmounts[avaxAssetID] = AssetAmount(assetID: avaxAssetID, amount: 0, burn: fee)
-                            let inputs: [TransferableInput]
-                            let outputs: [TransferableOutput]
+                            let (inputs, outputs): ([TransferableInput], [TransferableOutput])
                             do {
-                                let spendable = try UTXOHelper.getMinimumSpendable(aad: aad, utxos: utxos)
-                                inputs = spendable.inputs
-                                outputs = spendable.outputs + spendable.change
+                                (inputs, outputs) = try self.getInputsOutputs(
+                                    avax: avaxAssetID,
+                                    addresses: addresses,
+                                    change: change,
+                                    utxos: utxos,
+                                    fee: fee
+                                )
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -622,6 +632,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
         minterSets: [(minters: [Address], threshold: UInt32)],
         from: [Address]? = nil,
         change: Address? = nil,
+        memo: Data? = nil,
         credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<(assetID: AssetID, change: Address)>
     ) {
@@ -648,8 +659,95 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     .mapError(AvalancheApiError.init)
                     .map { (AssetID(cb58: $0.assetID)!, try! Address(bech: $0.changeAddr)) })
             }
-        case .account:
-            fatalError("Not implemented")
+        case .account(let account):
+            guard let keychain = keychain else {
+                handleError(.nilAddressManager, cb)
+                return
+            }
+            let addresses: [Address]
+            do {
+                addresses = try from ?? keychain.get(cached: account)
+            } catch {
+                handleError(error, cb)
+                return
+            }
+            let iterator = utxoProvider.utxos(api: self, addresses: addresses)
+            UTXOHelper.getAll(iterator: iterator) { res in
+                switch res {
+                case .success(let utxos):
+                    self.getAvaxAssetID { res in
+                        switch res {
+                        case .success(let avaxAssetID):
+                            let change = change != nil ? [change!] : addresses
+                            let fee = UInt64(self.info.creationTxFee)
+                            let (inputs, outputs): ([TransferableInput], [TransferableOutput])
+                            do {
+                                (inputs, outputs) = try self.getInputsOutputs(
+                                    avax: avaxAssetID,
+                                    addresses: addresses,
+                                    change: change,
+                                    utxos: utxos,
+                                    fee: fee
+                                )
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            let initialStates: [InitialState]
+                            do {
+                                initialStates = [InitialState(
+                                    featureExtensionID: .nft,
+                                    outputs: try minterSets.enumerated().map { index, minterSet in
+                                        try NFTMintOutput(
+                                            groupID: UInt32(index),
+                                            locktime: Date(timeIntervalSince1970: 0),
+                                            threshold: minterSet.threshold,
+                                            addresses: minterSet.minters
+                                        )
+                                    }
+                                )]
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            let transaction: UnsignedAvalancheTransaction
+                            do {
+                                transaction = try CreateAssetTransaction(
+                                    networkID: self.networkID,
+                                    blockchainID: self.info.blockchainID,
+                                    outputs: outputs,
+                                    inputs: inputs,
+                                    memo: memo ?? Data(),
+                                    name: name,
+                                    symbol: symbol,
+                                    denomination: 0,
+                                    initialStates: initialStates
+                                )
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            guard TransactionHelper.checkGooseEgg(
+                                avax: avaxAssetID,
+                                transaction: transaction,
+                                outputTotal: fee
+                            ) else {
+                                self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
+                                return
+                            }
+                            self.signAndSend(transaction, with: addresses, using: utxos) { res in
+                                cb(res.map { transactionID in
+                                    fatalError("Not implemented")
+                                })
+                            }
+                        case .failure(let error):
+                            self.handleError(error, cb)
+                        }
+                    }
+                case .failure(let error):
+                    self.handleError(error, cb)
+                }
+            }
         }
     }
     
