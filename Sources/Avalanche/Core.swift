@@ -28,3 +28,7 @@ public protocol AvalancheCore: AnyObject {
     
     func url(path: String) -> URL
 }
+
+public struct AvalancheConstants {
+    public static let avaxAssetAlias = "AVAX"
+}
