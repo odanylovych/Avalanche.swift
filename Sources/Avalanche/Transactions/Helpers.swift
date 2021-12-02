@@ -188,7 +188,7 @@ public struct TransactionHelper {
     }
     
     public static func checkGooseEgg(
-        avax assetID: AssetID,
+        assetID: AssetID,
         transaction: UnsignedAvalancheTransaction,
         outputTotal: UInt64? = nil
     ) -> Bool {
