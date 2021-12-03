@@ -19,6 +19,16 @@ public protocol AvalancheUtxoProviderIterator {
                                        iterator: AvalancheUtxoProviderIterator?)>)
 }
 
+extension AvalancheUtxoProviderIterator {
+    func next(
+        limit: UInt32? = nil,
+        sourceChain: BlockchainID? = nil,
+        result: @escaping ApiCallback<(utxos: [UTXO],
+                                       iterator: AvalancheUtxoProviderIterator?)>) {
+        next(limit: limit, sourceChain: sourceChain, result: result)
+    }
+}
+
 public protocol AvalancheUtxoProvider: AnyObject {
     func utxos<A: AvalancheVMApi>(api: A,
                                   ids: [(txID: TransactionID, index: UInt32)],

@@ -78,7 +78,7 @@ final class AddressManagerTests: XCTestCase {
         let utxoProvider = UtxoProviderMock()
         utxoProvider.utxosAddressesMock = { api, addresses in
             let utxos = addresses.contains(self.testAvalancheAddress) ? [self.testUtxo!] : []
-            return UtxoProviderMock.IteratorMock(nextMock: { limit, result in
+            return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
                 result(.success((utxos, nil)))
             })
         }
@@ -181,7 +181,7 @@ final class AddressManagerTests: XCTestCase {
         let utxoProvider = UtxoProviderMock()
         utxoProvider.utxosAddressesMock = { api, addresses in
             let utxos = addresses.compactMap { addressUtxoMap[$0] }
-            return UtxoProviderMock.IteratorMock(nextMock: { limit, result in
+            return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
                 result(.success((utxos, nil)))
             })
         }
