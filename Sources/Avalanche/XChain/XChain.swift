@@ -1381,8 +1381,83 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     .mapError(AvalancheApiError.init)
                     .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
             }
-        case .account:
-            fatalError("Not implemented")
+        case .account(let account):
+            guard let keychain = keychain else {
+                handleError(.nilAddressManager, cb)
+                return
+            }
+            let fromAddresses: [Address]
+            do {
+                fromAddresses = try from ?? keychain.get(cached: account)
+            } catch {
+                handleError(error, cb)
+                return
+            }
+            let utxoIterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
+            UTXOHelper.getAll(iterator: utxoIterator) { res in
+                switch res {
+                case .success(let utxos):
+                    self.getAvaxAssetID { res in
+                        switch res {
+                        case .success(let avaxAssetID):
+                            let changeAddress = change ?? to
+                            let fee = UInt64(self.info.txFee)
+                            let inputs: [TransferableInput]
+                            let outputs: [TransferableOutput]
+                            do {
+                                var aad = AssetAmountDestination(
+                                    senders: fromAddresses,
+                                    destinations: [to],
+                                    changeAddresses: [changeAddress]
+                                )
+                                let feeAssetID = avaxAssetID
+                                if assetID == feeAssetID {
+                                    aad.assetAmounts[assetID] = AssetAmount(assetID: assetID, amount: amount, burn: fee)
+                                } else {
+                                    aad.assetAmounts[assetID] = AssetAmount(assetID: assetID, amount: amount, burn: 0)
+                                    aad.assetAmounts[feeAssetID] = AssetAmount(assetID: feeAssetID, amount: 0, burn: fee)
+                                }
+                                let spendable = try UTXOHelper.getMinimumSpendable(aad: aad, utxos: utxos)
+                                inputs = spendable.inputs
+                                outputs = spendable.change + spendable.outputs
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            let transaction: UnsignedAvalancheTransaction
+                            do {
+                                transaction = try BaseTransaction(
+                                    networkID: self.networkID,
+                                    blockchainID: self.info.blockchainID,
+                                    outputs: outputs,
+                                    inputs: inputs,
+                                    memo: memo != nil ? memo!.data(using: .utf8)! : Data()
+                                )
+                            }
+                            catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            guard TransactionHelper.checkGooseEgg(
+                                avax: avaxAssetID,
+                                transaction: transaction
+                            ) else {
+                                self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
+                                return
+                            }
+                            self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                                cb(res.map { transactionID in
+                                    (txID: transactionID, change: changeAddress)
+                                })
+                            }
+                        case .failure(let error):
+                            self.handleError(error, cb)
+                        }
+                    }
+                case .failure(let error):
+                    self.handleError(error, cb)
+                }
+            }
         }
     }
     
