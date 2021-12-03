@@ -311,7 +311,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             }
                             self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                                 cb(res.map { transactionID in
-                                    fatalError("Not implemented")
+                                    (assetID: AssetID(data: transactionID.raw)!, change: changeAddress)
                                 })
                             }
                         case .failure(let error):
@@ -465,7 +465,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             }
                             self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                                 cb(res.map { transactionID in
-                                    fatalError("Not implemented")
+                                    (txID: transactionID, change: changeAddress)
                                 })
                             }
                         case .failure(let error):
@@ -620,7 +620,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             }
                             self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                                 cb(res.map { transactionID in
-                                    fatalError("Not implemented")
+                                    (assetID: AssetID(data: transactionID.raw)!, change: changeAddress)
                                 })
                             }
                         case .failure(let error):
@@ -767,7 +767,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             }
                             self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                                 cb(res.map { transactionID in
-                                    fatalError("Not implemented")
+                                    (assetID: AssetID(data: transactionID.raw)!, change: changeAddress)
                                 })
                             }
                         case .failure(let error):
@@ -930,7 +930,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             }
                             self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                                 cb(res.map { transactionID in
-                                    fatalError("Not implemented")
+                                    (txID: transactionID, change: changeAddress)
                                 })
                             }
                         case .failure(let error):
@@ -1060,7 +1060,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             }
                             self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
                                 cb(res.map { transactionID in
-                                    fatalError("Not implemented")
+                                    (txID: transactionID, change: changeAddress)
                                 })
                             }
                         case .failure(let error):
@@ -1414,9 +1414,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                                 return
                             }
-                            self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
-                                cb(res)
-                            }
+                            self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
                         case .failure(let error):
                             self.handleError(error, cb)
                         }
@@ -1862,9 +1860,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                                 return
                             }
-                            self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
-                                cb(res)
-                            }
+                            self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
                         case .failure(let error):
                             self.handleError(error, cb)
                         }
