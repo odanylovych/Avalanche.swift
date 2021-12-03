@@ -14,6 +14,7 @@ public enum AvalancheUtxoProviderError: Error {
 public protocol AvalancheUtxoProviderIterator {
     func next(
         limit: UInt32?,
+        sourceChain: BlockchainID?,
         result: @escaping ApiCallback<(utxos: [UTXO],
                                        iterator: AvalancheUtxoProviderIterator?)>)
 }
@@ -42,13 +43,14 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
         
         func next(
             limit: UInt32? = nil,
+            sourceChain: BlockchainID? = nil,
             result: @escaping ApiCallback<(utxos: [UTXO], iterator: AvalancheUtxoProviderIterator?)>
         ) {
             api.getUTXOs(
                 addresses: addresses,
                 limit: limit,
                 startIndex: index,
-                sourceChain: api.info.blockchainID,
+                sourceChain: sourceChain,
                 encoding: AvalancheEncoding.cb58
             ) { res in
                 result(res.map {

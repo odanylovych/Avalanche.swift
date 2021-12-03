@@ -72,17 +72,18 @@ public struct UTXOHelper {
     private static func getUtxos(
         iterator: AvalancheUtxoProviderIterator,
         limit: UInt32? = nil,
+        sourceChain: BlockchainID? = nil,
         all: [UTXO],
         _ cb: @escaping ApiCallback<[UTXO]>
     ) {
-        iterator.next(limit: limit) { res in
+        iterator.next(limit: limit, sourceChain: sourceChain) { res in
             switch res {
             case .success(let (utxos, iterator)):
                 guard let iterator = iterator else {
                     cb(.success(all + utxos))
                     return
                 }
-                self.getUtxos(iterator: iterator, limit: limit, all: all + utxos, cb)
+                self.getUtxos(iterator: iterator, limit: limit, sourceChain: sourceChain, all: all + utxos, cb)
             case .failure(let error):
                 cb(.failure(error))
             }
@@ -92,9 +93,10 @@ public struct UTXOHelper {
     public static func getAll(
         iterator: AvalancheUtxoProviderIterator,
         limit: UInt32? = nil,
+        sourceChain: BlockchainID? = nil,
         _ cb: @escaping ApiCallback<[UTXO]>
     ) {
-        getUtxos(iterator: iterator, limit: limit, all: [], cb)
+        getUtxos(iterator: iterator, limit: limit, sourceChain: sourceChain, all: [], cb)
     }
     
     public static func getMinimumSpendable(

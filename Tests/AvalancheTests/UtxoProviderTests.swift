@@ -107,7 +107,6 @@ final class UtxoProviderTests: XCTestCase {
         )
         api.getUTXOsMock = { addresses, limit, startIndex, sourceChain, encoding, cb in
             guard addresses == testAddresses,
-                  sourceChain == self.api.info.blockchainID,
                   encoding == AvalancheEncoding.cb58 else {
                 XCTFail("getUTXOs")
                 return

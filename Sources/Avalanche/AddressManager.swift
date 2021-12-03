@@ -189,7 +189,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
     private func getAllUtxos(iterator: AvalancheUtxoProviderIterator,
                              all: [UTXO],
                              _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
-        iterator.next(limit: nil) { res in
+        iterator.next(limit: nil, sourceChain: nil) { res in
             switch res {
             case .success((let utxos, let iterator)):
                 guard let iterator = iterator else {

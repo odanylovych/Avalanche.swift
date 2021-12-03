@@ -159,7 +159,9 @@ class UtxoProviderMock: AvalancheUtxoProvider {
     struct IteratorMock: AvalancheUtxoProviderIterator {
         let nextMock: ((UInt32?, @escaping ApiCallback<(utxos: [UTXO], iterator: AvalancheUtxoProviderIterator?)>) -> Void)?
         
-        func next(limit: UInt32?, result: @escaping ApiCallback<(utxos: [UTXO], iterator: AvalancheUtxoProviderIterator?)>) {
+        func next(limit: UInt32? = nil,
+                  sourceChain: BlockchainID? = nil,
+                  result: @escaping ApiCallback<(utxos: [UTXO], iterator: AvalancheUtxoProviderIterator?)>) {
             nextMock!(limit, result)
         }
     }
