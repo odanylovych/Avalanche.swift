@@ -38,6 +38,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     private let addressManager: AvalancheAddressManager?
     private let utxoProvider: AvalancheUtxoProvider
     private let signer: AvalancheSignatureProvider?
+    private let chainIDApiInfos: [String: AvalancheVMApiInfo]
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
@@ -58,7 +59,25 @@ public class AvalancheXChainApi: AvalancheVMApi {
             dynamicParser: XChainDynamicTypeRegistry.instance
         )
     }
-
+    
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
+        self.networkID = networkID
+        self.hrp = hrp
+        self.info = info
+        addressManager = avalanche.addressManager
+        utxoProvider = avalanche.utxoProvider
+        signer = avalanche.signatureProvider
+        chainIDApiInfos = [
+            avalanche.pChain.info.alias!: avalanche.pChain.info,
+            avalanche.cChain.info.alias!: avalanche.cChain.info
+        ]
+        
+        let settings = avalanche.settings
+        queue = settings.queue
+        self.service = JsonRpc(.http(url: avalanche.url(path: info.apiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.vmService = JsonRpc(.http(url: avalanche.url(path: info.vmApiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+    }
+    
     private func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {
         self.queue.async {
             cb(.failure(error))
@@ -69,20 +88,6 @@ public class AvalancheXChainApi: AvalancheVMApi {
         self.queue.async {
             cb(.failure(.custom(cause: error)))
         }
-    }
-    
-    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
-        self.networkID = networkID
-        self.hrp = hrp
-        self.info = info
-        addressManager = avalanche.addressManager
-        utxoProvider = avalanche.utxoProvider
-        signer = avalanche.signatureProvider
-        
-        let settings = avalanche.settings
-        queue = settings.queue
-        self.service = JsonRpc(.http(url: avalanche.url(path: info.apiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
-        self.vmService = JsonRpc(.http(url: avalanche.url(path: info.vmApiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
     }
     
     private func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>) {
@@ -1035,7 +1040,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 self.handleError(error, cb)
                                 return
                             }
-                            let destinationChain = BlockchainID(data: Data())! // TODO: blockchainID
+                            let destinationChain = self.chainIDApiInfos[to.chainId]!.blockchainID
                             let transaction: UnsignedAvalancheTransaction
                             do {
                                 transaction = try ExportTransaction(
