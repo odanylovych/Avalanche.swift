@@ -186,23 +186,6 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
         }
     }
     
-    private func getAllUtxos(iterator: AvalancheUtxoProviderIterator,
-                             all: [UTXO],
-                             _ cb: @escaping (Result<[UTXO], Error>) -> Void) {
-        iterator.next { res in
-            switch res {
-            case .success((let utxos, let iterator)):
-                guard let iterator = iterator else {
-                    cb(.success(all + utxos))
-                    return
-                }
-                self.getAllUtxos(iterator: iterator, all: all + utxos, cb)
-            case .failure(let error):
-                cb(.failure(error))
-            }
-        }
-    }
-    
     private func fetchNext<A: AvalancheVMApi>(avm api: A,
                            for account: Account,
                            index: Int,
@@ -224,7 +207,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
             return
         }
         let iterator = avalanche.utxoProvider.utxos(api: api, addresses: addresses.map { $0.address })
-        getAllUtxos(iterator: iterator, all: []) { res in
+        UTXOHelper.getAll(iterator: iterator) { res in
             switch res {
             case .success(let utxos):
                 let addressesInUtxos = Set(utxos.flatMap { $0.output.addresses })
