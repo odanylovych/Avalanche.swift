@@ -18,6 +18,7 @@ public class Avalanche: AvalancheCore {
     private var _addressManager: AvalancheAddressManager?
     private var _utxoProvider: AvalancheUtxoProvider
     private var _signatureProvider: AvalancheSignatureProvider?
+    private var _serviceProvider: AvalancheNetworkServiceProvider?
     
     public var networkID: NetworkID {
         get { _networkID }
@@ -75,6 +76,16 @@ public class Avalanche: AvalancheCore {
         set {
             _lock.lock()
             _signatureProvider = newValue
+            _apis = [:]
+            _lock.unlock()
+        }
+    }
+    
+    public var serviceProvider: AvalancheNetworkServiceProvider? {
+        get { _serviceProvider }
+        set {
+            _lock.lock()
+            _serviceProvider = newValue
             _apis = [:]
             _lock.unlock()
         }

@@ -8,6 +8,10 @@
 import Foundation
 import Avalanche
 
+enum ApiTestsError: Error {
+    case error(from: String)
+}
+
 struct NetworkInfoProviderMock: AvalancheNetworkInfoProvider {
     var infoMock: ((NetworkID) -> AvalancheNetworkInfo?)?
     var setInfoMock: ((AvalancheNetworkInfo, NetworkID) -> Void)?
@@ -22,7 +26,7 @@ struct NetworkInfoProviderMock: AvalancheNetworkInfoProvider {
 }
 
 class AvalancheCoreMock: AvalancheCore {
-    var getAPIMock: (() throws -> Any)?
+    var getAPIMock: ((Any.Type) throws -> Any)?
     var createAPIMock: ((NetworkID, String, Any) -> Any)?
     var urlMock: ((String) -> URL)?
     
@@ -32,6 +36,7 @@ class AvalancheCoreMock: AvalancheCore {
     var addressManager: AvalancheAddressManager?
     var utxoProvider: AvalancheUtxoProvider
     var signatureProvider: AvalancheSignatureProvider?
+    var serviceProvider: AvalancheNetworkServiceProvider?
     
     init(
         networkID: NetworkID = NetworkID.local,
@@ -39,7 +44,8 @@ class AvalancheCoreMock: AvalancheCore {
         settings: AvalancheSettings = AvalancheSettings.default,
         addressManager: AvalancheAddressManager? = AddressManagerMock(),
         utxoProvider: AvalancheUtxoProvider = UtxoProviderMock(),
-        signatureProvider: AvalancheSignatureProvider = SignatureProviderMock()
+        signatureProvider: AvalancheSignatureProvider = SignatureProviderMock(),
+        serviceProvider: AvalancheNetworkServiceProvider = NetworkServiceProviderMock()
     ) {
         self.networkID = networkID
         self.networkInfoProvider = networkInfoProvider
@@ -47,18 +53,11 @@ class AvalancheCoreMock: AvalancheCore {
         self.addressManager = addressManager
         self.utxoProvider = utxoProvider
         self.signatureProvider = signatureProvider
+        self.serviceProvider = serviceProvider
     }
     
-    static let `default` = AvalancheCoreMock(
-        networkID: NetworkID.local,
-        networkInfoProvider:  NetworkInfoProviderMock(),
-        settings:  AvalancheSettings.default,
-        addressManager:  AddressManagerMock(),
-        utxoProvider:  UtxoProviderMock()
-    )
-    
     func getAPI<A: AvalancheApi>() throws -> A {
-        try getAPIMock!() as! A
+        try getAPIMock!(A.self) as! A
     }
     
     func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A {
@@ -68,6 +67,9 @@ class AvalancheCoreMock: AvalancheCore {
     func url(path: String) -> URL {
         urlMock!(path)
     }
+}
+
+struct NetworkServiceProviderMock: AvalancheNetworkServiceProvider {
 }
 
 class SignatureProviderMock: AvalancheSignatureProvider {
