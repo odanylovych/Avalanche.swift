@@ -37,6 +37,6 @@ public class AvalanchePChainApiInfo: AvalancheBaseVMApiInfo {
     }
     
     override public var connectionType: ApiConnectionType {
-        return .pChain(alias: alias, blockchainID: blockchainID)
+        .pChain(alias: alias, blockchainID: blockchainID)
     }
 }

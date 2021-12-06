@@ -26,12 +26,11 @@ public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
     }
     
     override public var connectionType: ApiConnectionType {
-        return .xChain(alias: alias, blockchainID: blockchainID)
+        .xChain(alias: alias, blockchainID: blockchainID)
     }
     
     public var vmApiPath: ApiConnectionType {
-        fatalError("Not implemented")
-        // "/ext/vm/\(vm)"
+        .xChainVM(vm: vm)
     }
 }
 
