@@ -57,6 +57,17 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
         self.decoder = decoder
     }
     
+    public init(url: URL, settings: AvalancheSettings) {
+        self.init(
+            url: url,
+            queue: settings.queue,
+            session: settings.session,
+            headers: settings.headers,
+            encoder: settings.encoder,
+            decoder: settings.decoder
+        )
+    }
+    
     public func singleShot(api: ApiConnectionType) -> SingleShotConnection {
         let url = URL(string: api.path, relativeTo: url)!
         return HttpConnection(url: url, queue: queue, headers: [:], session: session)

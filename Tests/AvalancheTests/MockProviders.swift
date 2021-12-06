@@ -29,7 +29,6 @@ struct NetworkInfoProviderMock: AvalancheNetworkInfoProvider {
 class AvalancheCoreMock: AvalancheCore {
     var getAPIMock: ((Any.Type) throws -> Any)?
     var createAPIMock: ((NetworkID, String, Any) -> Any)?
-    var urlMock: ((String) -> URL)?
     
     var networkID: NetworkID
     var networkInfoProvider: AvalancheNetworkInfoProvider
@@ -63,10 +62,6 @@ class AvalancheCoreMock: AvalancheCore {
     
     func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A {
         createAPIMock!(networkID, hrp, info) as! A
-    }
-    
-    func url(path: String) -> URL {
-        urlMock!(path)
     }
 }
 

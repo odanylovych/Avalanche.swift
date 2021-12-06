@@ -48,11 +48,9 @@ final class XChainTests: XCTestCase {
                 throw ApiTestsError.error(from: "getAPI")
             }
         }
-        avalanche.urlMock = { path in
-            URL(string: "http://test")!
-        }
         avalanche.utxoProvider = utxoProvider
         avalanche.addressManager = AddressManagerMock()
+        avalanche.connectionProvider = ConnectionProviderMock()
         xChain = avalanche.xChain
         testAccount = try! Account(
             pubKey: Data(hex: "0x02ccbf163222a621523a477389b2b6318b9c43b424bdf4b74340e9b45443cc0506")!,
@@ -102,7 +100,6 @@ final class XChainTests: XCTestCase {
     }
     
     func testCreateFixedCapAsset() throws {
-        // TODO: provide all mocks
         let success = expectation(description: "success")
         let name = "name"
         let symbol = "symbol"

@@ -41,7 +41,12 @@ class AvalancheTestCase: XCTestCase {
         
         try XCTSkipUnless(Self.testEnabled, "Test disabled in config")
         
-        fatalError("Not implemented")
-//        self.ava = Avalanche(url: URL(string: "https://api.avax-test.network")!, networkID: .test)
+        self.ava = Avalanche(
+            networkID: .test,
+            connectionProvider: WebRPCAvalancheConnectionProvider(
+                url: URL(string: "https://api.avax-test.network")!,
+                settings: AvalancheSettings.default
+            )
+        )
     }
 }
