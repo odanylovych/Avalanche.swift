@@ -7,6 +7,7 @@
 
 import Foundation
 import Avalanche
+import RPC
 
 enum ApiTestsError: Error {
     case error(from: String)
@@ -36,7 +37,7 @@ class AvalancheCoreMock: AvalancheCore {
     var addressManager: AvalancheAddressManager?
     var utxoProvider: AvalancheUtxoProvider
     var signatureProvider: AvalancheSignatureProvider?
-    var serviceProvider: AvalancheNetworkServiceProvider?
+    var connectionProvider: AvalancheConnectionProvider
     
     init(
         networkID: NetworkID = NetworkID.local,
@@ -45,7 +46,7 @@ class AvalancheCoreMock: AvalancheCore {
         addressManager: AvalancheAddressManager? = AddressManagerMock(),
         utxoProvider: AvalancheUtxoProvider = UtxoProviderMock(),
         signatureProvider: AvalancheSignatureProvider = SignatureProviderMock(),
-        serviceProvider: AvalancheNetworkServiceProvider = NetworkServiceProviderMock()
+        connectionProvider: AvalancheConnectionProvider = ConnectionProviderMock()
     ) {
         self.networkID = networkID
         self.networkInfoProvider = networkInfoProvider
@@ -53,7 +54,7 @@ class AvalancheCoreMock: AvalancheCore {
         self.addressManager = addressManager
         self.utxoProvider = utxoProvider
         self.signatureProvider = signatureProvider
-        self.serviceProvider = serviceProvider
+        self.connectionProvider = connectionProvider
     }
     
     func getAPI<A: AvalancheApi>() throws -> A {
@@ -69,7 +70,19 @@ class AvalancheCoreMock: AvalancheCore {
     }
 }
 
-struct NetworkServiceProviderMock: AvalancheNetworkServiceProvider {
+struct ConnectionProviderMock: AvalancheConnectionProvider {
+    func singleShot(api: ApiConnection) -> SingleShotConnection {
+        fatalError("Not implemented")
+    }
+    
+    func rpc(api: ApiConnection) -> Client {
+        fatalError("Not implemented")
+    }
+    
+    func subscribableRPC(api: ApiConnection) -> PersistentConnection {
+        fatalError("Not implemented")
+    }
+    
 }
 
 class SignatureProviderMock: AvalancheSignatureProvider {

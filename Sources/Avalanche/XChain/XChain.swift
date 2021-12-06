@@ -74,8 +74,9 @@ public class AvalancheXChainApi: AvalancheVMApi {
         
         let settings = avalanche.settings
         queue = settings.queue
-        self.service = JsonRpc(.http(url: avalanche.url(path: info.apiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
-        self.vmService = JsonRpc(.http(url: avalanche.url(path: info.vmApiPath), session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        
+        service = avalanche.connectionProvider.rpc(api: .xChain(path: info.apiPath))
+        vmService = avalanche.connectionProvider.rpc(api: .xChain(path: info.vmApiPath))
     }
     
     private func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {
