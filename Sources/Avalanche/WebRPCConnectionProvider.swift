@@ -25,9 +25,9 @@ extension ApiConnectionType {
         case .pChain(let alias, let blockchainID):
             path = "/\(alias ?? blockchainID.cb58())"
         case .cChain(let alias, let blockchainID):
-            path = "/bc/\(alias ?? blockchainID.cb58())/rpc"
+            path = "/bc/\(alias ?? blockchainID.cb58())/avax"
         case .cChainVM(let alias, let blockchainID):
-            path = "/bc/\(alias ?? blockchainID.cb58())/ws"
+            path = "/bc/\(alias ?? blockchainID.cb58())/rpc"
         }
         return "/ext\(path)"
     }
