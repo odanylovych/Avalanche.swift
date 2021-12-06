@@ -71,16 +71,20 @@ class AvalancheCoreMock: AvalancheCore {
 }
 
 struct ConnectionProviderMock: AvalancheConnectionProvider {
+    var singleShotMock: ((ApiConnectionType) -> SingleShotConnection)?
+    var rpcMock: ((ApiConnectionType) -> Client)?
+    var subscribableRPCMock: ((ApiConnectionType) -> PersistentConnection?)?
+    
     func singleShot(api: ApiConnectionType) -> SingleShotConnection {
-        fatalError("Not implemented")
+        singleShotMock!(api)
     }
     
     func rpc(api: ApiConnectionType) -> Client {
-        fatalError("Not implemented")
+        rpcMock!(api)
     }
     
     func subscribableRPC(api: ApiConnectionType) -> PersistentConnection? {
-        fatalError("Not implemented")
+        subscribableRPCMock!(api)
     }
     
 }
