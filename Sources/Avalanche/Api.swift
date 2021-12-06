@@ -26,7 +26,7 @@ extension AvalancheApi {
 }
 
 public protocol AvalancheApiInfo {
-    var connection: ApiConnection { get }
+    var connectionType: ApiConnectionType { get }
 }
 
 public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
@@ -79,7 +79,7 @@ public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
         self.vm = vm
     }
     
-    public var connection: ApiConnection {
+    public var connectionType: ApiConnectionType {
         fatalError("Not supported")
     }
 }

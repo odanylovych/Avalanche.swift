@@ -25,12 +25,13 @@ public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
         super.init(blockchainID: blockchainID, alias: alias, vm: vm)
     }
     
-    override public var connection: ApiConnection {
-        return .xChain(path: "/ext/bc/\(chainId)")
+    override public var connectionType: ApiConnectionType {
+        return .xChain(alias: alias, blockchainID: blockchainID)
     }
     
-    public var vmApiPath: ApiConnection {
-        return .xChainVM(path: "/ext/vm/\(vm)")
+    public var vmApiPath: ApiConnectionType {
+        fatalError("Not implemented")
+        // "/ext/vm/\(vm)"
     }
 }
 
@@ -80,7 +81,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
         queue = settings.queue
         
         let connectionProvider = avalanche.connectionProvider
-        service = connectionProvider.rpc(api: info.connection)
+        service = connectionProvider.rpc(api: info.connectionType)
         vmService = connectionProvider.rpc(api: info.vmApiPath)
     }
     

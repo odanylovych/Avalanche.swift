@@ -12,7 +12,7 @@ import RPC
 #endif
 
 public struct AvalancheIPCApiInfo: AvalancheApiInfo {
-    public let connection: ApiConnection = .ipc(path: "/ext/ipcs")
+    public let connectionType: ApiConnectionType = .ipc
 }
 
 public class AvalancheIPCApi: AvalancheApi {
@@ -33,7 +33,7 @@ public class AvalancheIPCApi: AvalancheApi {
         self.hrp = hrp
         self.networkID = networkID
         
-        self.service = avalanche.connectionProvider.rpc(api: info.connection)
+        self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
     }
     
     public struct PublishBlockchainResponse: Decodable {

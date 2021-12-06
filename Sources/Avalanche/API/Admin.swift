@@ -12,7 +12,7 @@ import RPC
 #endif
 
 public struct AvalancheAdminApiInfo: AvalancheApiInfo {
-    public let connection: ApiConnection = .admin(path: "/ext/admin")
+    public let connectionType: ApiConnectionType = .admin
 }
 
 public class AvalancheAdminApi: AvalancheApi {
@@ -32,7 +32,7 @@ public class AvalancheAdminApi: AvalancheApi {
         self.hrp = hrp
         self.info = info
         
-        self.service = avalanche.connectionProvider.rpc(api: info.connection)
+        self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
     }
     
     public func alias(alias: String, endpoint: String,

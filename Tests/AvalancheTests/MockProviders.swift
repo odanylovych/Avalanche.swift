@@ -71,15 +71,15 @@ class AvalancheCoreMock: AvalancheCore {
 }
 
 struct ConnectionProviderMock: AvalancheConnectionProvider {
-    func singleShot(api: ApiConnection) -> SingleShotConnection {
+    func singleShot(api: ApiConnectionType) -> SingleShotConnection {
         fatalError("Not implemented")
     }
     
-    func rpc(api: ApiConnection) -> Client {
+    func rpc(api: ApiConnectionType) -> Client {
         fatalError("Not implemented")
     }
     
-    func subscribableRPC(api: ApiConnection) -> PersistentConnection {
+    func subscribableRPC(api: ApiConnectionType) -> PersistentConnection {
         fatalError("Not implemented")
     }
     
@@ -241,18 +241,21 @@ class AvalancheVMApiInfoMock: AvalancheVMApiInfo {
     let blockchainID: BlockchainID
     let alias: String?
     let vm: String
-    let connection: ApiConnection
+    let connectionType: ApiConnectionType
     
     init(
         blockchainID: BlockchainID = BlockchainID(data: Data(count: BlockchainID.size))!,
         alias: String? = nil,
         vm: String = "vm",
-        apiPath: ApiConnection = .xChain(path: "xChain")
+        apiPath: ApiConnectionType = .xChain(
+            alias: "alias",
+            blockchainID: BlockchainID(data: Data(count: BlockchainID.size))!
+        )
     ) {
         self.blockchainID = blockchainID
         self.alias = alias
         self.vm = vm
-        self.connection = apiPath
+        self.connectionType = apiPath
     }
 }
 

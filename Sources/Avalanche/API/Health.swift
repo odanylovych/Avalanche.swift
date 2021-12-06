@@ -12,7 +12,7 @@ import RPC
 #endif
 
 public struct AvalancheHealthApiInfo: AvalancheApiInfo {
-    public let connection: ApiConnection = .health(path: "/ext/health")
+    public let connectionType: ApiConnectionType = .health
 }
 
 public struct AvalancheLivenessResponse: Decodable {
@@ -46,7 +46,7 @@ public class AvalancheHealthApi: AvalancheApi {
         self.hrp = hrp
         self.networkID = networkID
         
-        self.service = avalanche.connectionProvider.rpc(api: info.connection)
+        self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
     }
     
     public func getLiveness(cb: @escaping ApiCallback<AvalancheLivenessResponse>) {

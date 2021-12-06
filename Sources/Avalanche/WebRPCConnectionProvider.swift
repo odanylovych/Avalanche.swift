@@ -8,6 +8,28 @@
 import Foundation
 import RPC
 
+extension ApiConnectionType {
+    public var path: String {
+        let path: String
+        switch self {
+        case .admin: path = "/admin"
+        case .auth: path = "/auth"
+        case .health: path = "/health"
+        case .info: path = "/info"
+        case .ipc: path = "/ipcs"
+        case .keystore: path = "/keystore"
+        case .metrics: path = "/admin"
+        case .xChain(let alias, let blockchainID):
+            path = "/bc/\(alias ?? blockchainID.cb58())"
+        case .pChain(let alias, let blockchainID):
+            path = "/\(alias ?? blockchainID.cb58())"
+        case .cChain(let alias, let blockchainID):
+            path = "/bc/\(alias ?? blockchainID.cb58())/rpc"
+        }
+        return "/ext\(path)"
+    }
+}
+
 public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
     private let url: URL
     private let queue: DispatchQueue
@@ -32,43 +54,13 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
         self.decoder = decoder
     }
     
-    public func singleShot(api: ApiConnection) -> SingleShotConnection {
-        let apiPath: String
-        switch api {
-        case .admin(let path): apiPath = path
-        case .auth(let path): apiPath = path
-        case .health(let path): apiPath = path
-        case .info(let path): apiPath = path
-        case .ipc(let path): apiPath = path
-        case .keystore(let path): apiPath = path
-        case .metrics(let path): apiPath = path
-        case .xChain(let path): apiPath = path
-        case .xChainVM(let path): apiPath = path
-        case .pChain(let path): apiPath = path
-        case .cChain(let path): apiPath = path
-        case .cChainWS(let path): apiPath = path
-        }
-        let url = URL(string: apiPath, relativeTo: url)!
+    public func singleShot(api: ApiConnectionType) -> SingleShotConnection {
+        let url = URL(string: api.path, relativeTo: url)!
         return HttpConnection(url: url, queue: queue, headers: [:], session: session)
     }
     
-    public func rpc(api: ApiConnection) -> Client {
-        let apiPath: String
-        switch api {
-        case .admin(let path): apiPath = path
-        case .auth(let path): apiPath = path
-        case .health(let path): apiPath = path
-        case .info(let path): apiPath = path
-        case .ipc(let path): apiPath = path
-        case .keystore(let path): apiPath = path
-        case .metrics(let path): apiPath = path
-        case .xChain(let path): apiPath = path
-        case .xChainVM(let path): apiPath = path
-        case .pChain(let path): apiPath = path
-        case .cChain(let path): apiPath = path
-        case .cChainWS(let path): apiPath = path
-        }
-        let url = URL(string: apiPath, relativeTo: url)!
+    public func rpc(api: ApiConnectionType) -> Client {
+        let url = URL(string: api.path, relativeTo: url)!
         return JsonRpc(
             .http(url: url, session: session, headers: headers),
             queue: queue,
@@ -77,7 +69,7 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
         )
     }
     
-    public func subscribableRPC(api: ApiConnection) -> PersistentConnection {
+    public func subscribableRPC(api: ApiConnectionType) -> PersistentConnection {
         fatalError("Not implemented")
     }
 }

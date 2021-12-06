@@ -51,7 +51,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         self.networkID = networkID
         self.queue = settings.queue
         
-        self.service = avalanche.connectionProvider.rpc(api: info.connection)
+        self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
     }
     
     public struct AddDelegatorParams: Encodable {

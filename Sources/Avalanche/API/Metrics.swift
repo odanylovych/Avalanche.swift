@@ -12,7 +12,7 @@ import RPC
 #endif
 
 public struct AvalancheMetricsApiInfo: AvalancheApiInfo {
-    public let connection: ApiConnection = .metrics(path: "/ext/metrics")
+    public let connectionType: ApiConnectionType = .metrics
 }
 
 public class AvalancheMetricsApi: AvalancheApi {
@@ -33,7 +33,7 @@ public class AvalancheMetricsApi: AvalancheApi {
         self.info = info
         self.hrp = hrp
         self.networkID = networkID
-        self.connection = avalanche.connectionProvider.singleShot(api: info.connection)
+        self.connection = avalanche.connectionProvider.singleShot(api: info.connectionType)
         self.decoder = avalanche.settings.decoder
     }
     

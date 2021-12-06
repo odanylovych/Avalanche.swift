@@ -9,23 +9,21 @@ import Foundation
 import RPC
 
 public protocol AvalancheConnectionProvider {
-    func singleShot(api: ApiConnection) -> SingleShotConnection
-    func rpc(api: ApiConnection) -> Client
-    func subscribableRPC(api: ApiConnection) -> PersistentConnection
+    func singleShot(api: ApiConnectionType) -> SingleShotConnection
+    func rpc(api: ApiConnectionType) -> Client
+    func subscribableRPC(api: ApiConnectionType) -> PersistentConnection
 }
 
-public enum ApiConnection {
-    case admin(path: String)
-    case auth(path: String)
-    case health(path: String)
-    case info(path: String)
-    case ipc(path: String)
-    case keystore(path: String)
-    case metrics(path: String)
+public enum ApiConnectionType {
+    case admin
+    case auth
+    case health
+    case info
+    case ipc
+    case keystore
+    case metrics
     
-    case xChain(path: String)
-    case xChainVM(path: String)
-    case pChain(path: String)
-    case cChain(path: String)
-    case cChainWS(path: String)
+    case xChain(alias: String?, blockchainID: BlockchainID)
+    case pChain(alias: String?, blockchainID: BlockchainID)
+    case cChain(alias: String?, blockchainID: BlockchainID)
 }
