@@ -12,7 +12,7 @@ import RPC
 #endif
 
 public struct AvalancheIPCApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/ipcs"
+    public let connection: ApiConnection = .ipc(path: "/ext/ipcs")
 }
 
 public class AvalancheIPCApi: AvalancheApi {
@@ -33,10 +33,7 @@ public class AvalancheIPCApi: AvalancheApi {
         self.hrp = hrp
         self.networkID = networkID
         
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-            
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.service = avalanche.connectionProvider.rpc(api: info.connection)
     }
     
     public struct PublishBlockchainResponse: Decodable {

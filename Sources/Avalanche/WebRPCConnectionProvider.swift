@@ -33,19 +33,44 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
     }
     
     public func singleShot(api: ApiConnection) -> SingleShotConnection {
-        fatalError("Not implemented")
+        let apiPath: String
+        switch api {
+        case .admin(let path): apiPath = path
+        case .auth(let path): apiPath = path
+        case .health(let path): apiPath = path
+        case .info(let path): apiPath = path
+        case .ipc(let path): apiPath = path
+        case .keystore(let path): apiPath = path
+        case .metrics(let path): apiPath = path
+        case .xChain(let path): apiPath = path
+        case .xChainVM(let path): apiPath = path
+        case .pChain(let path): apiPath = path
+        case .cChain(let path): apiPath = path
+        case .cChainWS(let path): apiPath = path
+        }
+        let url = URL(string: apiPath, relativeTo: url)!
+        return HttpConnection(url: url, queue: queue, headers: [:], session: session)
     }
     
     public func rpc(api: ApiConnection) -> Client {
-        let apiURL: URL
+        let apiPath: String
         switch api {
-        case .xChain(let path):
-            apiURL = URL(string: path, relativeTo: url)!
-        case .xChainVm(let path):
-            apiURL = URL(string: path, relativeTo: url)!
+        case .admin(let path): apiPath = path
+        case .auth(let path): apiPath = path
+        case .health(let path): apiPath = path
+        case .info(let path): apiPath = path
+        case .ipc(let path): apiPath = path
+        case .keystore(let path): apiPath = path
+        case .metrics(let path): apiPath = path
+        case .xChain(let path): apiPath = path
+        case .xChainVM(let path): apiPath = path
+        case .pChain(let path): apiPath = path
+        case .cChain(let path): apiPath = path
+        case .cChainWS(let path): apiPath = path
         }
+        let url = URL(string: apiPath, relativeTo: url)!
         return JsonRpc(
-            .http(url: apiURL, session: session, headers: headers),
+            .http(url: url, session: session, headers: headers),
             queue: queue,
             encoder: encoder,
             decoder: decoder

@@ -241,21 +241,19 @@ class AvalancheVMApiInfoMock: AvalancheVMApiInfo {
     let blockchainID: BlockchainID
     let alias: String?
     let vm: String
-    let apiPath: String
+    let connection: ApiConnection
     
-    init(blockchainID: BlockchainID, alias: String?, vm: String, apiPath: String) {
+    init(
+        blockchainID: BlockchainID = BlockchainID(data: Data(count: BlockchainID.size))!,
+        alias: String? = nil,
+        vm: String = "vm",
+        apiPath: ApiConnection = .xChain(path: "xChain")
+    ) {
         self.blockchainID = blockchainID
         self.alias = alias
         self.vm = vm
-        self.apiPath = apiPath
+        self.connection = apiPath
     }
-    
-    static let `default` = AvalancheVMApiInfoMock(
-        blockchainID: BlockchainID(data: Data(count: BlockchainID.size))!,
-        alias: nil,
-        vm: "vm",
-        apiPath: "apiPath"
-    )
 }
 
 struct AvalancheVMApiMock: AvalancheVMApi {
@@ -293,7 +291,7 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         avalanche: AvalancheCore,
         networkID: NetworkID = NetworkID.local,
         hrp: String = "hrp",
-        info: AvalancheVMApiInfoMock = AvalancheVMApiInfoMock.default
+        info: AvalancheVMApiInfoMock = AvalancheVMApiInfoMock()
     ) {
         self.avalanche = avalanche
         addressManager = avalanche.addressManager

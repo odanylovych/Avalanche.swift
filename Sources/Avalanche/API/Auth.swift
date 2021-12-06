@@ -12,7 +12,7 @@ import RPC
 #endif
 
 public struct AvalancheAuthApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/auth"
+    public let connection: ApiConnection = .auth(path: "/ext/auth")
 }
 
 public class AvalancheAuthApi: AvalancheApi {
@@ -33,10 +33,7 @@ public class AvalancheAuthApi: AvalancheApi {
         self.info = info
         self.hrp = hrp
         
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-            
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.service = avalanche.connectionProvider.rpc(api: info.connection)
     }
     
     public func newToken(password: String,

@@ -25,8 +25,12 @@ public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
         super.init(blockchainID: blockchainID, alias: alias, vm: vm)
     }
     
-    public var vmApiPath: String {
-        return "/ext/vm/\(vm)"
+    override public var connection: ApiConnection {
+        return .xChain(path: "/ext/bc/\(chainId)")
+    }
+    
+    public var vmApiPath: ApiConnection {
+        return .xChainVM(path: "/ext/vm/\(vm)")
     }
 }
 
@@ -75,8 +79,9 @@ public class AvalancheXChainApi: AvalancheVMApi {
         let settings = avalanche.settings
         queue = settings.queue
         
-        service = avalanche.connectionProvider.rpc(api: .xChain(path: info.apiPath))
-        vmService = avalanche.connectionProvider.rpc(api: .xChain(path: info.vmApiPath))
+        let connectionProvider = avalanche.connectionProvider
+        service = connectionProvider.rpc(api: info.connection)
+        vmService = connectionProvider.rpc(api: info.vmApiPath)
     }
     
     private func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {

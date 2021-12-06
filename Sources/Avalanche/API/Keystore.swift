@@ -12,7 +12,7 @@ import RPC
 #endif
 
 public struct AvalancheKeystoreApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/keystore"
+    public let connection: ApiConnection = .keystore(path: "/ext/keystore")
 }
 
 public class AvalancheKeystoreApi: AvalancheApi {
@@ -33,10 +33,7 @@ public class AvalancheKeystoreApi: AvalancheApi {
         self.hrp = hrp
         self.networkID = networkID
         
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-            
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.service = avalanche.connectionProvider.rpc(api: info.connection)
     }
     
     private struct CredentialsParams: Encodable {

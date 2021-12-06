@@ -12,7 +12,7 @@ import RPC
 #endif
 
 public struct AvalancheHealthApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/health"
+    public let connection: ApiConnection = .health(path: "/ext/health")
 }
 
 public struct AvalancheLivenessResponse: Decodable {
@@ -46,10 +46,7 @@ public class AvalancheHealthApi: AvalancheApi {
         self.hrp = hrp
         self.networkID = networkID
         
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-        
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.service = avalanche.connectionProvider.rpc(api: info.connection)
     }
     
     public func getLiveness(cb: @escaping ApiCallback<AvalancheLivenessResponse>) {

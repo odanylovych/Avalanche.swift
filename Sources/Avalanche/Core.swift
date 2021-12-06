@@ -26,8 +26,6 @@ public protocol AvalancheCore: AnyObject {
     
     func getAPI<A: AvalancheApi>() throws -> A
     func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A
-    
-    func url(path: String) -> URL // TODO: remove
 }
 
 public struct AvalancheConstants {

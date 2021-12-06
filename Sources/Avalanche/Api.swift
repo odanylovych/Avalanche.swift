@@ -26,7 +26,7 @@ extension AvalancheApi {
 }
 
 public protocol AvalancheApiInfo {
-    var apiPath: String { get }
+    var connection: ApiConnection { get }
 }
 
 public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
@@ -79,8 +79,8 @@ public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
         self.vm = vm
     }
     
-    public var apiPath: String {
-        return "/ext/bc/\(chainId)"
+    public var connection: ApiConnection {
+        fatalError("Not supported")
     }
 }
 

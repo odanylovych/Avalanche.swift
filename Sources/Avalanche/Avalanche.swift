@@ -132,10 +132,6 @@ public class Avalanche: AvalancheCore {
         defer { _lock.unlock() }
         return API(avalanche: self, networkID: networkID, hrp: hrp, info: info)
     }
-    
-    public func url(path: String) -> URL {
-        fatalError("Remove")
-    }
 }
 
 extension Avalanche {

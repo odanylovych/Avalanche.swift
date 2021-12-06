@@ -12,7 +12,7 @@ import RPC
 #endif
 
 public struct AvalancheInfoApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/info"
+    public let connection: ApiConnection = .info(path: "/ext/info")
 }
 
 public class AvalancheInfoApi: AvalancheApi {
@@ -33,10 +33,7 @@ public class AvalancheInfoApi: AvalancheApi {
         self.hrp = hrp
         self.info = info
         
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-        
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.service = avalanche.connectionProvider.rpc(api: info.connection)
     }
     
     /// methods

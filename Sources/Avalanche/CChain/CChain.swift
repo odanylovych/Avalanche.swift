@@ -22,12 +22,12 @@ public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
         super.init(blockchainID: blockchainID, alias: alias, vm: vm)
     }
     
-    override public var apiPath: String {
-        return super.apiPath + "/rpc"
+    override public var connection: ApiConnection {
+        return .cChain(path: "/ext/bc/\(chainId)/rpc")
     }
     
-    public var wsApiPath: String {
-        return super.apiPath + "/ws"
+    public var wsApiPath: ApiConnection {
+        return .cChainWS(path: "/ext/bc/\(chainId)/ws")
     }
 }
 

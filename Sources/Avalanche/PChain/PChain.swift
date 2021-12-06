@@ -51,9 +51,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         self.networkID = networkID
         self.queue = settings.queue
         
-        let url = avalanche.url(path: info.apiPath)
-        
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.service = avalanche.connectionProvider.rpc(api: info.connection)
     }
     
     public struct AddDelegatorParams: Encodable {
