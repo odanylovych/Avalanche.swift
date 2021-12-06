@@ -72,7 +72,12 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
         )
     }
     
-    public func subscribableRPC(api: ApiConnectionType) -> PersistentConnection {
-        fatalError("Not implemented")
+    public func subscribableRPC(api: ApiConnectionType) -> PersistentConnection? {
+        switch api {
+        case .cChainVM(let alias, let blockchainID):
+            let _ = "/ext/bc/\(alias ?? blockchainID.cb58())/ws"
+            fatalError("Not implemented")
+        default: return nil
+        }
     }
 }

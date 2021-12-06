@@ -29,7 +29,7 @@ public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
         .xChain(alias: alias, blockchainID: blockchainID)
     }
     
-    public var vmApiPath: ApiConnectionType {
+    public var vmConnectionType: ApiConnectionType {
         .xChainVM(vm: vm)
     }
 }
@@ -81,7 +81,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
         
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: info.connectionType)
-        vmService = connectionProvider.rpc(api: info.vmApiPath)
+        vmService = connectionProvider.rpc(api: info.vmConnectionType)
     }
     
     private func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {

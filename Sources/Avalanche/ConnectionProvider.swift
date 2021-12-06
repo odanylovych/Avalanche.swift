@@ -11,7 +11,7 @@ import RPC
 public protocol AvalancheConnectionProvider {
     func singleShot(api: ApiConnectionType) -> SingleShotConnection
     func rpc(api: ApiConnectionType) -> Client
-    func subscribableRPC(api: ApiConnectionType) -> PersistentConnection
+    func subscribableRPC(api: ApiConnectionType) -> PersistentConnection?
 }
 
 public enum ApiConnectionType {

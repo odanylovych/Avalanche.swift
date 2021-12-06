@@ -26,7 +26,7 @@ public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
         .cChain(alias: alias, blockchainID: blockchainID)
     }
     
-    public var wsApiPath: ApiConnectionType {
+    public var vmConnectionType: ApiConnectionType {
         .cChainVM(alias: alias, blockchainID: blockchainID)
     }
 }

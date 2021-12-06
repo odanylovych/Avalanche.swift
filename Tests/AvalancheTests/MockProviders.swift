@@ -79,7 +79,7 @@ struct ConnectionProviderMock: AvalancheConnectionProvider {
         fatalError("Not implemented")
     }
     
-    func subscribableRPC(api: ApiConnectionType) -> PersistentConnection {
+    func subscribableRPC(api: ApiConnectionType) -> PersistentConnection? {
         fatalError("Not implemented")
     }
     
