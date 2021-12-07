@@ -364,4 +364,96 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
+    
+    func testCreateVariableCapAsset() throws {
+        let success = expectation(description: "success")
+        let name = "name"
+        let symbol = "symbol"
+        let denomination: UInt8 = 1
+        let minterSets = [
+            (minters: [newAddress().address], threshold: UInt32(1))
+        ]
+        let from = testFromAddress.address
+        let path = testFromAddress.path
+        let testChangeAddress = newAddress().address
+        let memo = "memo".data(using: .utf8)!
+        let testAssetID = AssetID(data: self.testTransactionID.raw)!
+        let signatureProvider = SignatureProviderMock()
+        let utxo = testUtxos.first { type(of: $0.output) == SECP256K1TransferOutput.self }!
+        let output = utxo.output as! SECP256K1TransferOutput
+        let testInputs = [
+            TransferableInput(
+                transactionID: utxo.transactionID,
+                utxoIndex: utxo.utxoIndex,
+                assetID: utxo.assetID,
+                input: try! SECP256K1TransferInput(
+                    amount: output.amount,
+                    addressIndices: output.getAddressIndices(for: [from])
+                )
+            )
+        ]
+        let change = output.amount - UInt64(api.info.creationTxFee)
+        let testOutputs = [
+            TransferableOutput(
+                assetID: avaxAssetID,
+                output: try! type(of: output).init(
+                    amount: change,
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: 1,
+                    addresses: [from]
+                )
+            )
+        ]
+        let testInitialStates = [InitialState(
+            featureExtensionID: .secp256K1,
+            outputs: minterSets.map { minters, threshold in
+                try! SECP256K1MintOutput(
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: threshold,
+                    addresses: minters
+                )
+            }
+        )]
+        signatureProvider.signTransactionMock = { transaction, cb in
+            let extended = transaction as! ExtendedAvalancheTransaction
+            XCTAssertEqual(extended.pathes, [from: path])
+            assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.utxoAddresses.first!.1, [from])
+            let transaction = extended.transaction as! CreateAssetTransaction
+            let testTransaction = try! CreateAssetTransaction(
+                networkID: self.api.networkID,
+                blockchainID: self.api.info.blockchainID,
+                outputs: testOutputs,
+                inputs: testInputs,
+                memo: memo,
+                name: name,
+                symbol: symbol,
+                denomination: denomination,
+                initialStates: testInitialStates
+            )
+            XCTAssertEqual(transaction, testTransaction)
+            cb(.success(SignedAvalancheTransaction(
+                unsignedTransaction: transaction,
+                credentials: []
+            )))
+        }
+        avalanche.signatureProvider = signatureProvider
+        api.createVariableCapAsset(
+            name: name,
+            symbol: symbol,
+            denomination: denomination,
+            minterSets: minterSets,
+            from: [from],
+            change: testChangeAddress,
+            memo: memo,
+            credentials: .account(testAccount)
+        ) { res in
+            let (assetID, changeAddress) = try! res.get()
+            XCTAssertEqual(assetID, testAssetID)
+            XCTAssertEqual(changeAddress, testChangeAddress)
+            success.fulfill()
+        }
+        wait(for: [success], timeout: 10)
+    }
+    
 }
