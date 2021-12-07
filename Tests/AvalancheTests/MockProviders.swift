@@ -11,6 +11,7 @@ import RPC
 
 enum ApiTestsError: Error {
     case error(from: String)
+    case error(description: String)
 }
 
 struct NetworkInfoProviderMock: AvalancheNetworkInfoProvider {
@@ -83,8 +84,8 @@ struct ConnectionProviderMock: AvalancheConnectionProvider {
     }
 }
 
-struct ClientSuccessMock: Client {
-    var callMock: ((String, Any) -> Any)?
+struct ClientMock: Client {
+    var callMock: ((String, Any, @escaping (Result<Any, Error>) -> Void) -> Void)?
     
     func call<Params: Encodable, Res: Decodable, Err: Decodable>(
         method: String,
@@ -93,19 +94,11 @@ struct ClientSuccessMock: Client {
         _ err: Err.Type,
         response: @escaping RequestCallback<Params, Res, Err>
     ) {
-        response(.success(callMock!(method, params) as! Res))
-    }
-}
-
-struct ClientFailureMock: Client {
-    func call<Params: Encodable, Res: Decodable, Err: Decodable>(
-        method: String,
-        params: Params,
-        _ res: Res.Type,
-        _ err: Err.Type,
-        response: @escaping RequestCallback<Params, Res, Err>
-    ) {
-        response(.failure(.custom(description: "fail", cause: ApiTestsError.error(from: "call"))))
+        callMock!(method, params) { res in
+            response(res.mapError {
+                .custom(description: "callMock error", cause: $0)
+            }.map { $0 as! Res })
+        }
     }
 }
 
@@ -114,7 +107,7 @@ class SignatureProviderMock: AvalancheSignatureProvider {
         AvalancheSignatureProviderAccountRequestType,
         @escaping (AvalancheSignatureProviderResult<AvalancheSignatureProviderAccounts>) -> Void
     ) -> Void)?
-    var signTransactionMock: ((Any, Any) -> Void)?
+    var signTransactionMock: ((Any, @escaping (AvalancheSignatureProviderResult<Any>) -> Void) -> Void)?
     var signMessageMock: ((Data, Any, @escaping (AvalancheSignatureProviderResult<Signature>) -> Void) -> Void)?
     
     func accounts(type: AvalancheSignatureProviderAccountRequestType,
@@ -124,7 +117,9 @@ class SignatureProviderMock: AvalancheSignatureProvider {
     
     func sign<T: ExtendedUnsignedTransaction>(transaction: T,
                                               _ cb: @escaping (AvalancheSignatureProviderResult<T.Signed>) -> Void) {
-        signTransactionMock!(transaction, cb)
+        signTransactionMock!(transaction) { res in
+            cb(res.map { $0 as! T.Signed })
+        }
     }
     
     func sign<A: ExtendedAddressProtocol>(message: Data,
