@@ -425,9 +425,9 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             let (inputs, outputs): ([TransferableInput], [TransferableOutput])
                             do {
                                 (inputs, outputs) = try self.getInputsOutputs(
-                                    assetID: assetID,
+                                    assetID: avaxAssetID,
                                     from: fromAddresses,
-                                    to: [to],
+                                    to: fromAddresses,
                                     change: [changeAddress],
                                     utxos: utxos,
                                     fee: fee
