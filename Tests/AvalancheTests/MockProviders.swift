@@ -81,7 +81,32 @@ struct ConnectionProviderMock: AvalancheConnectionProvider {
     func subscribableRPC(api: ApiConnectionType) -> PersistentConnection? {
         subscribableRPCMock!(api)
     }
+}
+
+struct ClientSuccessMock: Client {
+    var callMock: ((String, Any) -> Any)?
     
+    func call<Params: Encodable, Res: Decodable, Err: Decodable>(
+        method: String,
+        params: Params,
+        _ res: Res.Type,
+        _ err: Err.Type,
+        response: @escaping RequestCallback<Params, Res, Err>
+    ) {
+        response(.success(callMock!(method, params) as! Res))
+    }
+}
+
+struct ClientFailureMock: Client {
+    func call<Params: Encodable, Res: Decodable, Err: Decodable>(
+        method: String,
+        params: Params,
+        _ res: Res.Type,
+        _ err: Err.Type,
+        response: @escaping RequestCallback<Params, Res, Err>
+    ) {
+        response(.failure(.custom(description: "fail", cause: ApiTestsError.error(from: "call"))))
+    }
 }
 
 class SignatureProviderMock: AvalancheSignatureProvider {

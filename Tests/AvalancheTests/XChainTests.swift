@@ -8,6 +8,7 @@
 import Foundation
 import XCTest
 import Avalanche
+import RPC
 
 final class XChainTests: XCTestCase {
     private var xChain: AvalancheXChainApi!
@@ -50,7 +51,7 @@ final class XChainTests: XCTestCase {
         }
         avalanche.utxoProvider = utxoProvider
         avalanche.addressManager = AddressManagerMock()
-        avalanche.connectionProvider = ConnectionProviderMock()
+        avalanche.connectionProvider = connectionProvider
         xChain = avalanche.xChain
         testAccount = try! Account(
             pubKey: Data(hex: "0x02ccbf163222a621523a477389b2b6318b9c43b424bdf4b74340e9b45443cc0506")!,
@@ -86,6 +87,19 @@ final class XChainTests: XCTestCase {
             })
         }
         return utxoProvider
+    }
+    
+    private var connectionProvider: AvalancheConnectionProvider {
+        var connectionProvider = ConnectionProviderMock()
+        connectionProvider.rpcMock = { api in
+            guard case .xChain = api else {
+                return ClientFailureMock()
+            }
+            return ClientSuccessMock(callMock: { method, params in
+                
+            })
+        }
+        return connectionProvider
     }
     
     private func newAddress() -> ExtendedAddress {
