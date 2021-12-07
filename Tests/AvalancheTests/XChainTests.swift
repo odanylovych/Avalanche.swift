@@ -178,8 +178,8 @@ final class XChainTests: XCTestCase {
         let initialHolders = [
             (address: newAddress().address, amount: UInt64(1))
         ]
-        let from = testFromAddress.address
-        let path = testFromAddress.path
+        let fromAddress = testFromAddress.address
+        let fromAddressPath = testFromAddress.path
         let testChangeAddress = newAddress().address
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
@@ -193,7 +193,7 @@ final class XChainTests: XCTestCase {
                 assetID: utxo.assetID,
                 input: try! SECP256K1TransferInput(
                     amount: output.amount,
-                    addressIndices: output.getAddressIndices(for: [from])
+                    addressIndices: output.getAddressIndices(for: [fromAddress])
                 )
             )
         ]
@@ -205,7 +205,7 @@ final class XChainTests: XCTestCase {
                     amount: change,
                     locktime: Date(timeIntervalSince1970: 0),
                     threshold: 1,
-                    addresses: [from]
+                    addresses: [fromAddress]
                 )
             )
         ]
@@ -222,15 +222,15 @@ final class XChainTests: XCTestCase {
                 SECP256K1MintOutput(
                     locktime: Date(timeIntervalSince1970: 0),
                     threshold: 1,
-                    addresses: [from]
+                    addresses: [fromAddress]
                 )
             ]
         )]
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
-            XCTAssertEqual(extended.pathes, [from: path])
+            XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
             assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
-            XCTAssertEqual(extended.utxoAddresses.first!.1, [from])
+            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
             let transaction = extended.transaction as! CreateAssetTransaction
             let testTransaction = try! CreateAssetTransaction(
                 networkID: self.api.networkID,
@@ -255,7 +255,7 @@ final class XChainTests: XCTestCase {
             symbol: symbol,
             denomination: denomination,
             initialHolders: initialHolders,
-            from: [from],
+            from: [fromAddress],
             change: testChangeAddress,
             memo: memo,
             credentials: .account(testAccount)
@@ -373,8 +373,8 @@ final class XChainTests: XCTestCase {
         let minterSets = [
             (minters: [newAddress().address], threshold: UInt32(1))
         ]
-        let from = testFromAddress.address
-        let path = testFromAddress.path
+        let fromAddress = testFromAddress.address
+        let fromAddressPath = testFromAddress.path
         let testChangeAddress = newAddress().address
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
@@ -388,7 +388,7 @@ final class XChainTests: XCTestCase {
                 assetID: utxo.assetID,
                 input: try! SECP256K1TransferInput(
                     amount: output.amount,
-                    addressIndices: output.getAddressIndices(for: [from])
+                    addressIndices: output.getAddressIndices(for: [fromAddress])
                 )
             )
         ]
@@ -400,7 +400,7 @@ final class XChainTests: XCTestCase {
                     amount: change,
                     locktime: Date(timeIntervalSince1970: 0),
                     threshold: 1,
-                    addresses: [from]
+                    addresses: [fromAddress]
                 )
             )
         ]
@@ -416,9 +416,9 @@ final class XChainTests: XCTestCase {
         )]
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
-            XCTAssertEqual(extended.pathes, [from: path])
+            XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
             assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
-            XCTAssertEqual(extended.utxoAddresses.first!.1, [from])
+            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
             let transaction = extended.transaction as! CreateAssetTransaction
             let testTransaction = try! CreateAssetTransaction(
                 networkID: self.api.networkID,
@@ -443,7 +443,7 @@ final class XChainTests: XCTestCase {
             symbol: symbol,
             denomination: denomination,
             minterSets: minterSets,
-            from: [from],
+            from: [fromAddress],
             change: testChangeAddress,
             memo: memo,
             credentials: .account(testAccount)
@@ -456,4 +456,93 @@ final class XChainTests: XCTestCase {
         wait(for: [success], timeout: 10)
     }
     
+    func testCreateNFTAsset() throws {
+        let success = expectation(description: "success")
+        let name = "name"
+        let symbol = "symbol"
+        let minterSets = [
+            (minters: [newAddress().address], threshold: UInt32(1))
+        ]
+        let fromAddress = testFromAddress.address
+        let fromAddressPath = testFromAddress.path
+        let testChangeAddress = newAddress().address
+        let memo = "memo".data(using: .utf8)!
+        let testAssetID = AssetID(data: self.testTransactionID.raw)!
+        let signatureProvider = SignatureProviderMock()
+        let utxo = testUtxos.first { type(of: $0.output) == SECP256K1TransferOutput.self }!
+        let output = utxo.output as! SECP256K1TransferOutput
+        let testInputs = [
+            TransferableInput(
+                transactionID: utxo.transactionID,
+                utxoIndex: utxo.utxoIndex,
+                assetID: utxo.assetID,
+                input: try! SECP256K1TransferInput(
+                    amount: output.amount,
+                    addressIndices: output.getAddressIndices(for: [fromAddress])
+                )
+            )
+        ]
+        let change = output.amount - UInt64(api.info.creationTxFee)
+        let testOutputs = [
+            TransferableOutput(
+                assetID: avaxAssetID,
+                output: try! type(of: output).init(
+                    amount: change,
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: 1,
+                    addresses: [fromAddress]
+                )
+            )
+        ]
+        let testInitialStates = [InitialState(
+            featureExtensionID: .nft,
+            outputs: try minterSets.enumerated().map { index, minterSet in
+                try NFTMintOutput(
+                    groupID: UInt32(index),
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: minterSet.threshold,
+                    addresses: minterSet.minters
+                )
+            }
+        )]
+        signatureProvider.signTransactionMock = { transaction, cb in
+            let extended = transaction as! ExtendedAvalancheTransaction
+            XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
+            assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            let transaction = extended.transaction as! CreateAssetTransaction
+            let testTransaction = try! CreateAssetTransaction(
+                networkID: self.api.networkID,
+                blockchainID: self.api.info.blockchainID,
+                outputs: testOutputs,
+                inputs: testInputs,
+                memo: memo,
+                name: name,
+                symbol: symbol,
+                denomination: 0,
+                initialStates: testInitialStates
+            )
+            XCTAssertEqual(transaction, testTransaction)
+            cb(.success(SignedAvalancheTransaction(
+                unsignedTransaction: transaction,
+                credentials: []
+            )))
+        }
+        avalanche.signatureProvider = signatureProvider
+        api.createNFTAsset(
+            name: name,
+            symbol: symbol,
+            minterSets: minterSets,
+            from: [fromAddress],
+            change: testChangeAddress,
+            memo: memo,
+            credentials: .account(testAccount)
+        ) { res in
+            let (assetID, changeAddress) = try! res.get()
+            XCTAssertEqual(assetID, testAssetID)
+            XCTAssertEqual(changeAddress, testChangeAddress)
+            success.fulfill()
+        }
+        wait(for: [success], timeout: 10)
+    }
 }
