@@ -151,7 +151,7 @@ public struct UTXOHelper {
             TransferableOutput(
                 assetID: $0.assetID,
                 output: try outputTypes[$0.assetID]!.init(
-                    amount: $0.amount,
+                    amount: $0.change,
                     locktime: Date(timeIntervalSince1970: 0),
                     threshold: 1,
                     addresses: aad.destinations
