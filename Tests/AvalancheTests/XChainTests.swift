@@ -181,6 +181,39 @@ final class XChainTests: XCTestCase {
         return extended
     }
     
+    private func inputsOutputs(
+        utxos: [UTXO],
+        from: [Address],
+        fee: UInt64
+    ) throws -> ([TransferableInput], [TransferableOutput]) {
+        let utxo = utxos.first { type(of: $0.output) == SECP256K1TransferOutput.self }!
+        let output = utxo.output as! SECP256K1TransferOutput
+        let inputs = [
+            TransferableInput(
+                transactionID: utxo.transactionID,
+                utxoIndex: utxo.utxoIndex,
+                assetID: utxo.assetID,
+                input: try SECP256K1TransferInput(
+                    amount: output.amount,
+                    addressIndices: output.getAddressIndices(for: from)
+                )
+            )
+        ]
+        let change = output.amount - fee
+        let outputs = [
+            TransferableOutput(
+                assetID: avaxAssetID,
+                output: try type(of: output).init(
+                    amount: change,
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: 1,
+                    addresses: from
+                )
+            )
+        ]
+        return (inputs, outputs)
+    }
+    
     func testCreateFixedCapAsset() throws {
         let success = expectation(description: "success")
         let name = "name"
@@ -195,31 +228,8 @@ final class XChainTests: XCTestCase {
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
         let signatureProvider = SignatureProviderMock()
-        let utxo = testUtxos.first { type(of: $0.output) == SECP256K1TransferOutput.self }!
-        let output = utxo.output as! SECP256K1TransferOutput
-        let testInputs = [
-            TransferableInput(
-                transactionID: utxo.transactionID,
-                utxoIndex: utxo.utxoIndex,
-                assetID: utxo.assetID,
-                input: try! SECP256K1TransferInput(
-                    amount: output.amount,
-                    addressIndices: output.getAddressIndices(for: [fromAddress])
-                )
-            )
-        ]
-        let change = output.amount - UInt64(api.info.creationTxFee)
-        let testOutputs = [
-            TransferableOutput(
-                assetID: avaxAssetID,
-                output: try! type(of: output).init(
-                    amount: change,
-                    locktime: Date(timeIntervalSince1970: 0),
-                    threshold: 1,
-                    addresses: [fromAddress]
-                )
-            )
-        ]
+        let fee = UInt64(api.info.creationTxFee)
+        let (inputs, outputs) = try inputsOutputs(utxos: testUtxos, from: [fromAddress], fee: fee)
         let testInitialStates = [InitialState(
             featureExtensionID: .secp256K1,
             outputs: try! initialHolders.map { address, amount in
@@ -246,8 +256,8 @@ final class XChainTests: XCTestCase {
             let testTransaction = try! CreateAssetTransaction(
                 networkID: self.api.networkID,
                 blockchainID: self.api.info.blockchainID,
-                outputs: testOutputs,
-                inputs: testInputs,
+                outputs: outputs,
+                inputs: inputs,
                 memo: memo,
                 name: name,
                 symbol: symbol,
@@ -289,31 +299,8 @@ final class XChainTests: XCTestCase {
         let fromAddressPath = testFromAddress.path
         let assetID = Self.newAssetID()
         let signatureProvider = SignatureProviderMock()
-        let utxo = testUtxos.first { type(of: $0.output) == SECP256K1TransferOutput.self }!
-        let output = utxo.output as! SECP256K1TransferOutput
-        let inputs = [
-            TransferableInput(
-                transactionID: utxo.transactionID,
-                utxoIndex: utxo.utxoIndex,
-                assetID: utxo.assetID,
-                input: try! SECP256K1TransferInput(
-                    amount: output.amount,
-                    addressIndices: output.getAddressIndices(for: [fromAddress])
-                )
-            )
-        ]
-        let change = output.amount - UInt64(api.info.txFee)
-        let outputs = [
-            TransferableOutput(
-                assetID: avaxAssetID,
-                output: try! type(of: output).init(
-                    amount: change,
-                    locktime: Date(timeIntervalSince1970: 0),
-                    threshold: 1,
-                    addresses: [fromAddress]
-                )
-            )
-        ]
+        let fee = UInt64(api.info.txFee)
+        let (inputs, outputs) = try inputsOutputs(utxos: testUtxos, from: [fromAddress], fee: fee)
         let mintUTXO = testUtxos.first { type(of: $0.output) == SECP256K1MintOutput.self }!
         let mintOutput = mintUTXO.output as! SECP256K1MintOutput
         let addressIndices = mintOutput.getAddressIndices(for: [fromAddress])
@@ -390,31 +377,8 @@ final class XChainTests: XCTestCase {
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
         let signatureProvider = SignatureProviderMock()
-        let utxo = testUtxos.first { type(of: $0.output) == SECP256K1TransferOutput.self }!
-        let output = utxo.output as! SECP256K1TransferOutput
-        let testInputs = [
-            TransferableInput(
-                transactionID: utxo.transactionID,
-                utxoIndex: utxo.utxoIndex,
-                assetID: utxo.assetID,
-                input: try! SECP256K1TransferInput(
-                    amount: output.amount,
-                    addressIndices: output.getAddressIndices(for: [fromAddress])
-                )
-            )
-        ]
-        let change = output.amount - UInt64(api.info.creationTxFee)
-        let testOutputs = [
-            TransferableOutput(
-                assetID: avaxAssetID,
-                output: try! type(of: output).init(
-                    amount: change,
-                    locktime: Date(timeIntervalSince1970: 0),
-                    threshold: 1,
-                    addresses: [fromAddress]
-                )
-            )
-        ]
+        let fee = UInt64(api.info.creationTxFee)
+        let (inputs, outputs) = try inputsOutputs(utxos: testUtxos, from: [fromAddress], fee: fee)
         let testInitialStates = [InitialState(
             featureExtensionID: .secp256K1,
             outputs: minterSets.map { minters, threshold in
@@ -434,8 +398,8 @@ final class XChainTests: XCTestCase {
             let testTransaction = try! CreateAssetTransaction(
                 networkID: self.api.networkID,
                 blockchainID: self.api.info.blockchainID,
-                outputs: testOutputs,
-                inputs: testInputs,
+                outputs: outputs,
+                inputs: inputs,
                 memo: memo,
                 name: name,
                 symbol: symbol,
@@ -480,31 +444,8 @@ final class XChainTests: XCTestCase {
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
         let signatureProvider = SignatureProviderMock()
-        let utxo = testUtxos.first { type(of: $0.output) == SECP256K1TransferOutput.self }!
-        let output = utxo.output as! SECP256K1TransferOutput
-        let testInputs = [
-            TransferableInput(
-                transactionID: utxo.transactionID,
-                utxoIndex: utxo.utxoIndex,
-                assetID: utxo.assetID,
-                input: try! SECP256K1TransferInput(
-                    amount: output.amount,
-                    addressIndices: output.getAddressIndices(for: [fromAddress])
-                )
-            )
-        ]
-        let change = output.amount - UInt64(api.info.creationTxFee)
-        let testOutputs = [
-            TransferableOutput(
-                assetID: avaxAssetID,
-                output: try! type(of: output).init(
-                    amount: change,
-                    locktime: Date(timeIntervalSince1970: 0),
-                    threshold: 1,
-                    addresses: [fromAddress]
-                )
-            )
-        ]
+        let fee = UInt64(api.info.creationTxFee)
+        let (inputs, outputs) = try inputsOutputs(utxos: testUtxos, from: [fromAddress], fee: fee)
         let testInitialStates = [InitialState(
             featureExtensionID: .nft,
             outputs: try minterSets.enumerated().map { index, minterSet in
@@ -525,8 +466,8 @@ final class XChainTests: XCTestCase {
             let testTransaction = try! CreateAssetTransaction(
                 networkID: self.api.networkID,
                 blockchainID: self.api.info.blockchainID,
-                outputs: testOutputs,
-                inputs: testInputs,
+                outputs: outputs,
+                inputs: inputs,
                 memo: memo,
                 name: name,
                 symbol: symbol,
@@ -567,31 +508,8 @@ final class XChainTests: XCTestCase {
         let fromAddressPath = testFromAddress.path
         let assetID = Self.newAssetID()
         let signatureProvider = SignatureProviderMock()
-        let utxo = testUtxos.first { type(of: $0.output) == SECP256K1TransferOutput.self }!
-        let output = utxo.output as! SECP256K1TransferOutput
-        let inputs = [
-            TransferableInput(
-                transactionID: utxo.transactionID,
-                utxoIndex: utxo.utxoIndex,
-                assetID: utxo.assetID,
-                input: try! SECP256K1TransferInput(
-                    amount: output.amount,
-                    addressIndices: output.getAddressIndices(for: [fromAddress])
-                )
-            )
-        ]
-        let change = output.amount - UInt64(api.info.txFee)
-        let outputs = [
-            TransferableOutput(
-                assetID: avaxAssetID,
-                output: try! type(of: output).init(
-                    amount: change,
-                    locktime: Date(timeIntervalSince1970: 0),
-                    threshold: 1,
-                    addresses: [fromAddress]
-                )
-            )
-        ]
+        let fee = UInt64(api.info.txFee)
+        let (inputs, outputs) = try inputsOutputs(utxos: testUtxos, from: [fromAddress], fee: fee)
         let mintUTXO = testUtxos.first { type(of: $0.output) == NFTMintOutput.self }!
         let mintOutput = mintUTXO.output as! NFTMintOutput
         let addressIndices = mintOutput.getAddressIndices(for: [fromAddress])
