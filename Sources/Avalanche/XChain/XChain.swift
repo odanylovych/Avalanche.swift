@@ -1341,7 +1341,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             var feePaid: UInt64 = 0
                             var importInputs = [TransferableInput]()
                             var outputs = [TransferableOutput]()
-                            for utxo in utxos {
+                            for utxo in utxos.filter({ type(of: $0.output) == SECP256K1TransferOutput.self }) {
                                 let output = utxo.output as! SECP256K1TransferOutput
                                 var inFeeAmount = output.amount
                                 if fee > 0 && feePaid < fee && utxo.assetID == feeAssetID {
