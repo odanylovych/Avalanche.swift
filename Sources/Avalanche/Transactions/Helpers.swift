@@ -154,7 +154,7 @@ public struct UTXOHelper {
                     amount: $0.change,
                     locktime: Date(timeIntervalSince1970: 0),
                     threshold: 1,
-                    addresses: aad.destinations
+                    addresses: aad.changeAddresses
                 )
             )
         }
