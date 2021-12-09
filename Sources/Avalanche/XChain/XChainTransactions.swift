@@ -155,6 +155,19 @@ public class ImportTransaction: BaseTransaction {
         )
     }
     
+    override public func utxoAddressIndices() -> [
+        (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
+    ] {
+        (inputs + transferableInputs).map {
+            (
+                $0.input.credentialType(),
+                $0.transactionID,
+                $0.utxoIndex,
+                $0.input.addressIndices
+            )
+        }
+    }
+    
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
             throw AvalancheDecoderError.dataCorrupted(

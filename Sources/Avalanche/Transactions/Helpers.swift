@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import BigInt
 
 public struct AssetAmountDestination {
     public let senders: [Address]
@@ -185,8 +186,10 @@ public struct TransactionHelper {
     
     public static func getBurn(_ inputs: [TransferableInput],
                                _ outputs: [TransferableOutput],
-                               assetID: AssetID) -> UInt64 {
-        getInputTotal(inputs, assetID: assetID) - getOutputTotal(outputs, assetID: assetID)
+                               assetID: AssetID) -> BigInt {
+        let inputTotal = BigInt(getInputTotal(inputs, assetID: assetID))
+        let outputTotal = BigInt(getOutputTotal(outputs, assetID: assetID))
+        return inputTotal - outputTotal
     }
     
     public static func checkGooseEgg(
