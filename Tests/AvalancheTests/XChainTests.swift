@@ -15,7 +15,6 @@ final class XChainTests: XCTestCase {
     private var testAccount: Account!
     private var idIndex: UInt8!
     private var avaxAssetID: AssetID!
-    private var exportAssetID: AssetID!
     private var addressIndex: UInt32!
     private var testFromAddress: ExtendedAddress!
     private var testChangeAddress: Address!
@@ -66,7 +65,6 @@ final class XChainTests: XCTestCase {
         idIndex = 0
         addressIndex = 0
         avaxAssetID = newAssetID()
-        exportAssetID = newAssetID()
         testFromAddress = newAddress()
         testChangeAddress = newAddress().address
         testTransactionID = newTransactionID()
@@ -99,16 +97,6 @@ final class XChainTests: XCTestCase {
                 assetID: avaxAssetID,
                 output: try! NFTMintOutput(
                     groupID: 1,
-                    locktime: Date(timeIntervalSince1970: 0),
-                    threshold: 1,
-                    addresses: [testFromAddress.address]
-                )
-            ), UTXO(
-                transactionID: newTransactionID(),
-                utxoIndex: 0,
-                assetID: exportAssetID,
-                output: try! SECP256K1TransferOutput(
-                    amount: 100_000_000,
                     locktime: Date(timeIntervalSince1970: 0),
                     threshold: 1,
                     addresses: [testFromAddress.address]
@@ -207,7 +195,6 @@ final class XChainTests: XCTestCase {
     }
     
     private func inputsOutputs(
-        utxos: [UTXO],
         fromAddresses: [Address],
         changeAddresses: [Address],
         fee: UInt64
@@ -255,7 +242,6 @@ final class XChainTests: XCTestCase {
         let signatureProvider = SignatureProviderMock()
         let fee = UInt64(api.info.creationTxFee)
         let (inputs, outputs) = try inputsOutputs(
-            utxos: testUtxos,
             fromAddresses: [fromAddress],
             changeAddresses: [testChangeAddress],
             fee: fee
@@ -331,7 +317,6 @@ final class XChainTests: XCTestCase {
         let signatureProvider = SignatureProviderMock()
         let fee = UInt64(api.info.txFee)
         let (inputs, outputs) = try inputsOutputs(
-            utxos: testUtxos,
             fromAddresses: [fromAddress],
             changeAddresses: [testChangeAddress],
             fee: fee
@@ -414,7 +399,6 @@ final class XChainTests: XCTestCase {
         let signatureProvider = SignatureProviderMock()
         let fee = UInt64(api.info.creationTxFee)
         let (inputs, outputs) = try inputsOutputs(
-            utxos: testUtxos,
             fromAddresses: [fromAddress],
             changeAddresses: [testChangeAddress],
             fee: fee
@@ -486,7 +470,6 @@ final class XChainTests: XCTestCase {
         let signatureProvider = SignatureProviderMock()
         let fee = UInt64(api.info.creationTxFee)
         let (inputs, outputs) = try inputsOutputs(
-            utxos: testUtxos,
             fromAddresses: [fromAddress],
             changeAddresses: [testChangeAddress],
             fee: fee
@@ -555,7 +538,6 @@ final class XChainTests: XCTestCase {
         let signatureProvider = SignatureProviderMock()
         let fee = UInt64(api.info.txFee)
         let (inputs, outputs) = try inputsOutputs(
-            utxos: testUtxos,
             fromAddresses: [fromAddress],
             changeAddresses: [testChangeAddress],
             fee: fee
@@ -631,16 +613,26 @@ final class XChainTests: XCTestCase {
         let memo = "memo".data(using: .utf8)!
         let fromAddress = testFromAddress.address
         let fromAddressPath = testFromAddress.path
-        let assetID = exportAssetID!
+        let assetID = newAssetID()
         let signatureProvider = SignatureProviderMock()
         let fee = UInt64(api.info.txFee)
         var (inputs, outputs) = try inputsOutputs(
-            utxos: testUtxos,
             fromAddresses: [fromAddress],
             changeAddresses: [testChangeAddress],
             fee: fee
         )
-        let utxo = testUtxos.first { $0.assetID == exportAssetID }!
+        let utxo = UTXO(
+            transactionID: newTransactionID(),
+            utxoIndex: 0,
+            assetID: assetID,
+            output: try! SECP256K1TransferOutput(
+                amount: 100_000_000,
+                locktime: Date(timeIntervalSince1970: 0),
+                threshold: 1,
+                addresses: [testFromAddress.address]
+            )
+        )
+        testUtxos = testUtxos + [utxo]
         inputs.append(TransferableInput(
             transactionID: utxo.transactionID,
             utxoIndex: utxo.utxoIndex,
@@ -719,7 +711,6 @@ final class XChainTests: XCTestCase {
     }
     
     func testImport() throws {
-        // TODO: fix
         let success = expectation(description: "success")
         let testSourceChain = BlockchainID(data: Data(repeating: 1, count: BlockchainID.size))!
         let toChain = avalanche.pChain
@@ -729,24 +720,21 @@ final class XChainTests: XCTestCase {
         let fromAddressPath = testFromAddress.path
         let signatureProvider = SignatureProviderMock()
         let fee = UInt64(api.info.txFee)
-        var (inputs, outputs) = try inputsOutputs(
-            utxos: testUtxos,
-            fromAddresses: [fromAddress],
-            changeAddresses: [testChangeAddress],
-            fee: fee
-        )
+        let inputs = [TransferableInput]()
         let utxo = utxoForInput!
         let output = utxo.output as! SECP256K1TransferOutput
         let inFeeAmount = output.amount - fee
-        outputs.append(TransferableOutput(
-            assetID: utxo.assetID,
-            output: try SECP256K1TransferOutput.init(
-                amount: inFeeAmount,
-                locktime: Date(timeIntervalSince1970: 0),
-                threshold: 1,
-                addresses: [toAddress]
+        let outputs = [
+            TransferableOutput(
+                assetID: utxo.assetID,
+                output: try SECP256K1TransferOutput.init(
+                    amount: inFeeAmount,
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: 1,
+                    addresses: [toAddress]
+                )
             )
-        ))
+        ]
         let importInputs = [
             TransferableInput(
                 transactionID: utxo.transactionID,
@@ -782,15 +770,7 @@ final class XChainTests: XCTestCase {
                 sourceChain: testSourceChain,
                 transferableInputs: importInputs
             )
-            XCTAssertEqual(transaction.networkID, testTransaction.networkID)
-            XCTAssertEqual(transaction.blockchainID, testTransaction.blockchainID)
-            XCTAssertEqual(transaction.outputs.count, testTransaction.outputs.count)
-            assert(transaction.outputs.allSatisfy(testTransaction.outputs.contains))
-            XCTAssertEqual(transaction.inputs.count, testTransaction.inputs.count)
-            assert(transaction.inputs.allSatisfy(testTransaction.inputs.contains))
-            XCTAssertEqual(transaction.memo, testTransaction.memo)
-            XCTAssertEqual(transaction.sourceChain, testTransaction.sourceChain)
-            XCTAssertEqual(transaction.transferableInputs, testTransaction.transferableInputs)
+            XCTAssertEqual(transaction, testTransaction)
             cb(.success(SignedAvalancheTransaction(
                 unsignedTransaction: transaction,
                 credentials: []
