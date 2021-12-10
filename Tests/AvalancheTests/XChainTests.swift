@@ -1012,4 +1012,93 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
+    
+    func testSendNFT() throws {
+        let success = expectation(description: "success")
+        let groupID: UInt32 = 123
+        let testChangeAddress = newAddress().address
+        let toAddress = newAddress().address
+        let memo = "memo".data(using: .utf8)!
+        let fromAddress = testFromAddress.address
+        let fromAddressPath = testFromAddress.path
+        let assetID = newAssetID()
+        let signatureProvider = SignatureProviderMock()
+        let fee = UInt64(api.info.txFee)
+        let (inputs, outputs) = try inputsOutputs(
+            fromAddresses: [fromAddress],
+            changeAddresses: [testChangeAddress],
+            fee: fee
+        )
+        let utxo = UTXO(
+            transactionID: newTransactionID(),
+            utxoIndex: 0,
+            assetID: avaxAssetID,
+            output: try! NFTTransferOutput(
+                groupID: groupID,
+                payload: Data(repeating: 1, count: 3),
+                locktime: Date(timeIntervalSince1970: 0),
+                threshold: 1,
+                addresses: [fromAddress]
+            )
+        )
+        testUtxos.append(utxo)
+        let nftTransferOutput = utxo.output as! NFTTransferOutput
+        let addressIndices = nftTransferOutput.getAddressIndices(for: [fromAddress])
+        let nftTransferOperation = NFTTransferOperation(
+            addressIndices: addressIndices,
+            nftTransferOutput: try NFTTransferOperationOutput(
+                groupID: nftTransferOutput.groupID,
+                payload: nftTransferOutput.payload,
+                locktime: Date(timeIntervalSince1970: 0),
+                threshold: 1,
+                addresses: [toAddress]
+            )
+        )
+        let transferableOperation = TransferableOperation(
+            assetID: utxo.assetID,
+            utxoIDs: [
+                UTXOID(
+                    transactionID: utxo.transactionID,
+                    utxoIndex: utxo.utxoIndex
+                )
+            ],
+            transferOperation: nftTransferOperation
+        )
+        signatureProvider.signTransactionMock = { transaction, cb in
+            let extended = transaction as! ExtendedAvalancheTransaction
+            XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            let transaction2 = extended.transaction as! OperationTransaction
+            let testTransaction = try! OperationTransaction(
+                networkID: self.api.networkID,
+                blockchainID: self.api.info.blockchainID,
+                outputs: outputs,
+                inputs: inputs,
+                memo: memo,
+                operations: [transferableOperation]
+            )
+            XCTAssertEqual(transaction2, testTransaction)
+            cb(.success(SignedAvalancheTransaction(
+                unsignedTransaction: transaction2,
+                credentials: []
+            )))
+        }
+        avalanche.signatureProvider = signatureProvider
+        api.sendNFT(
+            assetID: assetID,
+            groupID: groupID,
+            to: toAddress,
+            from: [fromAddress],
+            change: testChangeAddress,
+            memo: memo,
+            credentials: .account(testAccount)
+        ) { res in
+            let transactionID = try! res.get()
+            XCTAssertEqual(transactionID, self.testTransactionID)
+            success.fulfill()
+        }
+        wait(for: [success], timeout: 10)
+    }
+    
 }
