@@ -266,7 +266,7 @@ final class XChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
-            assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
             let transaction = extended.transaction as! CreateAssetTransaction
             let testTransaction = try! CreateAssetTransaction(
@@ -348,7 +348,7 @@ final class XChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
-            assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
             let transaction = extended.transaction as! OperationTransaction
             let testTransaction = try! OperationTransaction(
@@ -416,7 +416,7 @@ final class XChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
-            assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
             let transaction = extended.transaction as! CreateAssetTransaction
             let testTransaction = try! CreateAssetTransaction(
@@ -488,7 +488,7 @@ final class XChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
-            assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
             let transaction = extended.transaction as! CreateAssetTransaction
             let testTransaction = try! CreateAssetTransaction(
@@ -569,7 +569,7 @@ final class XChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
-            assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
             let transaction2 = extended.transaction as! OperationTransaction
             let testTransaction = try! OperationTransaction(
@@ -666,7 +666,7 @@ final class XChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { tx, cb in
             let extended = tx as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
-            assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
             let transaction = extended.transaction as! ExportTransaction
             let testTransaction = try! ExportTransaction(
@@ -681,9 +681,9 @@ final class XChainTests: XCTestCase {
             XCTAssertEqual(transaction.networkID, testTransaction.networkID)
             XCTAssertEqual(transaction.blockchainID, testTransaction.blockchainID)
             XCTAssertEqual(transaction.outputs.count, testTransaction.outputs.count)
-            assert(transaction.outputs.allSatisfy(testTransaction.outputs.contains))
+            XCTAssert(transaction.outputs.allSatisfy(testTransaction.outputs.contains))
             XCTAssertEqual(transaction.inputs.count, testTransaction.inputs.count)
-            assert(transaction.inputs.allSatisfy(testTransaction.inputs.contains))
+            XCTAssert(transaction.inputs.allSatisfy(testTransaction.inputs.contains))
             XCTAssertEqual(transaction.memo, testTransaction.memo)
             XCTAssertEqual(transaction.destinationChain, testTransaction.destinationChain)
             XCTAssertEqual(transaction.transferableOutputs, testTransaction.transferableOutputs)
@@ -758,7 +758,7 @@ final class XChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { tx, cb in
             let extended = tx as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
-            assert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
             let transaction = extended.transaction as! ImportTransaction
             let testTransaction = try! ImportTransaction(
