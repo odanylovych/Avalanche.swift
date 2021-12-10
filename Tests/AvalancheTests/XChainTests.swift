@@ -839,7 +839,7 @@ final class XChainTests: XCTestCase {
             ), TransferableOutput(
                 assetID: utxo.assetID,
                 output: try SECP256K1TransferOutput(
-                    amount: (utxoForInput.output as! SECP256K1TransferOutput).amount - amount,
+                    amount: amount,
                     locktime: Date(timeIntervalSince1970: 0),
                     threshold: 1,
                     addresses: [toAddress]
