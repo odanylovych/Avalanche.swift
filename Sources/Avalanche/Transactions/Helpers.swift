@@ -161,6 +161,53 @@ public struct UTXOHelper {
         }
         return (inputs, outputs, change)
     }
+    
+    public static func getMinimumSpendablePChain(
+        aad: AssetAmountDestination,
+        asOf: Date = Date(),
+        locktime: Date = Date(timeIntervalSince1970: 0),
+        threshold: UInt32 = 1,
+        stakeable: Bool = false,
+        utxos: [UTXO]
+    ) throws -> (
+        inputs: [TransferableInput],
+        outputs: [TransferableOutput],
+        change: [TransferableOutput]
+    ) {
+        var utxos = stakeable ? utxos : utxos.filter {
+            type(of: $0.output) != StakeableLockedOutput.self
+            || ($0.output as! StakeableLockedOutput).locktime < asOf
+        }
+        if stakeable {
+            var tempUTXOs = utxos.filter { type(of: $0.output) == StakeableLockedOutput.self }
+            tempUTXOs.sort(by: { utxo1, utxo2 in
+                let output1 = utxo1.output as! StakeableLockedOutput
+                let output2 = utxo2.output as! StakeableLockedOutput
+                return output1.locktime < output2.locktime
+            })
+            tempUTXOs.append(contentsOf: utxos.filter { type(of: $0.output) == SECP256K1TransferOutput.self })
+            utxos = tempUTXOs
+        }
+        let outputs = [AssetID: (lockedStakeable: [Output], unlocked: [Output])]()
+        let getSpenders = { (output: Output, addresses: [Address]) -> [Address] in
+            asOf > output.locktime ? Array(
+                output.addresses
+                    .filter { addresses.contains($0) }
+                    .prefix(Int(output.threshold))
+            ) : []
+        }
+        let meetsThreshold = { output, addresses in
+            getSpenders(output, addresses).count == output.threshold
+        }
+        for utxo in utxos.filter({
+            type(of: $0.output) == SECP256K1TransferOutput.self
+            && aad.assetAmounts.keys.contains($0.assetID)
+            && meetsThreshold($0.output, aad.senders)
+        }) {
+            // TODO
+        }
+        fatalError("Not implemented")
+    }
 }
 
 public struct TransactionHelper {
