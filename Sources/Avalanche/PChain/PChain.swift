@@ -529,7 +529,6 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                                     subnetID: subnetID,
                                     subnetAuth: SubnetAuth(signatureIndices: []) // TODO: signatureIndices
                                 )
-                                fatalError("Not implemented")
                             }
                             catch {
                                 self.handleError(error, cb)
@@ -556,6 +555,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                 }
             }
         }
+        fatalError("Not implemented")
     }
     
     public struct CreateAddressParams: Encodable {
@@ -666,6 +666,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         threshold: UInt32,
         from: [Address]? = nil,
         change: Address? = nil,
+        memo: Data = Data(),
         credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
     ) {
@@ -689,8 +690,93 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                     .mapError(AvalancheApiError.init)
                     .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
             }
-        case .account:
-            fatalError("Not implemented")
+        case .account(let account):
+            guard let keychain = keychain else {
+                handleError(.nilAddressManager, cb)
+                return
+            }
+            let fromAddresses: [Address]
+            do {
+                fromAddresses = try from ?? keychain.get(cached: account)
+            } catch {
+                handleError(error, cb)
+                return
+            }
+            let utxoIterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
+            UTXOHelper.getAll(iterator: utxoIterator) { res in
+                switch res {
+                case .success(let utxos):
+                    self.getStakingAssetID { res in
+                        switch res {
+                        case .success(let avaxAssetID):
+                            let changeAddress: Address
+                            do {
+                                changeAddress = try change ?? keychain.newChange(for: account)
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            let inputs: [TransferableInput]
+                            let outputs: [TransferableOutput]
+                            let fee = UInt64(self.info.creationTxFee)
+                            do {
+                                var aad = AssetAmountDestination(
+                                    senders: fromAddresses,
+                                    destinations: fromAddresses,
+                                    changeAddresses: [changeAddress]
+                                )
+                                aad.assetAmounts[avaxAssetID] = AssetAmount(
+                                    assetID: avaxAssetID,
+                                    amount: 0,
+                                    burn: fee
+                                )
+                                let spendable = try UTXOHelper.getMinimumSpendablePChain(aad: aad, utxos: utxos)
+                                inputs = spendable.inputs
+                                outputs = spendable.outputs + spendable.change
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            let transaction: UnsignedAvalancheTransaction
+                            do {
+                                transaction = try CreateSubnetTransaction(
+                                    networkID: self.networkID,
+                                    blockchainID: self.info.blockchainID,
+                                    outputs: outputs,
+                                    inputs: inputs,
+                                    memo: memo,
+                                    rewardsOwner: SECP256K1OutputOwners(
+                                        locktime: Date(timeIntervalSince1970: 0),
+                                        threshold: threshold,
+                                        addresses: fromAddresses
+                                    )
+                                )
+                            }
+                            catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            guard TransactionHelper.checkGooseEgg(
+                                avax: avaxAssetID,
+                                transaction: transaction,
+                                outputTotal: fee
+                            ) else {
+                                self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
+                                return
+                            }
+                            self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                                cb(res.map { transactionID in
+                                    (txID: transactionID, change: changeAddress)
+                                })
+                            }
+                        case .failure(let error):
+                            handleError(error, cb)
+                        }
+                    }
+                case .failure(let error):
+                    handleError(error, cb)
+                }
+            }
         }
     }
     
