@@ -141,7 +141,8 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         endTime: Date,
         stakeAmount: UInt64,
         reward: Address,
-        from: Array<Address>? = nil,
+        from: [Address]? = nil,
+        to: [Address]? = nil,
         change: Address? = nil,
         memo: Data = Data(),
         credentials: AvalancheVmApiCredentials,
@@ -196,7 +197,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                             do {
                                 var aad = AssetAmountDestination(
                                     senders: fromAddresses,
-                                    destinations: fromAddresses,
+                                    destinations: to ?? fromAddresses,
                                     changeAddresses: [changeAddress]
                                 )
                                 aad.assetAmounts[avaxAssetID] = AssetAmount(
@@ -287,6 +288,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         reward: Address,
         delegationFeeRate: Float,
         from: [Address]? = nil,
+        to: [Address]? = nil,
         change: Address? = nil,
         memo: Data = Data(),
         credentials: AvalancheVmApiCredentials,
@@ -348,7 +350,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                             do {
                                 var aad = AssetAmountDestination(
                                     senders: fromAddresses,
-                                    destinations: fromAddresses,
+                                    destinations: to ?? fromAddresses,
                                     changeAddresses: [changeAddress]
                                 )
                                 aad.assetAmounts[avaxAssetID] = AssetAmount(
