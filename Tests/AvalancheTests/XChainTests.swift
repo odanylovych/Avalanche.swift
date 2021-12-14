@@ -25,34 +25,7 @@ final class XChainTests: XCTestCase {
     override func setUp() {
         super.setUp()
         let avalanche = AvalancheCoreMock()
-        avalanche.getAPIMock = { apiType in
-            let networkID: NetworkID = .test
-            let networkInfo = AvalancheDefaultNetworkInfoProvider.default.info(for: networkID)!
-            if apiType == AvalancheXChainApi.self {
-                return AvalancheXChainApi(
-                    avalanche: avalanche,
-                    networkID: networkID,
-                    hrp: networkInfo.hrp,
-                    info: networkInfo.apiInfo.info(for: AvalancheXChainApi.self)!
-                )
-            } else if apiType == AvalanchePChainApi.self {
-                return AvalanchePChainApi(
-                    avalanche: avalanche,
-                    networkID: networkID,
-                    hrp: networkInfo.hrp,
-                    info: networkInfo.apiInfo.info(for: AvalanchePChainApi.self)!
-                )
-            } else if apiType == AvalancheCChainApi.self {
-                return AvalancheCChainApi(
-                    avalanche: avalanche,
-                    networkID: networkID,
-                    hrp: networkInfo.hrp,
-                    info: networkInfo.apiInfo.info(for: AvalancheCChainApi.self)!
-                )
-            } else {
-                throw ApiTestsError.error(from: "getAPIMock")
-            }
-        }
+        avalanche.getAPIMock = avalanche.defaultGetAPIMock(for: .test)
         avalanche.utxoProvider = utxoProvider
         avalanche.addressManager = addressManager
         avalanche.connectionProvider = connectionProvider

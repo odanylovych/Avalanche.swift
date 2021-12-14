@@ -64,6 +64,36 @@ class AvalancheCoreMock: AvalancheCore {
     func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A {
         createAPIMock!(networkID, hrp, info) as! A
     }
+    
+    func defaultGetAPIMock(for networkID: NetworkID) -> (Any.Type) throws -> Any {
+        { apiType in
+            let networkInfo = AvalancheDefaultNetworkInfoProvider.default.info(for: networkID)!
+            if apiType == AvalancheXChainApi.self {
+                return AvalancheXChainApi(
+                    avalanche: self,
+                    networkID: networkID,
+                    hrp: networkInfo.hrp,
+                    info: networkInfo.apiInfo.info(for: AvalancheXChainApi.self)!
+                )
+            } else if apiType == AvalanchePChainApi.self {
+                return AvalanchePChainApi(
+                    avalanche: self,
+                    networkID: networkID,
+                    hrp: networkInfo.hrp,
+                    info: networkInfo.apiInfo.info(for: AvalanchePChainApi.self)!
+                )
+            } else if apiType == AvalancheCChainApi.self {
+                return AvalancheCChainApi(
+                    avalanche: self,
+                    networkID: networkID,
+                    hrp: networkInfo.hrp,
+                    info: networkInfo.apiInfo.info(for: AvalancheCChainApi.self)!
+                )
+            } else {
+                throw ApiTestsError.error(from: "getAPIMock")
+            }
+        }
+    }
 }
 
 struct ConnectionProviderMock: AvalancheConnectionProvider {

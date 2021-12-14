@@ -42,7 +42,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     private let addressManager: AvalancheAddressManager?
     private let utxoProvider: AvalancheUtxoProvider
     private let signer: AvalancheSignatureProvider?
-    private let chainIDApiInfos: [String: AvalancheVMApiInfo]
+    private let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
@@ -71,10 +71,12 @@ public class AvalancheXChainApi: AvalancheVMApi {
         addressManager = avalanche.addressManager
         utxoProvider = avalanche.utxoProvider
         signer = avalanche.signatureProvider
-        chainIDApiInfos = [
-            avalanche.pChain.info.alias!: avalanche.pChain.info,
-            avalanche.cChain.info.alias!: avalanche.cChain.info
-        ]
+        chainIDApiInfos = {
+            [
+                avalanche.pChain.info.alias!: avalanche.pChain.info,
+                avalanche.cChain.info.alias!: avalanche.cChain.info
+            ][$0]!
+        }
         
         let settings = avalanche.settings
         queue = settings.queue
@@ -1046,7 +1048,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 self.handleError(error, cb)
                                 return
                             }
-                            let destinationChain = self.chainIDApiInfos[to.chainId]!.blockchainID
+                            let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
                             let transaction: UnsignedAvalancheTransaction
                             do {
                                 transaction = try ExportTransaction(

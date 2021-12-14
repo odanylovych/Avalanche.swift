@@ -21,7 +21,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     internal let queue: DispatchQueue
     private let signer: AvalancheSignatureProvider?
     private let utxoProvider: AvalancheUtxoProvider
-    private let chainIDApiInfos: [String: AvalancheVMApiInfo]
+    private let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     
     public let networkID: NetworkID
     public let hrp: String
@@ -54,10 +54,12 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         self.queue = settings.queue
         signer = avalanche.signatureProvider
         utxoProvider = avalanche.utxoProvider
-        chainIDApiInfos = [
-            avalanche.xChain.info.alias!: avalanche.xChain.info,
-            avalanche.cChain.info.alias!: avalanche.cChain.info
-        ]
+        chainIDApiInfos = {
+            [
+                avalanche.xChain.info.alias!: avalanche.xChain.info,
+                avalanche.cChain.info.alias!: avalanche.cChain.info
+            ][$0]!
+        }
         self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
     }
     
@@ -879,7 +881,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                                 self.handleError(error, cb)
                                 return
                             }
-                            let destinationChain = self.chainIDApiInfos[to.chainId]!.blockchainID
+                            let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
                             let transaction: UnsignedAvalancheTransaction
                             do {
                                 transaction = try ExportTransaction(
