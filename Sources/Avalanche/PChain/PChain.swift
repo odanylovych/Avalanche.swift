@@ -185,7 +185,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                         case .success(let avaxAssetID):
                             let changeAddress: Address
                             do {
-                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                                changeAddress = try change ?? keychain.newChange(for: account)
                             } catch {
                                 self.handleError(error, cb)
                                 return

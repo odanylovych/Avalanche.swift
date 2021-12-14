@@ -74,11 +74,11 @@ public protocol AvalancheApiUTXOAddressManager: AvalancheApiAddressManager {
 
 public extension AvalancheApiUTXOAddressManager {
     func newAddress(for account: Acct) throws -> Acct.Addr {
-        try new(for: account, change: false, count: 1)[0]
+        try new(for: account, change: false, count: 1).first!
     }
     
     func newChange(for account: Acct) throws -> Acct.Addr {
-        try new(for: account, change: true, count: 1)[0]
+        try new(for: account, change: true, count: 1).first!
     }
     
     func randomChange(for account: Acct) throws -> Acct.Addr {

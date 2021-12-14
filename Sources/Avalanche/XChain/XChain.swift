@@ -251,7 +251,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         case .success(let avaxAssetID):
                             let changeAddress: Address
                             do {
-                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                                changeAddress = try change ?? keychain.newChange(for: account)
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -416,7 +416,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             }
                             let changeAddress: Address
                             do {
-                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                                changeAddress = try change ?? keychain.newChange(for: account)
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -567,7 +567,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         case .success(let avaxAssetID):
                             let changeAddress: Address
                             do {
-                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                                changeAddress = try change ?? keychain.newChange(for: account)
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -714,7 +714,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         case .success(let avaxAssetID):
                             let changeAddress: Address
                             do {
-                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                                changeAddress = try change ?? keychain.newChange(for: account)
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -874,7 +874,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             }
                             let changeAddress: Address
                             do {
-                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                                changeAddress = try change ?? keychain.newChange(for: account)
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -1331,7 +1331,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         case .success(let avaxAssetID):
                             let changeAddress: Address
                             do {
-                                changeAddress = try keychain.new(for: account, change: true, count: 1).first!
+                                changeAddress = try keychain.newChange(for: account)
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -1666,7 +1666,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                         case .success(let avaxAssetID):
                             let changeAddress: Address
                             do {
-                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                                changeAddress = try change ?? keychain.newChange(for: account)
                             } catch {
                                 self.handleError(error, cb)
                                 return
@@ -1801,7 +1801,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                             let utxo = utxos.first { type(of: $0.output) == NFTTransferOutput.self }!
                             let changeAddress: Address
                             do {
-                                changeAddress = try change ?? keychain.new(for: account, change: true, count: 1).first!
+                                changeAddress = try change ?? keychain.newChange(for: account)
                             } catch {
                                 self.handleError(error, cb)
                                 return
