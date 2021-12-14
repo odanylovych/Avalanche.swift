@@ -21,6 +21,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     internal let queue: DispatchQueue
     private let signer: AvalancheSignatureProvider?
     private let utxoProvider: AvalancheUtxoProvider
+    private let chainIDApiInfos: [String: AvalancheVMApiInfo]
     
     public let networkID: NetworkID
     public let hrp: String
@@ -53,6 +54,10 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         self.queue = settings.queue
         signer = avalanche.signatureProvider
         utxoProvider = avalanche.utxoProvider
+        chainIDApiInfos = [
+            avalanche.xChain.info.alias!: avalanche.xChain.info,
+            avalanche.cChain.info.alias!: avalanche.cChain.info
+        ]
         self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
     }
     
@@ -801,6 +806,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         amount: UInt64,
         from: [Address]? = nil,
         change: Address? = nil,
+        memo: Data = Data(),
         credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
     ) {
@@ -824,8 +830,92 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                     .mapError(AvalancheApiError.init)
                     .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
             }
-        case .account:
-            fatalError("Not implemented")
+        case .account(let account):
+            guard let keychain = keychain else {
+                handleError(.nilAddressManager, cb)
+                return
+            }
+            let fromAddresses: [Address]
+            do {
+                fromAddresses = try from ?? keychain.get(cached: account)
+            } catch {
+                handleError(error, cb)
+                return
+            }
+            let utxoIterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
+            UTXOHelper.getAll(iterator: utxoIterator) { res in
+                switch res {
+                case .success(let utxos):
+                    self.getStakingAssetID { res in
+                        switch res {
+                        case .success(let avaxAssetID):
+                            let changeAddress: Address
+                            do {
+                                changeAddress = try change ?? keychain.newChange(for: account)
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            let inputs: [TransferableInput]
+                            let outputs: [TransferableOutput]
+                            let exportOutputs: [TransferableOutput]
+                            let fee = UInt64(self.info.txFee)
+                            do {
+                                var aad = AssetAmountDestination(
+                                    senders: fromAddresses,
+                                    destinations: [to],
+                                    changeAddresses: [changeAddress]
+                                )
+                                aad.assetAmounts[avaxAssetID] = AssetAmount(
+                                    assetID: avaxAssetID,
+                                    amount: amount,
+                                    burn: fee
+                                )
+                                let spendable = try UTXOHelper.getMinimumSpendablePChain(aad: aad, utxos: utxos)
+                                inputs = spendable.inputs
+                                outputs = spendable.change
+                                exportOutputs = spendable.outputs
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            let destinationChain = self.chainIDApiInfos[to.chainId]!.blockchainID
+                            let transaction: UnsignedAvalancheTransaction
+                            do {
+                                transaction = try ExportTransaction(
+                                    networkID: self.networkID,
+                                    blockchainID: self.info.blockchainID,
+                                    outputs: outputs,
+                                    inputs: inputs,
+                                    memo: memo,
+                                    destinationChain: destinationChain,
+                                    transferableOutputs: exportOutputs
+                                )
+                            }
+                            catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            guard TransactionHelper.checkGooseEgg(
+                                avax: avaxAssetID,
+                                transaction: transaction
+                            ) else {
+                                self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
+                                return
+                            }
+                            self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                                cb(res.map { transactionID in
+                                    (txID: transactionID, change: changeAddress)
+                                })
+                            }
+                        case .failure(let error):
+                            handleError(error, cb)
+                        }
+                    }
+                case .failure(let error):
+                    handleError(error, cb)
+                }
+            }
         }
     }
     
