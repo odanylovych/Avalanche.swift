@@ -192,6 +192,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                             }
                             let inputs: [TransferableInput]
                             let outputs: [TransferableOutput]
+                            let stakeOutputs: [TransferableOutput]
                             do {
                                 var aad = AssetAmountDestination(
                                     senders: fromAddresses,
@@ -203,27 +204,35 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                                     amount: stakeAmount,
                                     burn: 0
                                 )
-                                let spendable = try UTXOHelper.getMinimumSpendable(aad: aad, utxos: utxos)
+                                let spendable = try UTXOHelper.getMinimumSpendablePChain(aad: aad, stakeable: true, utxos: utxos)
                                 inputs = spendable.inputs
-                                outputs = spendable.change + spendable.outputs
+                                outputs = spendable.change
+                                stakeOutputs = spendable.outputs
                             } catch {
                                 self.handleError(error, cb)
                                 return
                             }
                             let transaction: UnsignedAvalancheTransaction
-                            // TODO
-                            fatalError("Not implemented")
                             do {
-//                                transaction = try AddDelegatorTransaction(
-//                                    networkID: self.networkID,
-//                                    blockchainID: self.info.blockchainID,
-//                                    outputs: outputs,
-//                                    inputs: inputs,
-//                                    memo: memo,
-//                                    validator: ,
-//                                    stake: ,
-//                                    rewardsOwner:
-//                                )
+                                transaction = try AddDelegatorTransaction(
+                                    networkID: self.networkID,
+                                    blockchainID: self.info.blockchainID,
+                                    outputs: outputs,
+                                    inputs: inputs,
+                                    memo: memo,
+                                    validator: Validator(
+                                        nodeID: nodeID,
+                                        startTime: startTime,
+                                        endTime: endTime,
+                                        weight: stakeAmount
+                                    ),
+                                    stake: Stake(lockedOutputs: stakeOutputs),
+                                    rewardsOwner: SECP256K1OutputOwners(
+                                        locktime: Date(timeIntervalSince1970: 0),
+                                        threshold: 1,
+                                        addresses: [reward]
+                                    )
+                                )
                             }
                             catch {
                                 self.handleError(error, cb)

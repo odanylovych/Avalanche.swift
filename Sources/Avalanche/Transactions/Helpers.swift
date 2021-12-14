@@ -28,9 +28,11 @@ public struct AssetAmountDestination {
 public struct AssetAmount {
     public let assetID: AssetID
     public let amount: UInt64
-    private let burn: UInt64
+    public let burn: UInt64
     public let change: UInt64
-    private let spent: UInt64
+    public let spent: UInt64
+    public let lockSpent: UInt64
+    public let lockChange: Bool
     public let finished: Bool
     
     public init(
@@ -39,6 +41,8 @@ public struct AssetAmount {
         burn: UInt64,
         change: UInt64 = 0,
         spent: UInt64 = 0,
+        lockSpent: UInt64 = 0,
+        lockChange: Bool = false,
         finished: Bool = false
     ) {
         self.assetID = assetID
@@ -46,16 +50,26 @@ public struct AssetAmount {
         self.burn = burn
         self.change = change
         self.spent = spent
+        self.lockSpent = lockSpent
+        self.lockChange = lockChange
         self.finished = finished
     }
     
-    public func spend(amount: UInt64) -> AssetAmount {
+    public func spend(amount: UInt64, locked: Bool = false) -> AssetAmount {
         let spent = spent + amount
+        var lockSpent = lockSpent
+        if locked {
+            lockSpent = lockSpent + amount
+        }
         let total = self.amount + burn
         var change = change
         var finished = finished
+        var lockChange = lockChange
         if spent >= total {
             change = spent - total
+            if locked {
+                lockChange = true
+            }
             finished = true
         }
         return AssetAmount(
@@ -64,6 +78,8 @@ public struct AssetAmount {
             burn: burn,
             change: change,
             spent: spent,
+            lockSpent: lockSpent,
+            lockChange: lockChange,
             finished: finished
         )
     }
@@ -116,6 +132,7 @@ public struct UTXOHelper {
         for utxo in utxos.filter({
             type(of: $0.output) == SECP256K1TransferOutput.self
             && aad.assetAmounts.keys.contains($0.assetID)
+            && $0.output.getAddressIndices(for: aad.senders).count == $0.output.threshold
         }) {
             let output = utxo.output as! SECP256K1TransferOutput
             let addressIndices = output.getAddressIndices(for: aad.senders)
@@ -188,25 +205,137 @@ public struct UTXOHelper {
             tempUTXOs.append(contentsOf: utxos.filter { type(of: $0.output) == SECP256K1TransferOutput.self })
             utxos = tempUTXOs
         }
-        let outputs = [AssetID: (lockedStakeable: [Output], unlocked: [Output])]()
-        let getSpenders = { (output: Output, addresses: [Address]) -> [Address] in
-            asOf > output.locktime ? Array(
-                output.addresses
-                    .filter { addresses.contains($0) }
-                    .prefix(Int(output.threshold))
-            ) : []
-        }
-        let meetsThreshold = { output, addresses in
-            getSpenders(output, addresses).count == output.threshold
-        }
+        var aad = aad
+        var inputs = [TransferableInput]()
+        var outputs = [TransferableOutput]()
+        var change = [TransferableOutput]()
+        var outputMap = [AssetID: (lockedStakeable: [StakeableLockedOutput], unlocked: [Output])]()
         for utxo in utxos.filter({
-            type(of: $0.output) == SECP256K1TransferOutput.self
+            (type(of: $0.output) == SECP256K1TransferOutput.self || type(of: $0.output) == StakeableLockedOutput.self)
             && aad.assetAmounts.keys.contains($0.assetID)
-            && meetsThreshold($0.output, aad.senders)
+            && $0.output.getAddressIndices(for: aad.senders).count == $0.output.threshold
         }) {
-            // TODO
+            let assetAmount = aad.assetAmounts[utxo.assetID]!
+            if assetAmount.finished {
+                continue
+            }
+            if !outputMap.keys.contains(utxo.assetID) {
+                outputMap[utxo.assetID] = (lockedStakeable: [], unlocked: [])
+            }
+            let getAmount = { output in
+                type(of: output) == SECP256K1TransferOutput.self
+                ? (output as! SECP256K1TransferOutput).amount
+                : ((output as! StakeableLockedOutput).transferableOutput.output as! SECP256K1TransferOutput).amount
+            }
+            let amount = getAmount(utxo.output)
+            var input: Input = try SECP256K1TransferInput(
+                amount: amount,
+                addressIndices: utxo.output.getAddressIndices(for: aad.senders)
+            )
+            var locked = false
+            if type(of: utxo.output) == StakeableLockedOutput.self {
+                let output = utxo.output as! StakeableLockedOutput
+                if output.locktime > asOf {
+                    input = StakeableLockedInput(
+                        locktime: output.locktime,
+                        transferableInput: TransferableInput(
+                            transactionID: utxo.transactionID,
+                            utxoIndex: utxo.utxoIndex,
+                            assetID: utxo.assetID,
+                            input: input
+                        )
+                    )
+                    locked = true
+                }
+            }
+            aad.assetAmounts[utxo.assetID] = assetAmount.spend(amount: amount, locked: locked)
+            if locked {
+                outputMap[utxo.assetID]!.lockedStakeable.append(utxo.output as! StakeableLockedOutput)
+            } else {
+                outputMap[utxo.assetID]!.unlocked.append(utxo.output)
+            }
+            inputs.append(TransferableInput(
+                transactionID: utxo.transactionID,
+                utxoIndex: utxo.utxoIndex,
+                assetID: utxo.assetID,
+                input: input
+            ))
+            if !aad.canComplete {
+                throw TransactionBuilderError.insufficientFunds
+            }
+            for assetAmount in aad.assetAmounts.values {
+                let lockedChange = assetAmount.lockChange ? assetAmount.change : 0
+                if let lockedOutputs = outputMap[assetAmount.assetID]?.lockedStakeable {
+                    for (index, lockedOutput) in lockedOutputs.enumerated() {
+                        let output = lockedOutput.transferableOutput.output
+                        var outputAmountRemaining = getAmount(output)
+                        if index == lockedOutputs.count - 1 && lockedChange > 0 {
+                            outputAmountRemaining = outputAmountRemaining - lockedChange
+                            change.append(TransferableOutput(
+                                assetID: assetAmount.assetID,
+                                output: try StakeableLockedOutput(
+                                    locktime: lockedOutput.locktime,
+                                    transferableOutput: TransferableOutput(
+                                        assetID: assetAmount.assetID,
+                                        output: type(of: output).init(
+                                            amount: lockedChange,
+                                            locktime: output.locktime,
+                                            threshold: output.threshold,
+                                            addresses: output.addresses
+                                        )
+                                    )
+                                )
+                            ))
+                        }
+                        outputs.append(TransferableOutput(
+                            assetID: assetAmount.assetID,
+                            output: try StakeableLockedOutput(
+                                locktime: lockedOutput.locktime,
+                                transferableOutput: TransferableOutput(
+                                    assetID: assetAmount.assetID,
+                                    output: type(of: output).init(
+                                        amount: outputAmountRemaining,
+                                        locktime: output.locktime,
+                                        threshold: output.threshold,
+                                        addresses: output.addresses
+                                    )
+                                )
+                            )
+                        ))
+                    }
+                }
+                let unlockedChange = assetAmount.lockChange ? 0 : assetAmount.change
+                if unlockedChange > 0 {
+                    change.append(TransferableOutput(
+                        assetID: assetAmount.assetID,
+                        output: try SECP256K1TransferOutput(
+                            amount: unlockedChange,
+                            locktime: Date(timeIntervalSince1970: 0),
+                            threshold: 1,
+                            addresses: aad.changeAddresses
+                        )
+                    ))
+                }
+                let totalAmountSpent = assetAmount.spent
+                let stakeableLockedAmount = assetAmount.lockSpent
+                let totalUnlockedSpent = totalAmountSpent - stakeableLockedAmount
+                let amountBurnt = assetAmount.burn
+                let totalUnlockedAvailable = totalUnlockedSpent - amountBurnt
+                let unlockedAmount = totalUnlockedAvailable - unlockedChange
+                if unlockedAmount > 0 {
+                    outputs.append(TransferableOutput(
+                        assetID: assetAmount.assetID,
+                        output: try SECP256K1TransferOutput(
+                            amount: unlockedAmount,
+                            locktime: locktime,
+                            threshold: threshold,
+                            addresses: aad.destinations
+                        )
+                    ))
+                }
+            }
         }
-        fatalError("Not implemented")
+        return (inputs, outputs, change)
     }
 }
 
