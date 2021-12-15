@@ -209,7 +209,6 @@ final class XChainTests: XCTestCase {
         ]
         let fromAddress = testFromAddress.address
         let fromAddressPath = testFromAddress.path
-        let testChangeAddress = newAddress().address
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
         let signatureProvider = SignatureProviderMock()
@@ -272,7 +271,7 @@ final class XChainTests: XCTestCase {
         ) { res in
             let (assetID, changeAddress) = try! res.get()
             XCTAssertEqual(assetID, testAssetID)
-            XCTAssertEqual(changeAddress, testChangeAddress)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -281,7 +280,6 @@ final class XChainTests: XCTestCase {
     func testMint() throws {
         let success = expectation(description: "success")
         let amount: UInt64 = 50_000_000
-        let testChangeAddress = newAddress().address
         let toAddress = newAddress().address
         let memo = "memo".data(using: .utf8)!
         let fromAddress = testFromAddress.address
@@ -350,7 +348,7 @@ final class XChainTests: XCTestCase {
         ) { res in
             let (transactionID, changeAddress) = try! res.get()
             XCTAssertEqual(transactionID, self.testTransactionID)
-            XCTAssertEqual(changeAddress, testChangeAddress)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -366,7 +364,6 @@ final class XChainTests: XCTestCase {
         ]
         let fromAddress = testFromAddress.address
         let fromAddressPath = testFromAddress.path
-        let testChangeAddress = newAddress().address
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
         let signatureProvider = SignatureProviderMock()
@@ -422,7 +419,7 @@ final class XChainTests: XCTestCase {
         ) { res in
             let (assetID, changeAddress) = try! res.get()
             XCTAssertEqual(assetID, testAssetID)
-            XCTAssertEqual(changeAddress, testChangeAddress)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -437,7 +434,6 @@ final class XChainTests: XCTestCase {
         ]
         let fromAddress = testFromAddress.address
         let fromAddressPath = testFromAddress.path
-        let testChangeAddress = newAddress().address
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
         let signatureProvider = SignatureProviderMock()
@@ -493,7 +489,7 @@ final class XChainTests: XCTestCase {
         ) { res in
             let (assetID, changeAddress) = try! res.get()
             XCTAssertEqual(assetID, testAssetID)
-            XCTAssertEqual(changeAddress, testChangeAddress)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -502,7 +498,6 @@ final class XChainTests: XCTestCase {
     func testMintNFT() throws {
         let success = expectation(description: "success")
         let payload = "0x010203"
-        let testChangeAddress = newAddress().address
         let toAddress = newAddress().address
         let memo = "memo".data(using: .utf8)!
         let fromAddress = testFromAddress.address
@@ -571,7 +566,7 @@ final class XChainTests: XCTestCase {
         ) { res in
             let (transactionID, changeAddress) = try! res.get()
             XCTAssertEqual(transactionID, self.testTransactionID)
-            XCTAssertEqual(changeAddress, testChangeAddress)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -580,7 +575,6 @@ final class XChainTests: XCTestCase {
     func testExport() throws {
         let success = expectation(description: "success")
         let amount: UInt64 = 50_000_000
-        let testChangeAddress = newAddress().address
         let toChain = avalanche.pChain
         let toAddress = newAddress(api: toChain).address
         let memo = "memo".data(using: .utf8)!
@@ -677,7 +671,7 @@ final class XChainTests: XCTestCase {
         ) { res in
             let (transactionID, changeAddress) = try! res.get()
             XCTAssertEqual(transactionID, self.testTransactionID)
-            XCTAssertEqual(changeAddress, testChangeAddress)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -766,7 +760,6 @@ final class XChainTests: XCTestCase {
     func testSend() throws {
         let success = expectation(description: "success")
         let amount: UInt64 = 50_000_000
-        let testChangeAddress = newAddress().address
         let toAddress = newAddress().address
         let memo = "memo"
         let fromAddress = testFromAddress.address
@@ -856,7 +849,7 @@ final class XChainTests: XCTestCase {
         ) { res in
             let (transactionID, changeAddress) = try! res.get()
             XCTAssertEqual(transactionID, self.testTransactionID)
-            XCTAssertEqual(changeAddress, testChangeAddress)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -866,7 +859,6 @@ final class XChainTests: XCTestCase {
         let success = expectation(description: "success")
         let amount1: UInt64 = 50_000_000
         let amount2: UInt64 = 30_000_000
-        let testChangeAddress = newAddress().address
         let toAddress1 = newAddress().address
         let toAddress2 = newAddress().address
         let memo = "memo"
@@ -906,7 +898,7 @@ final class XChainTests: XCTestCase {
         ) -> ([TransferableInput], [TransferableOutput]) in
             var (inputs, outputs) = try self.inputsOutputs(
                 fromAddresses: [fromAddress],
-                changeAddresses: [testChangeAddress],
+                changeAddresses: [self.testChangeAddress],
                 fee: fee
             )
             inputs.append(TransferableInput(
@@ -925,7 +917,7 @@ final class XChainTests: XCTestCase {
                         amount: (utxo.output as! SECP256K1TransferOutput).amount - amount,
                         locktime: Date(timeIntervalSince1970: 0),
                         threshold: 1,
-                        addresses: [testChangeAddress]
+                        addresses: [self.testChangeAddress]
                     )
                 ), TransferableOutput(
                     assetID: utxo.assetID,
@@ -980,7 +972,7 @@ final class XChainTests: XCTestCase {
         ) { res in
             let (transactionID, changeAddress) = try! res.get()
             XCTAssertEqual(transactionID, self.testTransactionID)
-            XCTAssertEqual(changeAddress, testChangeAddress)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
             success.fulfill()
         }
         wait(for: [success], timeout: 10)
@@ -989,7 +981,6 @@ final class XChainTests: XCTestCase {
     func testSendNFT() throws {
         let success = expectation(description: "success")
         let groupID: UInt32 = 123
-        let testChangeAddress = newAddress().address
         let toAddress = newAddress().address
         let memo = "memo".data(using: .utf8)!
         let fromAddress = testFromAddress.address
