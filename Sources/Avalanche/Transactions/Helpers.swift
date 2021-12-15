@@ -210,6 +210,11 @@ public struct UTXOHelper {
         var outputs = [TransferableOutput]()
         var change = [TransferableOutput]()
         var outputMap = [AssetID: (lockedStakeable: [StakeableLockedOutput], unlocked: [Output])]()
+        let getAmount = { output in
+            type(of: output) == SECP256K1TransferOutput.self
+            ? (output as! SECP256K1TransferOutput).amount
+            : ((output as! StakeableLockedOutput).transferableOutput.output as! SECP256K1TransferOutput).amount
+        }
         for utxo in utxos.filter({
             (type(of: $0.output) == SECP256K1TransferOutput.self || type(of: $0.output) == StakeableLockedOutput.self)
             && aad.assetAmounts.keys.contains($0.assetID)
@@ -221,11 +226,6 @@ public struct UTXOHelper {
             }
             if !outputMap.keys.contains(utxo.assetID) {
                 outputMap[utxo.assetID] = (lockedStakeable: [], unlocked: [])
-            }
-            let getAmount = { output in
-                type(of: output) == SECP256K1TransferOutput.self
-                ? (output as! SECP256K1TransferOutput).amount
-                : ((output as! StakeableLockedOutput).transferableOutput.output as! SECP256K1TransferOutput).amount
             }
             let amount = getAmount(utxo.output)
             var input: Input = try SECP256K1TransferInput(
@@ -260,41 +260,26 @@ public struct UTXOHelper {
                 assetID: utxo.assetID,
                 input: input
             ))
-            if !aad.canComplete {
-                throw TransactionBuilderError.insufficientFunds
-            }
-            for assetAmount in aad.assetAmounts.values {
-                let lockedChange = assetAmount.lockChange ? assetAmount.change : 0
-                if let lockedOutputs = outputMap[assetAmount.assetID]?.lockedStakeable {
-                    for (index, lockedOutput) in lockedOutputs.enumerated() {
-                        let output = lockedOutput.transferableOutput.output
-                        var outputAmountRemaining = getAmount(output)
-                        if index == lockedOutputs.count - 1 && lockedChange > 0 {
-                            outputAmountRemaining = outputAmountRemaining - lockedChange
-                            change.append(TransferableOutput(
-                                assetID: assetAmount.assetID,
-                                output: try StakeableLockedOutput(
-                                    locktime: lockedOutput.locktime,
-                                    transferableOutput: TransferableOutput(
-                                        assetID: assetAmount.assetID,
-                                        output: type(of: output).init(
-                                            amount: lockedChange,
-                                            locktime: output.locktime,
-                                            threshold: output.threshold,
-                                            addresses: output.addresses
-                                        )
-                                    )
-                                )
-                            ))
-                        }
-                        outputs.append(TransferableOutput(
+        }
+        if !aad.canComplete {
+            throw TransactionBuilderError.insufficientFunds
+        }
+        for assetAmount in aad.assetAmounts.values {
+            let lockedChange = assetAmount.lockChange ? assetAmount.change : 0
+            if let lockedOutputs = outputMap[assetAmount.assetID]?.lockedStakeable {
+                for (index, lockedOutput) in lockedOutputs.enumerated() {
+                    let output = lockedOutput.transferableOutput.output
+                    var outputAmountRemaining = getAmount(output)
+                    if index == lockedOutputs.count - 1 && lockedChange > 0 {
+                        outputAmountRemaining = outputAmountRemaining - lockedChange
+                        change.append(TransferableOutput(
                             assetID: assetAmount.assetID,
                             output: try StakeableLockedOutput(
                                 locktime: lockedOutput.locktime,
                                 transferableOutput: TransferableOutput(
                                     assetID: assetAmount.assetID,
                                     output: type(of: output).init(
-                                        amount: outputAmountRemaining,
+                                        amount: lockedChange,
                                         locktime: output.locktime,
                                         threshold: output.threshold,
                                         addresses: output.addresses
@@ -303,36 +288,51 @@ public struct UTXOHelper {
                             )
                         ))
                     }
-                }
-                let unlockedChange = assetAmount.lockChange ? 0 : assetAmount.change
-                if unlockedChange > 0 {
-                    change.append(TransferableOutput(
-                        assetID: assetAmount.assetID,
-                        output: try SECP256K1TransferOutput(
-                            amount: unlockedChange,
-                            locktime: Date(timeIntervalSince1970: 0),
-                            threshold: 1,
-                            addresses: aad.changeAddresses
-                        )
-                    ))
-                }
-                let totalAmountSpent = assetAmount.spent
-                let stakeableLockedAmount = assetAmount.lockSpent
-                let totalUnlockedSpent = totalAmountSpent - stakeableLockedAmount
-                let amountBurnt = assetAmount.burn
-                let totalUnlockedAvailable = totalUnlockedSpent - amountBurnt
-                let unlockedAmount = totalUnlockedAvailable - unlockedChange
-                if unlockedAmount > 0 {
                     outputs.append(TransferableOutput(
                         assetID: assetAmount.assetID,
-                        output: try SECP256K1TransferOutput(
-                            amount: unlockedAmount,
-                            locktime: locktime,
-                            threshold: threshold,
-                            addresses: aad.destinations
+                        output: try StakeableLockedOutput(
+                            locktime: lockedOutput.locktime,
+                            transferableOutput: TransferableOutput(
+                                assetID: assetAmount.assetID,
+                                output: type(of: output).init(
+                                    amount: outputAmountRemaining,
+                                    locktime: output.locktime,
+                                    threshold: output.threshold,
+                                    addresses: output.addresses
+                                )
+                            )
                         )
                     ))
                 }
+            }
+            let unlockedChange = assetAmount.lockChange ? 0 : assetAmount.change
+            if unlockedChange > 0 {
+                change.append(TransferableOutput(
+                    assetID: assetAmount.assetID,
+                    output: try SECP256K1TransferOutput(
+                        amount: unlockedChange,
+                        locktime: Date(timeIntervalSince1970: 0),
+                        threshold: 1,
+                        addresses: aad.changeAddresses
+                    )
+                ))
+            }
+            let totalAmountSpent = assetAmount.spent
+            let stakeableLockedAmount = assetAmount.lockSpent
+            let totalUnlockedSpent = totalAmountSpent - stakeableLockedAmount
+            let amountBurnt = assetAmount.burn
+            let totalUnlockedAvailable = totalUnlockedSpent - amountBurnt
+            let unlockedAmount = totalUnlockedAvailable - unlockedChange
+            if unlockedAmount > 0 {
+                outputs.append(TransferableOutput(
+                    assetID: assetAmount.assetID,
+                    output: try SECP256K1TransferOutput(
+                        amount: unlockedAmount,
+                        locktime: locktime,
+                        threshold: threshold,
+                        addresses: aad.destinations
+                    )
+                ))
             }
         }
         return (inputs, outputs, change)
