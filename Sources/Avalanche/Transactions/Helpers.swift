@@ -317,11 +317,8 @@ public struct UTXOHelper {
                     )
                 ))
             }
-            let totalAmountSpent = assetAmount.spent
-            let stakeableLockedAmount = assetAmount.lockSpent
-            let totalUnlockedSpent = totalAmountSpent - stakeableLockedAmount
-            let amountBurnt = assetAmount.burn
-            let totalUnlockedAvailable = totalUnlockedSpent - amountBurnt
+            let totalUnlockedSpent = assetAmount.spent - assetAmount.lockSpent
+            let totalUnlockedAvailable = totalUnlockedSpent - assetAmount.burn
             let unlockedAmount = totalUnlockedAvailable - unlockedChange
             if unlockedAmount > 0 {
                 outputs.append(TransferableOutput(
