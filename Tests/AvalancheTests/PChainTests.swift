@@ -698,4 +698,85 @@ final class PChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
+    
+    func testImportAVAX() throws {
+        let success = expectation(description: "success")
+        let fromAddress = testFromAddress.address
+        let fromAddressPath = testFromAddress.path
+        let toAddress = newAddress().address
+        let memo = "memo".data(using: .utf8)!
+        let testSourceChain = newID(type: BlockchainID.self)
+        let output = utxoForInput.output as! SECP256K1TransferOutput
+        let inputs = [TransferableInput]()
+        let fee = UInt64(api.info.txFee)
+        let outputs = [
+            TransferableOutput(
+                assetID: avaxAssetID,
+                output: try type(of: output).init(
+                    amount: output.amount - fee,
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: 1,
+                    addresses: [toAddress]
+                )
+            )
+        ]
+        let importInputs = [
+            TransferableInput(
+                transactionID: utxoForInput.transactionID,
+                utxoIndex: utxoForInput.utxoIndex,
+                assetID: utxoForInput.assetID,
+                input: try SECP256K1TransferInput(
+                    amount: output.amount,
+                    addressIndices: output.getAddressIndices(for: output.addresses)
+                )
+            )
+        ]
+        let utxoProvider = UtxoProviderMock()
+        utxoProvider.utxosAddressesMock = { api, addresses in
+            precondition(addresses == [self.testFromAddress.address])
+            return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
+                precondition(sourceChain == testSourceChain)
+                result(.success((self.testUtxos, nil)))
+            })
+        }
+        avalanche.utxoProvider = utxoProvider
+        let signatureProvider = SignatureProviderMock()
+        signatureProvider.signTransactionMock = { transaction, cb in
+            let extended = transaction as! ExtendedAvalancheTransaction
+            XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            let transaction = extended.transaction as! ImportTransaction
+            let testTransaction = try! ImportTransaction(
+                networkID: self.api.networkID,
+                blockchainID: self.api.info.blockchainID,
+                outputs: outputs,
+                inputs: inputs,
+                memo: memo,
+                sourceChain: testSourceChain,
+                transferableInputs: importInputs
+            )
+            XCTAssertEqual(transaction, testTransaction)
+            cb(.success(SignedAvalancheTransaction(
+                unsignedTransaction: transaction,
+                credentials: []
+            )))
+        }
+        avalanche.signatureProvider = signatureProvider
+        api.importAVAX(
+            from: [fromAddress],
+            to: toAddress,
+            change: testChangeAddress,
+            source: testSourceChain,
+            memo: memo,
+            credentials: .account(testAccount)
+        ) { res in
+            let (transactionID, changeAddress) = try! res.get()
+            XCTAssertEqual(transactionID, self.testTransactionID)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
+            success.fulfill()
+        }
+        wait(for: [success], timeout: 10)
+    }
+    
 }
