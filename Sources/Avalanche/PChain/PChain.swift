@@ -625,34 +625,30 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         encoding: AvalancheEncoding? = nil,
         from: [Address]? = nil,
         change: Address? = nil,
-        credentials: AvalancheVmApiCredentials,
+        username: String,
+        password: String,
         _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
     ) {
-        switch credentials {
-        case .password(let username, let password):
-            let params = CreateBlockchainParams(
-                subnetID: subnetID.cb58(),
-                vmID: vmID,
-                name: name,
-                genesisData: genesisData,
-                encoding: encoding,
-                from: from?.map { $0.bech },
-                changeAddr: change?.bech,
-                username: username,
-                password: password
-            )
-            service.call(
-                method: "platform.createBlockchain",
-                params: params,
-                CreateBlockchainResponse.self,
-                SerializableValue.self
-            ) { res in
-                cb(res
-                    .mapError(AvalancheApiError.init)
-                    .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
-            }
-        case .account:
-            fatalError("Not implemented")
+        let params = CreateBlockchainParams(
+            subnetID: subnetID.cb58(),
+            vmID: vmID,
+            name: name,
+            genesisData: genesisData,
+            encoding: encoding,
+            from: from?.map { $0.bech },
+            changeAddr: change?.bech,
+            username: username,
+            password: password
+        )
+        service.call(
+            method: "platform.createBlockchain",
+            params: params,
+            CreateBlockchainResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res
+                .mapError(AvalancheApiError.init)
+                .map { (TransactionID(cb58: $0.txID)!, try! Address(bech: $0.changeAddr)) })
         }
     }
     
