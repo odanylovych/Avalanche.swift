@@ -563,8 +563,8 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                     handleError(error, cb)
                 }
             }
+            fatalError("Not implemented")
         }
-        fatalError("Not implemented")
     }
     
     public struct CreateAddressParams: Encodable {

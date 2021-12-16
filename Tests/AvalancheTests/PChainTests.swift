@@ -412,4 +412,77 @@ final class PChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
+    
+    func testCreateSubnet() throws {
+        let success = expectation(description: "success")
+        let fromAddress = testFromAddress.address
+        let fromAddressPath = testFromAddress.path
+        let memo = "memo".data(using: .utf8)!
+        let controlKeys = [newAddress().address]
+        let threshold: UInt32 = 1
+        let output = utxoForInput.output as! SECP256K1TransferOutput
+        let inputs = [
+            TransferableInput(
+                transactionID: utxoForInput.transactionID,
+                utxoIndex: utxoForInput.utxoIndex,
+                assetID: utxoForInput.assetID,
+                input: try SECP256K1TransferInput(
+                    amount: output.amount,
+                    addressIndices: output.getAddressIndices(for: [fromAddress])
+                )
+            )
+        ]
+        let fee = UInt64(api.info.creationTxFee)
+        let outputs = [
+            TransferableOutput(
+                assetID: avaxAssetID,
+                output: try SECP256K1TransferOutput(
+                    amount: output.amount - fee,
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: 1,
+                    addresses: [testChangeAddress]
+                )
+            )
+        ]
+        let signatureProvider = SignatureProviderMock()
+        signatureProvider.signTransactionMock = { transaction, cb in
+            let extended = transaction as! ExtendedAvalancheTransaction
+            XCTAssertEqual(extended.pathes, [fromAddress: fromAddressPath])
+            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            let transaction = extended.transaction as! CreateSubnetTransaction
+            let testTransaction = try! CreateSubnetTransaction(
+                networkID: self.api.networkID,
+                blockchainID: self.api.info.blockchainID,
+                outputs: outputs,
+                inputs: inputs,
+                memo: memo,
+                rewardsOwner: SECP256K1OutputOwners(
+                    locktime: Date(timeIntervalSince1970: 0),
+                    threshold: threshold,
+                    addresses: [fromAddress]
+                )
+            )
+            XCTAssertEqual(transaction, testTransaction)
+            cb(.success(SignedAvalancheTransaction(
+                unsignedTransaction: transaction,
+                credentials: []
+            )))
+        }
+        avalanche.signatureProvider = signatureProvider
+        api.createSubnet(
+            controlKeys: controlKeys,
+            threshold: threshold,
+            from: [fromAddress],
+            change: testChangeAddress,
+            memo: memo,
+            credentials: .account(testAccount)
+        ) { res in
+            let (transactionID, changeAddress) = try! res.get()
+            XCTAssertEqual(transactionID, self.testTransactionID)
+            XCTAssertEqual(changeAddress, self.testChangeAddress)
+            success.fulfill()
+        }
+        wait(for: [success], timeout: 10)
+    }
 }
