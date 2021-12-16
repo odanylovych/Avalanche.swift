@@ -38,9 +38,26 @@ public class StakeableLockedOutput: Output, AvalancheDecodable {
         )
     }
     
+    override public func getAddressIndices(for addresses: [Address]) -> [UInt32] {
+        Date() > transferableOutput.output.locktime ? Array(
+            self.addresses.enumerated()
+                .filter { addresses.contains($0.element) }
+                .map { UInt32($0.offset) }
+                .prefix(Int(threshold))
+        ) : []
+    }
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(locktime, name: "locktime")
             .encode(transferableOutput, name: "transferableOutput")
+    }
+    
+    override public func equalTo(rhs: Output) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return transferableOutput == rhs.transferableOutput
+            && locktime == rhs.locktime
+            && threshold == rhs.threshold
+            && addresses == rhs.addresses
     }
 }

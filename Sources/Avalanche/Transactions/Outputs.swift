@@ -41,6 +41,15 @@ public class Output: AvalancheEncodable, AvalancheDynamicDecodableTypeID, Equata
         fatalError("Not supported")
     }
     
+    public func getAddressIndices(for addresses: [Address]) -> [UInt32] {
+        Date() > locktime ? Array(
+            self.addresses.enumerated()
+                .filter { addresses.contains($0.element) }
+                .map { UInt32($0.offset) }
+                .prefix(Int(threshold))
+        ) : []
+    }
+    
     public static func from(decoder: AvalancheDecoder) throws -> Self {
         return try decoder.context.dynamicParser.decode(output: decoder) as! Self
     }
@@ -55,17 +64,6 @@ public class Output: AvalancheEncodable, AvalancheDynamicDecodableTypeID, Equata
     
     public static func == (lhs: Output, rhs: Output) -> Bool {
         lhs.equalTo(rhs: rhs)
-    }
-}
-
-extension Output {
-    public func getAddressIndices(for addresses: [Address]) -> [UInt32] {
-        Date() > locktime ? Array(
-            self.addresses.enumerated()
-                .filter { addresses.contains($0.element) }
-                .map { UInt32($0.offset) }
-                .prefix(Int(threshold))
-        ) : []
     }
 }
 

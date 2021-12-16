@@ -32,9 +32,20 @@ public class StakeableLockedInput: Input, AvalancheDecodable {
         )
     }
     
+    override public func credentialType() -> Credential.Type {
+        SECP256K1Credential.self
+    }
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
         try encoder.encode(Self.typeID, name: "typeID")
             .encode(locktime, name: "locktime")
             .encode(transferableInput, name: "transferableInput")
+    }
+    
+    override public func equalTo(rhs: Input) -> Bool {
+        guard let rhs = rhs as? Self else { return false }
+        return locktime == rhs.locktime
+        && transferableInput == rhs.transferableInput
+        && addressIndices == rhs.addressIndices
     }
 }
