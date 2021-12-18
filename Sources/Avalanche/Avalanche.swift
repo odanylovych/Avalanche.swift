@@ -18,6 +18,7 @@ public class Avalanche: AvalancheCore {
     private var _utxoProvider: AvalancheUtxoProvider
     private var _signatureProvider: AvalancheSignatureProvider?
     private var _connectionProvider: AvalancheConnectionProvider
+    private var _encoderDecoderProvider: AvalancheEncoderDecoderProvider
     
     public var networkID: NetworkID {
         get { _networkID }
@@ -90,13 +91,24 @@ public class Avalanche: AvalancheCore {
         }
     }
     
+    public var encoderDecoderProvider: AvalancheEncoderDecoderProvider {
+        get { _encoderDecoderProvider }
+        set {
+            _lock.lock()
+            _encoderDecoderProvider = newValue
+            _apis = [:]
+            _lock.unlock()
+        }
+    }
+    
     public init(networkID: NetworkID,
                 networkInfo: AvalancheNetworkInfoProvider = AvalancheDefaultNetworkInfoProvider.default,
                 settings: AvalancheSettings = .default,
                 utxoProvider: AvalancheUtxoProvider = AvalancheDefaultUtxoProvider(),
                 addressManager: AvalancheAddressManager? = nil,
                 signatureProvider: AvalancheSignatureProvider? = nil,
-                connectionProvider: AvalancheConnectionProvider) {
+                connectionProvider: AvalancheConnectionProvider,
+                encoderDecoderProvider: AvalancheEncoderDecoderProvider = DefaultAvalancheEncoderDecoderProvider()) {
         self._apis = [:]
         self._lock = NSRecursiveLock()
         self._networkID = networkID
@@ -106,6 +118,7 @@ public class Avalanche: AvalancheCore {
         self._utxoProvider = utxoProvider
         self._signatureProvider = signatureProvider
         self._connectionProvider = connectionProvider
+        self._encoderDecoderProvider = encoderDecoderProvider
         addressManager?.start(avalanche: self)
     }
     
@@ -173,5 +186,12 @@ extension Avalanche {
         let netInfo = AvalancheDefaultNetworkInfo(hrp: hrp, apiInfo: apiInfo)
         provider.setInfo(info: netInfo, for: networkID)
         self.init(networkID: networkID, networkInfo: provider, settings: settings, addressManager: addressManager, signatureProvider: signer, connectionProvider: connectionProvider)
+    }
+    
+    public convenience init(url: URL, network: NetworkID) {
+        self.init(
+            networkID: network,
+            connectionProvider: WebRPCAvalancheConnectionProvider(url: url, settings: .default)
+        )
     }
 }

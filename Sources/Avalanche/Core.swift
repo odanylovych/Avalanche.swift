@@ -23,6 +23,7 @@ public protocol AvalancheCore: AnyObject {
     var utxoProvider: AvalancheUtxoProvider { get set }
     var signatureProvider: AvalancheSignatureProvider? { get set }
     var connectionProvider: AvalancheConnectionProvider { get set }
+    var encoderDecoderProvider: AvalancheEncoderDecoderProvider { get set }
     
     func getAPI<A: AvalancheApi>() throws -> A
     func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A

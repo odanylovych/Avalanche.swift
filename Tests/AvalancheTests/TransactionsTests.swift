@@ -219,9 +219,9 @@ final class TransactionsTests: AvalancheTestCase {
         bytes: [UInt8],
         context: AvalancheDecoderContext = xChainDecoderContext
     ) throws {
-        let encoded = Array(try AEncoder().encode(value).output)
+        let encoded = Array(try DefaultAvalancheEncoder().encode(value).output)
         XCTAssertEqual(encoded, bytes)
-        let decoded = try ADecoder(context: context, data: Data(bytes)).decode(T.self)
+        let decoded = try DefaultAvalancheDecoder(context: context, data: Data(bytes)).decode(T.self)
         XCTAssertEqual(decoded, value)
     }
     
@@ -231,9 +231,9 @@ final class TransactionsTests: AvalancheTestCase {
         size: Int,
         context: AvalancheDecoderContext = xChainDecoderContext
     ) throws {
-        let encoded = Array(try AEncoder().encode(value, size: size).output)
+        let encoded = Array(try DefaultAvalancheEncoder().encode(value, size: size).output)
         XCTAssertEqual(encoded, bytes)
-        let decoded = try ADecoder(context: context, data: Data(bytes)).decode(T.self, size: size)
+        let decoded = try DefaultAvalancheDecoder(context: context, data: Data(bytes)).decode(T.self, size: size)
         XCTAssertEqual(decoded, value)
     }
     

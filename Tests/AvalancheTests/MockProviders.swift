@@ -38,6 +38,7 @@ class AvalancheCoreMock: AvalancheCore {
     var utxoProvider: AvalancheUtxoProvider
     var signatureProvider: AvalancheSignatureProvider?
     var connectionProvider: AvalancheConnectionProvider
+    var encoderDecoderProvider: AvalancheEncoderDecoderProvider
     
     init(
         networkID: NetworkID = NetworkID.local,
@@ -46,7 +47,8 @@ class AvalancheCoreMock: AvalancheCore {
         addressManager: AvalancheAddressManager? = AddressManagerMock(),
         utxoProvider: AvalancheUtxoProvider = UtxoProviderMock(),
         signatureProvider: AvalancheSignatureProvider = SignatureProviderMock(),
-        connectionProvider: AvalancheConnectionProvider = ConnectionProviderMock()
+        connectionProvider: AvalancheConnectionProvider = ConnectionProviderMock(),
+        encoderDecoderProvider: AvalancheEncoderDecoderProvider = DefaultAvalancheEncoderDecoderProvider()
     ) {
         self.networkID = networkID
         self.networkInfoProvider = networkInfoProvider
@@ -55,6 +57,7 @@ class AvalancheCoreMock: AvalancheCore {
         self.utxoProvider = utxoProvider
         self.signatureProvider = signatureProvider
         self.connectionProvider = connectionProvider
+        self.encoderDecoderProvider = encoderDecoderProvider
     }
     
     func getAPI<A: AvalancheApi>() throws -> A {

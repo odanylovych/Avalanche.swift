@@ -58,7 +58,7 @@ public struct SignedAvalancheTransaction: Equatable {
 
 extension SignedAvalancheTransaction: SignedTransaction {
     public func serialized() throws -> Data {
-        try AEncoder().encode(self).output
+        try DefaultAvalancheEncoder().encode(self).output
     }
 }
 
@@ -118,7 +118,7 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     }
     
     public func serialized() throws -> Data {
-        try AEncoder().encode(transaction).output
+        try DefaultAvalancheEncoder().encode(transaction).output
     }
     
     public func signingAddresses() throws -> [Addr.Extended] {

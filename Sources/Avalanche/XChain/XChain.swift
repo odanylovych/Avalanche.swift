@@ -42,6 +42,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     private let addressManager: AvalancheAddressManager?
     private let utxoProvider: AvalancheUtxoProvider
     private let signer: AvalancheSignatureProvider?
+    private let encoderDecoderProvider: AvalancheEncoderDecoderProvider
     private let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     public let networkID: NetworkID
     public let hrp: String
@@ -71,6 +72,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
         addressManager = avalanche.addressManager
         utxoProvider = avalanche.utxoProvider
         signer = avalanche.signatureProvider
+        encoderDecoderProvider = avalanche.encoderDecoderProvider
         chainIDApiInfos = {
             [
                 avalanche.pChain.info.alias!: avalanche.pChain.info,
@@ -162,7 +164,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
             case .success(let signed):
                 let tx: String
                 do {
-                    tx = try AEncoder().encode(signed).output.cb58()
+                    tx = try self.encoderDecoderProvider.encoder().encode(signed).output.cb58()
                 } catch {
                     self.handleError(error, cb)
                     return
@@ -1199,7 +1201,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     // TODO: handle error
                     fatalError("Not implemented")
                 }
-                let decoder = ADecoder(
+                let decoder = self.encoderDecoderProvider.decoder(
                     context: self.context,
                     data: transactionData
                 )
@@ -1263,7 +1265,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     return (
                         fetched: $0.numFetched,
                         utxos: $0.utxos.map {
-                            let decoder = ADecoder(
+                            let decoder = self.encoderDecoderProvider.decoder(
                                 context: self.context,
                                 data: Algos.Base58.from(cb58: $0)!
                             )

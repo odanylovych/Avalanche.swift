@@ -67,7 +67,7 @@ extension AvalancheDecoder {
     }
 }
 
-class ADecoder: AvalancheDecoder {
+class DefaultAvalancheDecoder: AvalancheDecoder {
     var context: AvalancheDecoderContext
     private let data: Data
     private var position: Int
