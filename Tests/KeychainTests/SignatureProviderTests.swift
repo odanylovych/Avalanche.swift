@@ -9,7 +9,6 @@ import Foundation
 import XCTest
 import Avalanche
 import AvalancheKeychain
-import AvalancheTests
 
 final class SignatureProviderTests: XCTestCase {
     private var signer: AvalancheBip44Keychain!
