@@ -1192,21 +1192,29 @@ public class AvalancheXChainApi: AvalancheVMApi {
             GetTxResponse.self,
             SerializableValue.self
         ) { res in
-            cb(res.mapError(AvalancheApiError.init).map { response in
-                let transactionData: Data
+            switch res {
+            case .success(let response):
                 switch response.encoding {
-                case .cb58: transactionData = Algos.Base58.from(cb58: response.tx)!
-                case .hex: transactionData = Data(hex: response.tx)!
+                case .cb58:
+                    let transactionData = Algos.Base58.from(cb58: response.tx)!
+                    let decoder = self.encoderDecoderProvider.decoder(
+                        context: self.context,
+                        data: transactionData
+                    )
+                    cb(.success(try! decoder.decode()))
+                case .hex:
+                    let transactionData = Data(hex: response.tx)!
+                    let decoder = self.encoderDecoderProvider.decoder(
+                        context: self.context,
+                        data: transactionData
+                    )
+                    cb(.success(try! decoder.decode()))
                 case .json:
-                    // TODO: handle error
-                    fatalError("Not implemented")
+                    self.handleError(.unsupportedEncoding(encoding: "json"), cb)
                 }
-                let decoder = self.encoderDecoderProvider.decoder(
-                    context: self.context,
-                    data: transactionData
-                )
-                return try! decoder.decode()
-            })
+            case .failure(let error):
+                self.handleError(.init(request: error), cb)
+            }
         }
     }
     

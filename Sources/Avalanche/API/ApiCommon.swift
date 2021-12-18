@@ -19,6 +19,7 @@ public enum AvalancheApiError: Error {
     case custom(description: String? = nil, cause: Error?)
     case malformed(field: String, description: String)
     case cb58DecodingFailed(field: String)
+    case unsupportedEncoding(encoding: String)
     case addressNotFound(address: String)
     case methodIsNotSupported(method: String)
     case nilAddressManager
