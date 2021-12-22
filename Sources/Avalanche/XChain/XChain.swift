@@ -100,7 +100,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
         }
     }
     
-    private func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>) {
+    public func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>) {
         getAssetDescription(assetID: AvalancheConstants.avaxAssetAlias) { res in
             cb(res.map { avaxAssetID, _, _, _ in
                 avaxAssetID

@@ -25,6 +25,12 @@ public struct SignedEthereumTransaction: SignedTransaction {
     }
 }
 
+extension SignedEthereumTransaction: AvalancheEncodable {
+    public func encode(in encoder: AvalancheEncoder) throws {
+        fatalError("Not implemented")
+    }
+}
+
 public struct EthereumTransactionExt: ExtendedUnsignedTransaction {
     public typealias Addr = EthAddress
     public typealias Signed = SignedEthereumTransaction
