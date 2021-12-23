@@ -18,13 +18,15 @@ public enum CChainCredentials {
 }
 
 public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
+    public let txFee: BigUInt
     public let gasPrice: BigUInt
     public let chainId: UInt32
     
     public init(
-        gasPrice: BigUInt, chainId: UInt32, blockchainID: BlockchainID,
+        txFee: BigUInt, gasPrice: BigUInt, chainId: UInt32, blockchainID: BlockchainID,
         alias: String? = nil, vm: String = "evm"
     ) {
+        self.txFee = txFee
         self.gasPrice = gasPrice
         self.chainId = chainId
         super.init(blockchainID: blockchainID, alias: alias, vm: vm)
@@ -186,6 +188,10 @@ public class AvalancheCChainApi: AvalancheApi {
         //FIX: network.call(method: "eth_unsubscribe", params: subcription.id, Bool.self, response: result)
     }*/
     
+    public func getChainID(_ cb: @escaping ApiCallback<UInt64>) {
+        fatalError("Not implemented")
+    }
+    
     public func getTransactionCount(
         for address: EthAddress,
         _ cb: @escaping ApiCallback<UInt64>
@@ -239,9 +245,7 @@ public class AvalancheCChainApi: AvalancheApi {
                 switch res {
                 case .success(let avaxAssetID):
                     let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
-                    // TODO: txFee
-//                    let fee = UInt64(self.info.txFee)
-                    let fee: UInt64 = 0
+                    let fee = UInt64(self.info.txFee)
                     let address = account.address
                     self.getTransactionCount(for: address) { res in
                         switch res {
@@ -303,10 +307,15 @@ public class AvalancheCChainApi: AvalancheApi {
                                 self.handleError(error, cb)
                                 return
                             }
-                            // TODO: chainId
-                            let chainId: UInt64 = 0
-                            self.signAndSend(transaction, with: [address], chainId: chainId) { res in
-                                cb(res)
+                            self.getChainID { res in
+                                switch res {
+                                case .success(let chainId):
+                                    self.signAndSend(transaction, with: [address], chainId: chainId) { res in
+                                        cb(res)
+                                    }
+                                case .failure(let error):
+                                    self.handleError(error, cb)
+                                }
                             }
                         case .failure(let error):
                             self.handleError(error, cb)

@@ -104,6 +104,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         netApis.setInfo(
             info: AvalancheCChainApi.Info(
+                txFee: .milliAVAX,
                 gasPrice: 470.gwei,
                 chainId: 43111,
                 blockchainID: BlockchainID(cb58: "2fFZQibQXcd6LTE4rpBPBAkLVXFE91Kit8pgxaBG1mRnh5xqbb")!,
@@ -147,6 +148,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         netApis.setInfo(
             info: AvalancheCChainApi.Info(
+                txFee: .milliAVAX,
                 gasPrice: 470.gwei,
                 chainId: 43114,
                 blockchainID: BlockchainID(cb58: "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5")!,
@@ -190,6 +192,7 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         netApis.setInfo(
             info: AvalancheCChainApi.Info(
+                txFee: .milliAVAX,
                 gasPrice: 470.gwei,
                 chainId: 43113,
                 blockchainID: BlockchainID(cb58: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")!,
