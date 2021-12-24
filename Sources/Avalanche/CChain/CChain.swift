@@ -12,9 +12,14 @@ import RPC
 import Serializable
 #endif
 
+public enum CChainApiError: Error {
+    case unsupportedAccountType
+}
+
 public enum CChainCredentials {
     case password(username: String, password: String)
-    case account(EthAccount)
+    case account(Account)
+    case ethAccount(EthAccount)
 }
 
 public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
@@ -43,7 +48,7 @@ public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
 
 public class AvalancheCChainApi: AvalancheVMApi {
     public typealias Info = AvalancheCChainApiInfo
-    public typealias Keychain = AvalancheCChainApiAddressManager
+    public typealias Keychain = AvalancheCChainApiUTXOAddressManager
     
     private struct SubscriptionId: Decodable {
         let subscription: String
@@ -65,7 +70,13 @@ public class AvalancheCChainApi: AvalancheVMApi {
     private let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     private let service: Client
     
-    public var keychain: AvalancheCChainApiAddressManager? {
+    public var keychain: AvalancheCChainApiUTXOAddressManager? {
+        addressManager.map {
+            AvalancheCChainApiUTXOAddressManager(manager: $0, api: self)
+        }
+    }
+    
+    public var ethKeychain: AvalancheCChainApiAddressManager? {
         addressManager.map {
             AvalancheCChainApiAddressManager(manager: $0, api: self)
         }
@@ -110,7 +121,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
                              with addresses: [EthAddress],
                              chainId: UInt64,
                              _ cb: @escaping ApiCallback<TransactionID>) {
-        guard let keychain = keychain else {
+        guard let keychain = ethKeychain else {
             handleError(.nilAddressManager, cb)
             return
         }
@@ -131,6 +142,56 @@ public class AvalancheCChainApi: AvalancheVMApi {
             chainId: chainId,
             pathes: pathes
         )
+        signer.sign(transaction: extendedTransaction) { res in
+            switch res {
+            case .success(let signed):
+                let tx: String
+                do {
+                    tx = try self.encoderDecoderProvider.encoder().encode(signed).output.cb58()
+                } catch {
+                    self.handleError(error, cb)
+                    return
+                }
+                self.issueTx(tx: tx, encoding: AvalancheEncoding.cb58) { res in
+                    cb(res)
+                }
+            case .failure(let error):
+                self.handleError(error, cb)
+            }
+        }
+    }
+    
+    private func signAndSend(_ transaction: UnsignedAvalancheTransaction,
+                             with addresses: [Address],
+                             using utxos: [UTXO],
+                             _ cb: @escaping ApiCallback<TransactionID>) {
+        guard let keychain = keychain else {
+            handleError(.nilAddressManager, cb)
+            return
+        }
+        guard let signer = signer else {
+            handleError(.nilSignatureProvider, cb)
+            return
+        }
+        let pathes: [Address: Bip32Path]
+        do {
+            let extended = try keychain.extended(for: addresses)
+            pathes = Dictionary(uniqueKeysWithValues: extended.map { ($0.address, $0.path) })
+        } catch {
+            handleError(error, cb)
+            return
+        }
+        let extendedTransaction: ExtendedAvalancheTransaction
+        do {
+            extendedTransaction = try ExtendedAvalancheTransaction(
+                transaction: transaction,
+                utxos: utxos,
+                pathes: pathes
+            )
+        } catch {
+            handleError(error, cb)
+            return
+        }
         signer.sign(transaction: extendedTransaction) { res in
             switch res {
             case .success(let signed):
@@ -270,7 +331,9 @@ public class AvalancheCChainApi: AvalancheVMApi {
                     .mapError(AvalancheApiError.init)
                     .map { TransactionID(cb58: $0.txID)! })
             }
-        case .account(let account):
+        case .account:
+            self.handleError(CChainApiError.unsupportedAccountType, cb)
+        case .ethAccount(let account):
             xchain.getAvaxAssetID { res in
                 switch res {
                 case .success(let avaxAssetID):
@@ -401,9 +464,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
             }
             let fromAddresses: [Address]
             do {
-                // TODO: address manager
-//                fromAddresses = try keychain.get(cached: account)
-                fromAddresses = []
+                fromAddresses = try keychain.get(cached: account)
             } catch {
                 handleError(error, cb)
                 return
@@ -416,7 +477,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
                         switch res {
                         case .success(let avaxAssetID):
                             let feeAssetID = avaxAssetID
-                            var fee = baseFee ?? UInt64(self.info.txFee)
+                            let fee = baseFee ?? UInt64(self.info.txFee)
                             var feePaid: UInt64 = 0
                             var importInputs = [TransferableInput]()
                             var assetIDAmount = [AssetID: UInt64]()
@@ -456,40 +517,20 @@ public class AvalancheCChainApi: AvalancheVMApi {
                             }
                             var outputs = [EVMOutput]()
                             for (assetID, amount) in assetIDAmount {
-                                do {
-                                    outputs.append(EVMOutput(
-                                        address: to,
-                                        amount: amount,
-                                        assetID: assetID
-                                    ))
-                                } catch {
-                                    self.handleError(error, cb)
-                                    return
-                                }
+                                outputs.append(EVMOutput(
+                                    address: to,
+                                    amount: amount,
+                                    assetID: assetID
+                                ))
                             }
-                            let transaction: UnsignedEthereumTransaction
-                            do {
-                                transaction = UnsignedEthereumTransaction()
-                                // TODO: CChainImportTransaction
-//                                transaction = try CChainImportTransaction(
-//                                    networkID: self.networkID,
-//                                    blockchainID: self.info.blockchainID,
-//                                    sourceChain: sourceChain,
-//                                    importedInputs: importInputs,
-//                                    outputs: outputs
-//                                )
-                            } catch {
-                                self.handleError(error, cb)
-                                return
-                            }
-                            self.getChainID { res in
-                                switch res {
-                                case .success(let chainId):
-                                    self.signAndSend(transaction, with: [account.address], chainId: chainId, cb)
-                                case .failure(let error):
-                                    self.handleError(error, cb)
-                                }
-                            }
+                            let transaction = CChainImportTransaction(
+                                networkID: self.networkID,
+                                blockchainID: self.info.blockchainID,
+                                sourceChain: sourceChain,
+                                importedInputs: importInputs,
+                                outputs: outputs
+                            )
+                            self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
                         case .failure(let error):
                             self.handleError(error, cb)
                         }
@@ -498,6 +539,8 @@ public class AvalancheCChainApi: AvalancheVMApi {
                     self.handleError(error, cb)
                 }
             }
+        case .ethAccount:
+            self.handleError(CChainApiError.unsupportedAccountType, cb)
         }
     }
     
