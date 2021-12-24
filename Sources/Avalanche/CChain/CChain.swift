@@ -41,8 +41,9 @@ public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
     }
 }
 
-public class AvalancheCChainApi: AvalancheApi {
+public class AvalancheCChainApi: AvalancheVMApi {
     public typealias Info = AvalancheCChainApiInfo
+    public typealias Keychain = AvalancheCChainApiAddressManager
     
     private struct SubscriptionId: Decodable {
         let subscription: String
@@ -57,11 +58,18 @@ public class AvalancheCChainApi: AvalancheApi {
     private var subscriptionId: UInt?
     //FIX: public let network: AvalancheSubscribableRpcConnection
     public let xchain: AvalancheXChainApi
-    public let keychain: AvalancheAddressManager?
+    private let addressManager: AvalancheAddressManager?
     private let signer: AvalancheSignatureProvider?
     private let encoderDecoderProvider: AvalancheEncoderDecoderProvider
+    private let utxoProvider: AvalancheUtxoProvider
     private let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     private let service: Client
+    
+    public var keychain: AvalancheCChainApiAddressManager? {
+        addressManager.map {
+            AvalancheCChainApiAddressManager(manager: $0, api: self)
+        }
+    }
     
     public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         //FIX: self.network = avalanche.connections.wsRpcConnection(for: info.wsApiPath)
@@ -77,9 +85,10 @@ public class AvalancheCChainApi: AvalancheApi {
                 avalanche.pChain.info.alias!: avalanche.pChain.info
             ][$0]!
         }
-        keychain = avalanche.addressManager
+        addressManager = avalanche.addressManager
         signer = avalanche.signatureProvider
         encoderDecoderProvider = avalanche.encoderDecoderProvider
+        utxoProvider = avalanche.utxoProvider
         service = avalanche.connectionProvider.rpc(api: info.connectionType)
         self.subscriptions = [:]
         self.subscriptionId = nil
@@ -111,7 +120,7 @@ public class AvalancheCChainApi: AvalancheApi {
         }
         let pathes: [EthAddress: Bip32Path]
         do {
-            let extended = try keychain.extended(eth: addresses)
+            let extended = try keychain.extended(for: addresses)
             pathes = Dictionary(uniqueKeysWithValues: extended.map { ($0.address, $0.path) })
         } catch {
             handleError(error, cb)
@@ -188,6 +197,27 @@ public class AvalancheCChainApi: AvalancheApi {
         //FIX: network.call(method: "eth_unsubscribe", params: subcription.id, Bool.self, response: result)
     }*/
     
+    public func getTransaction(id: TransactionID,
+                        result: @escaping ApiCallback<SignedAvalancheTransaction>) {
+        fatalError("Not implemented")
+    }
+    
+    public func getUTXOs(
+        addresses: [Address],
+        limit: UInt32?,
+        startIndex: UTXOIndex?,
+        sourceChain: BlockchainID?,
+        encoding: AvalancheEncoding?,
+        _ cb: @escaping ApiCallback<(
+            fetched: UInt32,
+            utxos: [UTXO],
+            endIndex: UTXOIndex,
+            encoding: AvalancheEncoding
+        )>
+    ) {
+        fatalError("Not implemented")
+    }
+    
     public func getChainID(_ cb: @escaping ApiCallback<UInt64>) {
         fatalError("Not implemented")
     }
@@ -203,7 +233,7 @@ public class AvalancheCChainApi: AvalancheApi {
         public let to: String
         public let amount: UInt64
         public let assetID: String
-        public let baseFee: UInt64
+        public let baseFee: UInt64?
         public let username: String
         public let password: String
     }
@@ -216,7 +246,7 @@ public class AvalancheCChainApi: AvalancheApi {
         to: Address,
         amount: UInt64,
         assetID: AssetID,
-        baseFee: UInt64,
+        baseFee: UInt64? = nil,
         credentials: CChainCredentials,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
@@ -245,7 +275,7 @@ public class AvalancheCChainApi: AvalancheApi {
                 switch res {
                 case .success(let avaxAssetID):
                     let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
-                    let fee = UInt64(self.info.txFee)
+                    let fee = baseFee ?? UInt64(self.info.txFee)
                     let address = account.address
                     self.getTransactionCount(for: address) { res in
                         switch res {
@@ -310,9 +340,152 @@ public class AvalancheCChainApi: AvalancheApi {
                             self.getChainID { res in
                                 switch res {
                                 case .success(let chainId):
-                                    self.signAndSend(transaction, with: [address], chainId: chainId) { res in
-                                        cb(res)
+                                    self.signAndSend(transaction, with: [address], chainId: chainId, cb)
+                                case .failure(let error):
+                                    self.handleError(error, cb)
+                                }
+                            }
+                        case .failure(let error):
+                            self.handleError(error, cb)
+                        }
+                    }
+                case .failure(let error):
+                    self.handleError(error, cb)
+                }
+            }
+        }
+    }
+    
+    public struct ImportParams: Encodable {
+        public let to: String
+        public let sourceChain: String
+        public let baseFee: UInt64?
+        public let username: String
+        public let password: String
+    }
+    
+    public struct ImportResponse: Decodable {
+        public let txID: String
+    }
+    
+    public func `import`(
+        to: EthAddress,
+        sourceChain: BlockchainID,
+        baseFee: UInt64? = nil,
+        credentials: CChainCredentials,
+        _ cb: @escaping ApiCallback<TransactionID>
+    ) {
+        switch credentials {
+        case .password(let username, let password):
+            let params = ImportParams(
+                to: to.hex(),
+                sourceChain: sourceChain.cb58(),
+                baseFee: baseFee,
+                username: username,
+                password: password
+            )
+            service.call(
+                method: "avax.import",
+                params: params,
+                ImportResponse.self,
+                SerializableValue.self
+            ) { res in
+                cb(res
+                    .mapError(AvalancheApiError.init)
+                    .map { TransactionID(cb58: $0.txID)! })
+            }
+        case .account(let account):
+            guard let keychain = keychain else {
+                handleError(.nilAddressManager, cb)
+                return
+            }
+            let fromAddresses: [Address]
+            do {
+                // TODO: address manager
+//                fromAddresses = try keychain.get(cached: account)
+                fromAddresses = []
+            } catch {
+                handleError(error, cb)
+                return
+            }
+            let iterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
+            UTXOHelper.getAll(iterator: iterator, sourceChain: sourceChain) { res in
+                switch res {
+                case .success(let utxos):
+                    self.xchain.getAvaxAssetID { res in
+                        switch res {
+                        case .success(let avaxAssetID):
+                            let feeAssetID = avaxAssetID
+                            var fee = baseFee ?? UInt64(self.info.txFee)
+                            var feePaid: UInt64 = 0
+                            var importInputs = [TransferableInput]()
+                            var assetIDAmount = [AssetID: UInt64]()
+                            for utxo in utxos.filter({ type(of: $0.output) == SECP256K1TransferOutput.self }) {
+                                let output = utxo.output as! SECP256K1TransferOutput
+                                var inFeeAmount = output.amount
+                                if fee > 0 && feePaid < fee && utxo.assetID == feeAssetID {
+                                    feePaid += inFeeAmount
+                                    if feePaid > fee {
+                                        inFeeAmount = feePaid - fee
+                                        feePaid = fee
+                                    } else {
+                                        inFeeAmount = 0
                                     }
+                                }
+                                let input: TransferableInput
+                                do {
+                                    input = TransferableInput(
+                                        transactionID: utxo.transactionID,
+                                        utxoIndex: utxo.utxoIndex,
+                                        assetID: utxo.assetID,
+                                        input: try SECP256K1TransferInput(
+                                            amount: output.amount,
+                                            addressIndices: output.getAddressIndices(for: output.addresses)
+                                        )
+                                    )
+                                } catch {
+                                    self.handleError(error, cb)
+                                    return
+                                }
+                                // TODO: sort importInputs
+                                importInputs.append(input)
+                                if let amount = assetIDAmount[utxo.assetID] {
+                                    inFeeAmount += amount
+                                }
+                                assetIDAmount[utxo.assetID] = inFeeAmount
+                            }
+                            var outputs = [EVMOutput]()
+                            for (assetID, amount) in assetIDAmount {
+                                do {
+                                    outputs.append(EVMOutput(
+                                        address: to,
+                                        amount: amount,
+                                        assetID: assetID
+                                    ))
+                                } catch {
+                                    self.handleError(error, cb)
+                                    return
+                                }
+                            }
+                            let transaction: UnsignedEthereumTransaction
+                            do {
+                                transaction = UnsignedEthereumTransaction()
+                                // TODO: CChainImportTransaction
+//                                transaction = try CChainImportTransaction(
+//                                    networkID: self.networkID,
+//                                    blockchainID: self.info.blockchainID,
+//                                    sourceChain: sourceChain,
+//                                    importedInputs: importInputs,
+//                                    outputs: outputs
+//                                )
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
+                            self.getChainID { res in
+                                switch res {
+                                case .success(let chainId):
+                                    self.signAndSend(transaction, with: [account.address], chainId: chainId, cb)
                                 case .failure(let error):
                                     self.handleError(error, cb)
                                 }
