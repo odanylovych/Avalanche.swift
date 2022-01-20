@@ -13,59 +13,6 @@ import RPC
 import Serializable
 #endif
 
-public struct JSONRPCResponseResult: Decodable {
-    public let result: Any?
-
-    public init(from decoder: Decoder) throws {
-        var container = try decoder.unkeyedContainer()
-        var result: Any? = nil
-        if let rawValue = try container.decodeIfPresent(String.self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent(Int.self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent(Bool.self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent(EventLog.self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent(Block.self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent(TransactionReceipt.self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent(TransactionDetails.self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([EventLog].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([Block].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([TransactionReceipt].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([TransactionDetails].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent(TxPoolStatus.self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent(TxPoolContent.self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([Bool].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([Int].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([String].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([String: String].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([String: Int].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([String:[String:[String:String]]].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent([String:[String:[String:[String:String?]]]].self) {
-            result = rawValue
-        } else if let rawValue = try container.decodeIfPresent(FilterChanges.self) {
-            result = rawValue
-        }
-        self.result = result
-    }
-}
-
 public struct Web3NetworkProvider: Web3Provider {
     public var network: Networks?
     public var url: URL
@@ -88,16 +35,16 @@ public struct Web3NetworkProvider: Web3Provider {
             service.call(
                 method: method.rawValue,
                 params: params,
-                JSONRPCResponseResult.self,
+                JSONRPCresponse.Result.self,
                 SerializableValue.self
             ) { res in
                 switch res {
-                case .success(let response):
+                case .success(let result):
                     queue.async {
                         resolver.fulfill(JSONRPCresponse(
                             id: Int(request.id),
                             jsonrpc: request.jsonrpc,
-                            result: response.result,
+                            result: result,
                             error: nil
                         ))
                     }
@@ -110,14 +57,14 @@ public struct Web3NetworkProvider: Web3Provider {
                             resolver.fulfill(JSONRPCresponse(
                                 id: Int(request.id),
                                 jsonrpc: request.jsonrpc,
-                                result: nil,
+                                result: JSONRPCresponse.Result(value: nil),
                                 error: nil
                             ))
                         case .reply(method: _, params: _, error: let error):
                             resolver.fulfill(JSONRPCresponse(
                                 id: Int(request.id),
                                 jsonrpc: request.jsonrpc,
-                                result: nil,
+                                result: JSONRPCresponse.Result(value: nil),
                                 error: JSONRPCresponse.ErrorMessage(code: error.code, message: error.message)
                             ))
                         case .custom(description: let description, cause: let cause):
