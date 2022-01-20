@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "Avalanche",
+    platforms: [.macOS(.v10_12), .iOS(.v11)],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
@@ -27,7 +28,7 @@ let package = Package(
         .package(url: "https://github.com/tesseract-one/UncommonCrypto.swift.git", from: "0.1.0"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.0"),
         .package(url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0"),
-        .package(url: "https://github.com/tesseract-one/CSecp256k1.swift.git", from: "0.1.0")
+        .package(url: "https://github.com/odanylovych/web3swift.git", .branch("signature-provider"))
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
@@ -35,7 +36,7 @@ let package = Package(
         .target(
             name: "Avalanche",
             dependencies: [
-                "RPC", "Serializable", "BigInt", "CSecp256k1",
+                "RPC", "Serializable", "BigInt", "web3swift",
                 "UncommonCrypto", "Bech32"]),
         .target(
             name: "AvalancheKeychain",
