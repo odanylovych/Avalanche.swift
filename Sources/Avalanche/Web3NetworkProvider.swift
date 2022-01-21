@@ -13,7 +13,7 @@ import RPC
 import Serializable
 #endif
 
-public struct Web3NetworkProvider: Web3Provider {
+public class Web3NetworkProvider: Web3Provider {
     public var network: Networks?
     public var url: URL
     private let service: Client
