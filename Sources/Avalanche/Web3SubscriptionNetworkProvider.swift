@@ -26,7 +26,7 @@ public class Web3Subscription: Subscription {
 }
 
 public enum Web3SubscriptionError: Error {
-    case eventParseError(Error)
+    case parseEventError(CodecError)
 }
 
 public class Web3SubscriptionNetworkProvider: Web3NetworkProvider, Web3SubscriptionProvider, ServerDelegate {
@@ -101,7 +101,7 @@ public class Web3SubscriptionNetworkProvider: Web3NetworkProvider, Web3Subscript
                     self.subscriptions[subscriptionID] = { event in
                         listener(event.parse(to: SubscriptionEvent<R>.self)
                                     .map { $0!.result }
-                                    .mapError { Web3SubscriptionError.eventParseError($0) })
+                                    .mapError(Web3SubscriptionError.parseEventError))
                     }
                 }
             }
