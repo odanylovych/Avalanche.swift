@@ -31,10 +31,10 @@ public enum Web3SubscriptionError: Error {
 
 public class Web3SubscriptionNetworkProvider: Web3NetworkProvider, Web3SubscriptionProvider, ServerDelegate {
     private let internalQueue: DispatchQueue
-    private var service: Client & Delegator
+    private var service: Subscribable
     private var subscriptions = [String: (Parsable) -> Void]()
     
-    public init(network: Networks?, url: URL, service: Client & Delegator) {
+    public init(network: Networks?, url: URL, service: Subscribable) {
         internalQueue = DispatchQueue(
             label: "subscription.network.provider.sync.queue",
             target: .global()

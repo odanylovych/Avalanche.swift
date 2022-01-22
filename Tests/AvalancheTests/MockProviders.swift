@@ -6,8 +6,11 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import Avalanche
 import RPC
+import web3swift
+#endif
 
 enum ApiTestsError: Error {
     case error(from: String)
@@ -32,11 +35,13 @@ class AvalancheCoreMock: AvalancheCore {
     var createAPIMock: ((NetworkID, String, Any) -> Any)?
     
     var networkID: NetworkID
+    var web3Network: Networks?
     var networkInfoProvider: AvalancheNetworkInfoProvider
     var settings: AvalancheSettings
     var addressManager: AvalancheAddressManager?
     var utxoProvider: AvalancheUtxoProvider
     var signatureProvider: AvalancheSignatureProvider?
+    var ethereumSignatureProvider: SignatureProvider?
     var connectionProvider: AvalancheConnectionProvider
     var encoderDecoderProvider: AvalancheEncoderDecoderProvider
     
@@ -47,6 +52,7 @@ class AvalancheCoreMock: AvalancheCore {
         addressManager: AvalancheAddressManager? = AddressManagerMock(),
         utxoProvider: AvalancheUtxoProvider = UtxoProviderMock(),
         signatureProvider: AvalancheSignatureProvider = SignatureProviderMock(),
+        ethereumSignatureProvider: SignatureProvider? = nil,
         connectionProvider: AvalancheConnectionProvider = ConnectionProviderMock(),
         encoderDecoderProvider: AvalancheEncoderDecoderProvider = DefaultAvalancheEncoderDecoderProvider()
     ) {
@@ -102,7 +108,8 @@ class AvalancheCoreMock: AvalancheCore {
 struct ConnectionProviderMock: AvalancheConnectionProvider {
     var singleShotMock: ((ApiConnectionType) -> SingleShotConnection)?
     var rpcMock: ((ApiConnectionType) -> Client)?
-    var subscribableRPCMock: ((ApiConnectionType) -> PersistentConnection?)?
+    var subscribableRPCMock: ((ApiConnectionType) -> Subscribable?)?
+    var web3ProviderMock: ((Networks?, ApiConnectionType) -> Web3Provider)?
     
     func singleShot(api: ApiConnectionType) -> SingleShotConnection {
         singleShotMock!(api)
@@ -112,8 +119,12 @@ struct ConnectionProviderMock: AvalancheConnectionProvider {
         rpcMock!(api)
     }
     
-    func subscribableRPC(api: ApiConnectionType) -> PersistentConnection? {
+    func subscribableRPC(api: ApiConnectionType) -> Subscribable? {
         subscribableRPCMock!(api)
+    }
+    
+    func web3Provider(network: Networks?, api: ApiConnectionType) -> Web3Provider {
+        web3ProviderMock!(network, api)
     }
 }
 

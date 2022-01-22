@@ -8,6 +8,7 @@
 import Foundation
 import BigInt
 #if !COCOAPODS
+import web3swift
 import RPC
 import Serializable
 #endif
@@ -66,6 +67,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
     private let utxoProvider: AvalancheUtxoProvider
     private let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     private let service: Client
+    private let web3: web3
     
     public var keychain: AvalancheCChainApiUTXOAddressManager? {
         addressManager.map {
@@ -78,6 +80,13 @@ public class AvalancheCChainApi: AvalancheVMApi {
             AvalancheCChainApiAddressManager(manager: $0, api: self)
         }
     }
+    
+    public var eth: web3.Eth { web3.eth }
+    public var personal: web3.Personal { web3.personal }
+    public var txPool: web3.TxPool { web3.txPool }
+    public var wallet: web3.Web3Wallet { web3.wallet }
+    public var browserFunctions: web3.BrowserFunctions { web3.browserFunctions }
+    public var eventLoop: web3.Eventloop { web3.eventLoop }
     
     public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         self.hrp = hrp
@@ -96,7 +105,10 @@ public class AvalancheCChainApi: AvalancheVMApi {
         signer = avalanche.signatureProvider
         encoderDecoderProvider = avalanche.encoderDecoderProvider
         utxoProvider = avalanche.utxoProvider
-        service = avalanche.connectionProvider.rpc(api: info.connectionType)
+        let connectionProvider = avalanche.connectionProvider
+        service = connectionProvider.rpc(api: info.connectionType)
+        let web3Provider = connectionProvider.web3Provider(network: avalanche.web3Network, api: info.connectionType)
+        web3 = web3swift.web3(provider: web3Provider, signer: avalanche.ethereumSignatureProvider)
     }
     
     private func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {

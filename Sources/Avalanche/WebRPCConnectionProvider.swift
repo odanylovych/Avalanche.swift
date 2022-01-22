@@ -6,7 +6,10 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import RPC
+import web3swift
+#endif
 
 extension ApiConnectionType {
     public var path: String {
@@ -68,27 +71,41 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
         )
     }
     
+    private func getUrl(for api: ApiConnectionType) -> URL {
+        URL(string: api.path, relativeTo: url)!
+    }
+    
+    private func getUrl(subscribable api: ApiConnectionType) -> URL? {
+        switch api {
+        case .cChainVM(let alias, let blockchainID):
+            let path = "/ext/bc/\(alias ?? blockchainID.cb58())/ws"
+            return URL(string: path, relativeTo: url)!
+        default: return nil
+        }
+    }
+    
     public func singleShot(api: ApiConnectionType) -> SingleShotConnection {
-        let url = URL(string: api.path, relativeTo: url)!
-        return HttpConnection(url: url, queue: queue, headers: [:], session: session)
+        HttpConnection(url: getUrl(for: api), queue: queue, headers: [:], session: session)
     }
     
     public func rpc(api: ApiConnectionType) -> Client {
-        let url = URL(string: api.path, relativeTo: url)!
-        return JsonRpc(
-            .http(url: url, session: session, headers: headers),
-            queue: queue,
-            encoder: encoder,
-            decoder: decoder
-        )
+        JsonRpc(.http(url: getUrl(for: api), session: session, headers: headers),
+                queue: queue,
+                encoder: encoder,
+                decoder: decoder)
     }
     
-    public func subscribableRPC(api: ApiConnectionType) -> PersistentConnection? {
-        switch api {
-        case .cChainVM(let alias, let blockchainID):
-            let _ = "/ext/bc/\(alias ?? blockchainID.cb58())/ws"
-            fatalError("Not implemented")
-        default: return nil
+    public func subscribableRPC(api: ApiConnectionType) -> Subscribable? {
+        guard let url = getUrl(subscribable: api) else {
+            return nil
         }
+        return JsonRpc(.ws(url: url), queue: queue, encoder: encoder, decoder: decoder)
+    }
+    
+    public func web3Provider(network: Networks?, api: ApiConnectionType) -> Web3Provider {
+        if let subscribable = subscribableRPC(api: api) {
+            return Web3SubscriptionNetworkProvider(network: network, url: getUrl(subscribable: api)!, service: subscribable)
+        }
+        return Web3NetworkProvider(network: network, url: getUrl(for: api), service: rpc(api: api))
     }
 }

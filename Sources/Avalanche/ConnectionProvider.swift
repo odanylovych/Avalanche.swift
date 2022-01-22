@@ -6,12 +6,21 @@
 //
 
 import Foundation
+#if !COCOAPODS
 import RPC
+import web3swift
+#endif
 
-public protocol AvalancheConnectionProvider {
+public typealias Subscribable = Client & Delegator
+
+public protocol Web3NetworkProviderFactory {
+    func web3Provider(network: Networks?, api: ApiConnectionType) -> Web3Provider
+}
+
+public protocol AvalancheConnectionProvider: Web3NetworkProviderFactory {
     func singleShot(api: ApiConnectionType) -> SingleShotConnection
     func rpc(api: ApiConnectionType) -> Client
-    func subscribableRPC(api: ApiConnectionType) -> PersistentConnection?
+    func subscribableRPC(api: ApiConnectionType) -> Subscribable?
 }
 
 public enum ApiConnectionType {
