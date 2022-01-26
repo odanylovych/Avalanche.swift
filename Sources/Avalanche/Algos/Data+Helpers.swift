@@ -97,4 +97,15 @@ extension Data {
         UInt8(ascii: "8"), UInt8(ascii: "9"), UInt8(ascii: "a"), UInt8(ascii: "b"),
         UInt8(ascii: "c"), UInt8(ascii: "d"), UInt8(ascii: "e"), UInt8(ascii: "f")
     ]
+    
+    public static func < (left: Data, right: Data) -> Bool {
+        let left = Array(left)
+        let right = Array(right)
+        for index in (0...[left.count, right.count].min()! - 1) {
+            if left[index] != right[index] {
+                return left[index] < right[index]
+            }
+        }
+        return left.count < right.count
+    }
 }

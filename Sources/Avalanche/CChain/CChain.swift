@@ -13,14 +13,9 @@ import RPC
 import Serializable
 #endif
 
-public enum CChainApiError: Error {
-    case unsupportedAccountType
-}
-
 public enum CChainCredentials {
     case password(username: String, password: String)
-    case account(Account)
-    case ethAccount(EthAccount)
+    case account(Account, EthAccount? = nil)
 }
 
 public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
@@ -51,10 +46,6 @@ public class AvalancheCChainApi: AvalancheVMApi {
     public typealias Info = AvalancheCChainApiInfo
     public typealias Keychain = AvalancheCChainApiUTXOAddressManager
     
-    private struct SubscriptionId: Decodable {
-        let subscription: String
-    }
-    
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
@@ -75,10 +66,12 @@ public class AvalancheCChainApi: AvalancheVMApi {
         }
     }
     
-    public var ethKeychain: AvalancheCChainApiAddressManager? {
-        addressManager.map {
-            AvalancheCChainApiAddressManager(manager: $0, api: self)
-        }
+    private var context: AvalancheDecoderContext {
+        DefaultAvalancheDecoderContext(
+            hrp: hrp,
+            chainId: info.chainId,
+            dynamicParser: CChainDynamicTypeRegistry.instance
+        )
     }
     
     public var eth: web3.Eth { web3.eth }
@@ -120,50 +113,6 @@ public class AvalancheCChainApi: AvalancheVMApi {
     private func handleError<R: Any>(_ error: Error, _ cb: @escaping ApiCallback<R>) {
         self.queue.async {
             cb(.failure(.custom(cause: error)))
-        }
-    }
-    
-    private func signAndSend(_ transaction: UnsignedEthereumTransaction,
-                             with addresses: [EthAddress],
-                             chainId: UInt64,
-                             _ cb: @escaping ApiCallback<TransactionID>) {
-        guard let keychain = ethKeychain else {
-            handleError(.nilAddressManager, cb)
-            return
-        }
-        guard let signer = signer else {
-            handleError(.nilSignatureProvider, cb)
-            return
-        }
-        let pathes: [EthAddress: Bip32Path]
-        do {
-            let extended = try keychain.extended(for: addresses)
-            pathes = Dictionary(uniqueKeysWithValues: extended.map { ($0.address, $0.path) })
-        } catch {
-            handleError(error, cb)
-            return
-        }
-        let extendedTransaction = EthereumTransactionExt(
-            tx: transaction,
-            chainId: chainId,
-            pathes: pathes
-        )
-        signer.sign(transaction: extendedTransaction) { res in
-            switch res {
-            case .success(let signed):
-                let tx: String
-                do {
-                    tx = try self.encoderDecoderProvider.encoder().encode(signed).output.cb58()
-                } catch {
-                    self.handleError(error, cb)
-                    return
-                }
-                self.issueTx(tx: tx, encoding: AvalancheEncoding.cb58) { res in
-                    cb(res)
-                }
-            case .failure(let error):
-                self.handleError(error, cb)
-            }
         }
     }
     
@@ -217,9 +166,84 @@ public class AvalancheCChainApi: AvalancheVMApi {
         }
     }
     
+    public struct GetAtomicTxParams: Encodable {
+        public let txID: String
+        public let encoding: AvalancheEncoding?
+    }
+    
+    public struct GetAtomicTxResponse: Decodable {
+        public let tx: String
+        public let encoding: AvalancheEncoding
+        public let blockHeight: String
+    }
+    
+    public func getAtomicTx(
+        id: TransactionID,
+        encoding: AvalancheEncoding?,
+        _ cb: @escaping ApiCallback<(tx: SignedAvalancheTransaction, blockHeight: UInt64)>
+    ) {
+        let params = GetAtomicTxParams(
+            txID: id.cb58(),
+            encoding: encoding
+        )
+        service.call(
+            method: "avax.getAtomicTx",
+            params: params,
+            GetAtomicTxResponse.self,
+            SerializableValue.self
+        ) { res in
+            switch res {
+            case .success(let response):
+                let transactionData: Data?
+                switch response.encoding {
+                case .cb58: transactionData = Algos.Base58.from(cb58: response.tx)
+                case .hex: transactionData = Data(hex: response.tx)
+                }
+                guard let transactionData = transactionData else {
+                    self.handleError(.custom(description: "Cannot decode transaction", cause: nil), cb)
+                    return
+                }
+                let decoder = self.encoderDecoderProvider.decoder(
+                    context: self.context,
+                    data: transactionData
+                )
+                let transaction: SignedAvalancheTransaction
+                do {
+                    transaction = try decoder.decode()
+                } catch {
+                    self.handleError(.custom(description: "Cannot decode transaction", cause: error), cb)
+                    return
+                }
+                cb(.success((
+                    tx: transaction,
+                    blockHeight: UInt64(response.blockHeight)!
+                )))
+            case .failure(let error):
+                self.handleError(.init(request: error), cb)
+            }
+        }
+    }
+    
     public func getTransaction(id: TransactionID,
-                        result: @escaping ApiCallback<SignedAvalancheTransaction>) {
-        fatalError("Not implemented")
+                               result: @escaping ApiCallback<SignedAvalancheTransaction>) {
+        getAtomicTx(id: id, encoding: .cb58) { res in
+            result(res.map { $0.tx })
+        }
+    }
+    
+    public struct GetUTXOsParams: Encodable {
+        public let addresses: [String]
+        public let limit: UInt32?
+        public let startIndex: UTXOIndex?
+        public let sourceChain: String?
+        public let encoding: AvalancheEncoding?
+    }
+    
+    public struct GetUTXOsResponse: Decodable {
+        public let numFetched: UInt32
+        public let utxos: [String]
+        public let endIndex: UTXOIndex
+        public let encoding: AvalancheEncoding
     }
     
     public func getUTXOs(
@@ -235,18 +259,46 @@ public class AvalancheCChainApi: AvalancheVMApi {
             encoding: AvalancheEncoding
         )>
     ) {
-        fatalError("Not implemented")
-    }
-    
-    public func getChainID(_ cb: @escaping ApiCallback<UInt64>) {
-        fatalError("Not implemented")
+        let params = GetUTXOsParams(
+            addresses: addresses.map { $0.bech },
+            limit: limit,
+            startIndex: startIndex,
+            sourceChain: sourceChain?.cb58(),
+            encoding: encoding
+        )
+        service.call(
+            method: "avax.getUTXOs",
+            params: params,
+            GetUTXOsResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res
+                .mapError(AvalancheApiError.init)
+                .map {
+                    return (
+                        fetched: $0.numFetched,
+                        utxos: $0.utxos.map {
+                            let decoder = self.encoderDecoderProvider.decoder(
+                                context: self.context,
+                                data: Algos.Base58.from(cb58: $0)!
+                            )
+                            return try! decoder.decode()
+                        },
+                        endIndex: $0.endIndex,
+                        encoding: $0.encoding
+                    )
+                }
+            )
+        }
     }
     
     public func getTransactionCount(
         for address: EthAddress,
         _ cb: @escaping ApiCallback<UInt64>
     ) {
-        fatalError("Not implemented")
+        eth.getTransactionCountPromise(address: EthereumAddress(from: address)).asCallback {
+            cb($0.map(UInt64.init))
+        }
     }
     
     public struct ExportParams: Encodable {
@@ -290,79 +342,93 @@ public class AvalancheCChainApi: AvalancheVMApi {
                     .mapError(AvalancheApiError.init)
                     .map { TransactionID(cb58: $0.txID)! })
             }
-        case .account:
-            self.handleError(CChainApiError.unsupportedAccountType, cb)
-        case .ethAccount(let account):
-            xchain.getAvaxAssetID { res in
+        case .account(let account, let ethAccount):
+            guard let ethAccount = ethAccount else {
+                handleError(.custom(description: "EthAccount is not provided", cause: nil), cb)
+                return
+            }
+            guard let keychain = keychain else {
+                handleError(.nilAddressManager, cb)
+                return
+            }
+            let fromAddresses: [Address]
+            do {
+                fromAddresses = try keychain.get(cached: account)
+            } catch {
+                handleError(error, cb)
+                return
+            }
+            let iterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
+            UTXOHelper.getAll(iterator: iterator) { res in
                 switch res {
-                case .success(let avaxAssetID):
-                    let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
-                    let fee = baseFee ?? UInt64(self.info.txFee)
-                    let address = account.address
-                    self.getTransactionCount(for: address) { res in
+                case .success(let utxos):
+                    self.xchain.getAvaxAssetID { res in
                         switch res {
-                        case .success(let nonce):
-                            var inputs = [EVMInput]()
-                            if assetID == avaxAssetID {
-                                inputs.append(EVMInput(
-                                    address: address,
-                                    amount: amount + fee,
-                                    assetID: assetID,
-                                    nonce: nonce
-                                ))
-                            } else {
-                                inputs.append(contentsOf: [
-                                    EVMInput(
-                                        address: address,
-                                        amount: fee,
-                                        assetID: avaxAssetID,
-                                        nonce: nonce
-                                    ),
-                                    EVMInput(
-                                        address: address,
-                                        amount: amount,
-                                        assetID: assetID,
-                                        nonce: nonce
-                                    )
-                                ])
-                            }
-                            let exportedOutputs: [TransferableOutput]
-                            do {
-                                exportedOutputs = [
-                                    TransferableOutput(
-                                        assetID: assetID,
-                                        output: try SECP256K1TransferOutput(
-                                            amount: amount,
-                                            locktime: Date(timeIntervalSince1970: 0),
-                                            threshold: 1,
-                                            addresses: [to]
-                                        )
-                                    )
-                                ]
-                            } catch {
-                                self.handleError(error, cb)
-                                return
-                            }
-                            // TODO: sort exportedOutputs
-                            let transaction: UnsignedEthereumTransaction
-                            do {
-                                transaction = UnsignedEthereumTransaction()
-                                // TODO: CChainExportTransaction
-        //                        transaction = try CChainExportTransaction(
-        //                            networkID: self.networkID,
-        //                            blockchainID: self.info.blockchainID,
-        //                            destinationChain: destinationChain,
-        //                            inputs: inputs,
-        //                            exportedOutputs: exportedOutputs
-        //                        )
-                            } catch {
-                                self.handleError(error, cb)
-                                return
-                            }
-                            self.getChainID { res in
+                        case .success(let avaxAssetID):
+                            let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
+                            let fee = baseFee ?? UInt64(self.info.txFee)
+                            let address = ethAccount.address
+                            self.getTransactionCount(for: address) { res in
                                 switch res {
-                                case .success(let chainId):
-                                    self.signAndSend(transaction, with: [address], chainId: chainId, cb)
+                                case .success(let nonce):
+                                    var inputs = [EVMInput]()
+                                    if assetID == avaxAssetID {
+                                        inputs.append(EVMInput(
+                                            address: address,
+                                            amount: amount + fee,
+                                            assetID: assetID,
+                                            nonce: nonce
+                                        ))
+                                    } else {
+                                        inputs.append(contentsOf: [
+                                            EVMInput(
+                                                address: address,
+                                                amount: fee,
+                                                assetID: avaxAssetID,
+                                                nonce: nonce
+                                            ),
+                                            EVMInput(
+                                                address: address,
+                                                amount: amount,
+                                                assetID: assetID,
+                                                nonce: nonce
+                                            )
+                                        ])
+                                    }
+                                    let exportedOutputs: [TransferableOutput]
+                                    do {
+                                        exportedOutputs = [
+                                            TransferableOutput(
+                                                assetID: assetID,
+                                                output: try SECP256K1TransferOutput(
+                                                    amount: amount,
+                                                    locktime: Date(timeIntervalSince1970: 0),
+                                                    threshold: 1,
+                                                    addresses: [to]
+                                                )
+                                            )
+                                        ]
+                                    } catch {
+                                        self.handleError(error, cb)
+                                        return
+                                    }
+                                    let transaction: UnsignedAvalancheTransaction
+                                    do {
+                                        let encoder = self.encoderDecoderProvider.encoder()
+                                        transaction = CChainExportTransaction(
+                                            networkID: self.networkID,
+                                            blockchainID: self.info.blockchainID,
+                                            destinationChain: destinationChain,
+                                            inputs: inputs,
+                                            exportedOutputs: try exportedOutputs.sorted {
+                                                try encoder.encode($0).output < encoder.encode($1).output
+                                            }
+                                        )
+                                    } catch {
+                                        self.handleError(error, cb)
+                                        return
+                                    }
+                                    self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
                                 case .failure(let error):
                                     self.handleError(error, cb)
                                 }
@@ -416,7 +482,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
                     .mapError(AvalancheApiError.init)
                     .map { TransactionID(cb58: $0.txID)! })
             }
-        case .account(let account):
+        case .account(let account, _):
             guard let keychain = keychain else {
                 handleError(.nilAddressManager, cb)
                 return
@@ -467,7 +533,6 @@ public class AvalancheCChainApi: AvalancheVMApi {
                                     self.handleError(error, cb)
                                     return
                                 }
-                                // TODO: sort importInputs
                                 importInputs.append(input)
                                 if let amount = assetIDAmount[utxo.assetID] {
                                     inFeeAmount += amount
@@ -482,13 +547,22 @@ public class AvalancheCChainApi: AvalancheVMApi {
                                     assetID: assetID
                                 ))
                             }
-                            let transaction = CChainImportTransaction(
-                                networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
-                                sourceChain: sourceChain,
-                                importedInputs: importInputs,
-                                outputs: outputs
-                            )
+                            let transaction: UnsignedAvalancheTransaction
+                            do {
+                                let encoder = self.encoderDecoderProvider.encoder()
+                                transaction = CChainImportTransaction(
+                                    networkID: self.networkID,
+                                    blockchainID: self.info.blockchainID,
+                                    sourceChain: sourceChain,
+                                    importedInputs: try importInputs.sorted {
+                                        try encoder.encode($0).output < encoder.encode($1).output
+                                    },
+                                    outputs: outputs
+                                )
+                            } catch {
+                                self.handleError(error, cb)
+                                return
+                            }
                             self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
                         case .failure(let error):
                             self.handleError(error, cb)
@@ -498,8 +572,6 @@ public class AvalancheCChainApi: AvalancheVMApi {
                     self.handleError(error, cb)
                 }
             }
-        case .ethAccount:
-            self.handleError(CChainApiError.unsupportedAccountType, cb)
         }
     }
     

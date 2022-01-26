@@ -1,5 +1,5 @@
 //
-//  Web3SignatureProvider.swift
+//  Web3+SignatureProvider.swift
 //  
 //
 //  Created by Ostap Danylovych on 21.01.2022.
@@ -10,18 +10,6 @@ import Foundation
 import Avalanche
 import web3swift
 #endif
-
-extension EthereumAddress {
-    public init(from address: EthAddress) {
-        self.init(address.rawAddress)!
-    }
-}
-
-extension EthAddress {
-    public init(from address: EthereumAddress) {
-        try! self.init(pubKey: address.addressData)
-    }
-}
 
 extension AvalancheBip44Keychain: SignatureProvider {
     private func _getPrivateKey(for account: EthereumAddress) throws -> Data {

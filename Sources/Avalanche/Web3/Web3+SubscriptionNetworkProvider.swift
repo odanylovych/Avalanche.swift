@@ -1,5 +1,5 @@
 //
-//  Web3SubscriptionNetworkProvider.swift
+//  Web3+SubscriptionNetworkProvider.swift
 //  
 //
 //  Created by Ostap Danylovych on 20.01.2022.

@@ -1,5 +1,5 @@
 //
-//  Web3NetworkProvider.swift
+//  Web3+NetworkProvider.swift
 //  
 //
 //  Created by Ostap Danylovych on 18.01.2022.
