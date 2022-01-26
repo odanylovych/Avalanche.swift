@@ -293,10 +293,10 @@ public class AvalancheCChainApi: AvalancheVMApi {
     }
     
     public func getTransactionCount(
-        for address: EthAddress,
+        for address: EthereumAddress,
         _ cb: @escaping ApiCallback<UInt64>
     ) {
-        eth.getTransactionCountPromise(address: EthereumAddress(from: address)).asCallback {
+        eth.getTransactionCountPromise(address: address).asCallback {
             cb($0.map(UInt64.init))
         }
     }
@@ -457,7 +457,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
     }
     
     public func `import`(
-        to: EthAddress,
+        to: EthereumAddress,
         sourceChain: BlockchainID,
         baseFee: UInt64? = nil,
         credentials: CChainCredentials,
@@ -466,7 +466,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
         switch credentials {
         case .password(let username, let password):
             let params = ImportParams(
-                to: to.hex(),
+                to: to.address,
                 sourceChain: sourceChain.cb58(),
                 baseFee: baseFee,
                 username: username,

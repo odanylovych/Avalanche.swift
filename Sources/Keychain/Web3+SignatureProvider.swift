@@ -13,7 +13,7 @@ import web3swift
 
 extension AvalancheBip44Keychain: SignatureProvider {
     private func _getPrivateKey(for account: EthereumAddress) throws -> Data {
-        guard let account = ethereumAccounts().first(where: { $0.address == EthAddress(from: account) }),
+        guard let account = ethereumAccounts().first(where: { $0.address == account }),
               let keyPair = _ethCache[account.index] else {
             throw Web3Error.inputError(desc: "No such account in keychain: \(account)")
         }
@@ -23,7 +23,7 @@ extension AvalancheBip44Keychain: SignatureProvider {
     public func accounts(_ cb: @escaping SignatureProviderCallback<[EthereumAddress]>) {
         accounts(type: .ethereumOnly) { res in
             cb(res.map { accounts in
-                accounts.ethereum.map { EthereumAddress(from: $0.address) }
+                accounts.ethereum.map { $0.address }
             }.mapError(Web3Error.generalError))
         }
     }

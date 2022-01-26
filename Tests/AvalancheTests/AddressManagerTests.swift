@@ -8,6 +8,7 @@
 import Foundation
 import XCTest
 import Avalanche
+import web3swift
 
 final class AddressManagerTests: XCTestCase {
     private var avalanche: AvalancheCore!
@@ -17,7 +18,7 @@ final class AddressManagerTests: XCTestCase {
     private var testExtendedAvalancheAddress: ExtendedAddress!
     private var testAvalancheAddress: Address!
     private var testEthereumAccount: EthAccount!
-    private var testEthereumAddress: EthAddress!
+    private var testEthereumAddress: EthereumAddress!
     private var testAccounts: AvalancheSignatureProviderAccounts!
     private var testUtxo: UTXO!
     

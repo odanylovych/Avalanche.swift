@@ -185,7 +185,7 @@ class AddressManagerMock: AvalancheAddressManager {
     var fetchMock: ((Any, @escaping (Result<Void, Error>) -> Void) -> Void)?
     var fetchedAccountsMock: (() -> AvalancheSignatureProviderAccounts)?
     var extendedAvmMock: (([Address]) throws -> [ExtendedAddress])?
-    var extendedEthMock: (([EthAddress]) throws -> [EthAccount])?
+    var extendedEthMock: (([EthereumAddress]) throws -> [EthAccount])?
     
     var avalanche: AvalancheCore!
     
@@ -225,7 +225,7 @@ class AddressManagerMock: AvalancheAddressManager {
         try extendedAvmMock!(addresses)
     }
     
-    func extended(eth addresses: [EthAddress]) throws -> [EthAccount] {
+    func extended(eth addresses: [EthereumAddress]) throws -> [EthAccount] {
         try extendedEthMock!(addresses)
     }
 }

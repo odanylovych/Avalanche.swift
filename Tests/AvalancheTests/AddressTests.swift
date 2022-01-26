@@ -7,6 +7,7 @@
 
 import XCTest
 import Avalanche
+import web3swift
 import UncommonCrypto
 
 final class AddressTests: XCTestCase {
@@ -27,8 +28,8 @@ final class AddressTests: XCTestCase {
     }
 
     func testCorrectEvmAddress() throws {
-        let address = try EthAddress(pubKey: pubKey)
-        XCTAssertEqual(address.hex(), "0x506433b9338e2a5706e3c0d6bce041d30688935f")
+        let address = try EthereumAddress(pubKey: pubKey)
+        XCTAssertEqual(address.address, "0x506433b9338e2a5706e3c0d6bce041d30688935f")
     }
     
     func testVerifyMessage1() throws {

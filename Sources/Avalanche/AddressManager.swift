@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
+import web3swift
+#endif
 
 public enum AvalancheAddressManagerError: Error {
     case addressNotFound(address: String)
@@ -47,7 +50,7 @@ public protocol AvalancheAddressManager: AnyObject {
     
     // Returns extended addresses for provided addresses
     func extended(avm addresses: [Address]) throws -> [ExtendedAddress]
-    func extended(eth addresses: [EthAddress]) throws -> [EthAccount]
+    func extended(eth addresses: [EthereumAddress]) throws -> [EthAccount]
 }
 
 public protocol AvalancheApiAddressManager {
@@ -304,7 +307,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
         }
     }
     
-    public func extended(eth addresses: [EthAddress]) throws -> [EthAccount] {
+    public func extended(eth addresses: [EthereumAddress]) throws -> [EthAccount] {
         return try self.syncQueue.sync {
             let accounts = self.accountsCache?.ethereum ?? []
             return try addresses.map { addr in
@@ -313,7 +316,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
                     return account
                 }
                 throw AvalancheAddressManagerError.addressNotFound(
-                    address: addr.hex()
+                    address: addr.address
                 )
             }
         }

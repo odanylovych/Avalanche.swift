@@ -6,12 +6,15 @@
 //
 
 import Foundation
+#if !COCOAPODS
+import web3swift
+#endif
 
 public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, Hashable {
-    public typealias Addr = EthAddress
-    public typealias Base = EthAddress
+    public typealias Addr = EthereumAddress
+    public typealias Base = EthereumAddress
     
-    public let address: EthAddress
+    public let address: EthereumAddress
     public let path: Bip32Path
     
     public var index: UInt32 { accountIndex }
@@ -19,16 +22,16 @@ public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, H
     public var accountIndex: UInt32 { path.accountIndex! }
     
     public init(pubKey: Data, path: Bip32Path) throws {
-        let addr: EthAddress
+        let addr: EthereumAddress
         do {
-            addr = try EthAddress(pubKey: pubKey)
+            addr = try EthereumAddress(pubKey: pubKey)
         } catch AddressError.badPublicKey(key: let pk) {
             throw AccountError.badPublicKey(key: pk)
         }
         try self.init(address: addr, path: path)
     }
     
-    public init(address: EthAddress, path: Bip32Path) throws {
+    public init(address: EthereumAddress, path: Bip32Path) throws {
         guard path.isValidEthereumAccount else {
             throw AccountError.badBip32Path(path: path)
         }
@@ -37,35 +40,23 @@ public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, H
     }
 }
 
-public struct EthAddress: AddressProtocol, Equatable, Hashable {
-    public typealias Extended = EthAccount
-    
-    public static let rawAddressSize = 20
-    
-    public let rawAddress: Data
-    
+extension EthereumAddress {
     public init(pubKey: Data) throws {
-        guard let raw = Algos.Ethereum.address(from: pubKey) else {
+        guard let raw = Algos.Ethereum.address(from: pubKey),
+              let address = Self(raw) else {
             throw AccountError.badPublicKey(key: pubKey)
         }
-        self.rawAddress = raw
+        self = address
     }
-    
-    public init(hex: String, eip55: Bool = false) throws {
-        guard let addr = Algos.Ethereum.address(from: hex, eip55: eip55) else {
-            throw AddressError.badAddressString(address: hex)
-        }
-        self.rawAddress = addr
-    }
-    
-    public func hex(eip55: Bool = false) -> String {
-        return Algos.Ethereum.hexAddress(rawAddress: rawAddress, eip55: eip55)
-    }
+}
+
+extension EthereumAddress: AddressProtocol {
+    public typealias Extended = EthAccount
     
     public func verify(message: Data, signature: Signature) -> Bool {
-        return Algos.Ethereum.verify(address: rawAddress,
-                                     message: message,
-                                     signature: signature.raw) ?? false
+        Algos.Ethereum.verify(address: addressData,
+                              message: message,
+                              signature: signature.raw) ?? false
     }
     
     public func extended(path: Bip32Path) throws -> Extended {
@@ -77,12 +68,14 @@ public struct EthAddress: AddressProtocol, Equatable, Hashable {
     }
 }
 
-extension EthAddress: AvalancheCodable {
-    public init(from decoder: AvalancheDecoder) throws {
-        self.rawAddress = try decoder.decode(size: Self.rawAddressSize)
-    }
+extension EthereumAddress: AvalancheCodable {
+    public static let rawAddressSize = 20
     
+    public init(from decoder: AvalancheDecoder) throws {
+        self.init(try decoder.decode(size: Self.rawAddressSize))!
+    }
+
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(rawAddress, size: Self.rawAddressSize)
+        try encoder.encode(addressData, size: Self.rawAddressSize)
     }
 }

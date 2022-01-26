@@ -8,6 +8,7 @@
 import Foundation
 #if !COCOAPODS
 import Avalanche
+import web3swift
 #endif
 
 public struct KeyPair {
@@ -75,8 +76,8 @@ public extension KeyPair {
         try! Address(pubKey: publicKey, hrp: hrp, chainId: chainId)
     }
     
-    var ethAddress: EthAddress {
-        try! EthAddress(pubKey: publicKey)
+    var ethAddress: EthereumAddress {
+        try! EthereumAddress(pubKey: publicKey)
     }
     
     func signAvalanche(serialized tx: Data) -> Signature? {

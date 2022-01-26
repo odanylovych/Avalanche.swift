@@ -13,7 +13,7 @@ import Avalanche
 private extension AvalancheBip44Keychain {
     private func signTx<T: ExtendedUnsignedTransaction>(
         tx: T,
-        isEthereum: Bool,
+        isEthereum: Bool = false,
         _ cb: @escaping (AvalancheSignatureProviderResult<T.Signed>) -> Void
     ) {
         let data: Data
@@ -110,9 +110,7 @@ extension AvalancheBip44Keychain: AvalancheSignatureProvider {
         _ cb: @escaping (AvalancheSignatureProviderResult<T.Signed>) -> Void
     ) where T : ExtendedUnsignedTransaction {
         DispatchQueue.global().async {
-            self.signTx(tx: transaction,
-                        isEthereum: transaction is EthereumTransactionExt,
-                        cb)
+            self.signTx(tx: transaction, cb)
         }
     }
     
