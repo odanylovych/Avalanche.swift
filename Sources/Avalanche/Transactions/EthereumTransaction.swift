@@ -14,31 +14,6 @@ import web3swift
 extension EthereumTransaction: UnsignedTransaction {
     public typealias Addr = EthereumAddress
     public typealias Signed = Self
-    
-    public func toSigned(signatures: Dictionary<EthereumAddress, Signature>) throws -> Self {
-        guard let signature = signatures.first?.value else {
-            throw EthereumTransactionError.noSignature
-        }
-        guard let chainID = intrinsicChainID else {
-            throw EthereumTransactionError.emptyChainID
-        }
-        let v = signature.raw[64]
-        let r = Data(signature.raw[0..<32])
-        let s = Data(signature.raw[32..<64])
-        var d = BigUInt(0)
-        if v >= 0 && v <= 3 {
-            d = BigUInt(35)
-        } else if v >= 27 && v <= 30 {
-            d = BigUInt(8)
-        } else if v >= 31 && v <= 34 {
-            d = BigUInt(4)
-        }
-        var transaction = self
-        transaction.v = BigUInt(v) + d + chainID + chainID
-        transaction.r = BigUInt(r)
-        transaction.s = BigUInt(s)
-        return transaction
-    }
 }
 
 extension EthereumTransaction: SignedTransaction {
@@ -56,23 +31,41 @@ public struct ExtendedEthereumTransaction: ExtendedUnsignedTransaction {
     
     public let transaction: EthereumTransaction
     public let account: Addr.Extended
+    public let chainID: BigUInt
     
     public init(transaction: EthereumTransaction, account: Addr.Extended, chainID: BigUInt) {
-        var transaction = transaction
-        transaction.UNSAFE_setChainID(chainID)
         self.transaction = transaction
         self.account = account
+        self.chainID = chainID
     }
     
     public func serialized() throws -> Data {
-        guard let data = transaction.encode(forSignature: true) else {
+        guard let data = transaction.encode(forSignature: true, chainID: chainID) else {
             throw EthereumTransactionError.encodeError
         }
         return data
     }
     
     public func toSigned(signatures: Dictionary<EthereumAddress, Signature>) throws -> EthereumTransaction {
-        try transaction.toSigned(signatures: signatures)
+        guard let signature = signatures.first?.value else {
+            throw EthereumTransactionError.noSignature
+        }
+        let v = signature.raw[64]
+        let r = Data(signature.raw[0..<32])
+        let s = Data(signature.raw[32..<64])
+        var d = BigUInt(0)
+        if v >= 0 && v <= 3 {
+            d = BigUInt(35)
+        } else if v >= 27 && v <= 30 {
+            d = BigUInt(8)
+        } else if v >= 31 && v <= 34 {
+            d = BigUInt(4)
+        }
+        var transaction = transaction
+        transaction.v = BigUInt(v) + d + chainID + chainID
+        transaction.r = BigUInt(r)
+        transaction.s = BigUInt(s)
+        return transaction
     }
     
     public func signingAddresses() throws -> [Addr.Extended] {

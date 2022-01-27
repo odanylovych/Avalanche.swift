@@ -27,10 +27,6 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
         fatalError("Not supported")
     }
     
-    public func toSigned(signatures: Dictionary<Address, Signature>) throws -> SignedAvalancheTransaction {
-        fatalError("Not supported")
-    }
-    
     public func encode(in encoder: AvalancheEncoder) throws {
         fatalError("Not supported")
     }

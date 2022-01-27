@@ -26,5 +26,4 @@ public enum ExtendedAvalancheTransactionError: Error {
 public enum EthereumTransactionError: Error {
     case encodeError
     case noSignature
-    case emptyChainID
 }
