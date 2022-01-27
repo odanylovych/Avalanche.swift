@@ -168,7 +168,9 @@ public class AvalancheCChainApi: AvalancheVMApi {
                     return
                 }
                 self.issueTx(tx: tx, encoding: AvalancheEncoding.cb58) { res in
-                    cb(res)
+                    self.queue.async {
+                        cb(res)
+                    }
                 }
             case .failure(let error):
                 self.handleError(error, cb)
