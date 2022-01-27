@@ -10,14 +10,29 @@ import Foundation
 import web3swift
 #endif
 
+public protocol AddressManagerProvider {
+    func manager(ava: AvalancheCore) -> AvalancheAddressManager?
+}
+
+public struct DefaultAddressManagerProvider: AddressManagerProvider {
+    public init() {}
+    
+    public func manager(ava: AvalancheCore) -> AvalancheAddressManager? {
+        guard let signer = ava.signatureProvider else {
+            return nil
+        }
+        return AvalancheDefaultAddressManager(queue: ava.settings.queue,
+                                              signer: signer,
+                                              utxoProvider: ava.settings.utxoProvider)
+    }
+}
+
 public enum AvalancheAddressManagerError: Error {
     case addressNotFound(address: String)
     case notInCache(account: Account)
 }
 
 public protocol AvalancheAddressManager: AnyObject {
-    func start(avalanche: AvalancheCore)
-    
     // Returns list of accounts
     func accounts(type: AvalancheSignatureProviderAccountRequestType,
                   _ cb: @escaping (AvalancheSignatureProviderResult<AvalancheSignatureProviderAccounts>) -> Void)
@@ -98,17 +113,17 @@ public extension AvalancheApiUTXOAddressManager {
 public class AvalancheDefaultAddressManager: AvalancheAddressManager {
     private static let fetchChunkSize = 20
     
-    public private (set) weak var avalanche: AvalancheCore!
-
-    public let signer: AvalancheSignatureProvider
-    
-    private var queue: DispatchQueue { avalanche.settings.queue }
+    private let queue: DispatchQueue
+    private let syncQueue: DispatchQueue
+    private let signer: AvalancheSignatureProvider
+    private let utxoProvider: AvalancheUtxoProvider
     private var accountsCache: AvalancheSignatureProviderAccounts?
-    private var syncQueue: DispatchQueue
     private var addresses: Dictionary<Account, Dictionary<Address, Bip32Path>>
     
-    public init(signer: AvalancheSignatureProvider) {
+    public init(queue: DispatchQueue, signer: AvalancheSignatureProvider, utxoProvider: AvalancheUtxoProvider) {
+        self.queue = queue
         self.signer = signer
+        self.utxoProvider = utxoProvider
         self.accountsCache = nil
         self.syncQueue = DispatchQueue(
             label: "address.manager.internal.sync.queue",
@@ -116,10 +131,6 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
             target: .global(qos: .userInitiated)
         )
         self.addresses = [:]
-    }
-    
-    public func start(avalanche: AvalancheCore) {
-        self.avalanche = avalanche
     }
     
     public func accounts(type: AvalancheSignatureProviderAccountRequestType,
@@ -209,7 +220,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
             cb(.failure(error))
             return
         }
-        let iterator = avalanche.utxoProvider.utxos(api: api, addresses: addresses.map { $0.address })
+        let iterator = utxoProvider.utxos(api: api, addresses: addresses.map { $0.address })
         UTXOHelper.getAll(iterator: iterator) { res in
             switch res {
             case .success(let utxos):

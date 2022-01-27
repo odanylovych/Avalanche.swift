@@ -24,7 +24,9 @@ final class AddressManagerTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        avalanche = AvalancheCoreMock(utxoProvider: utxoProvider)
+        let settings = AvalancheSettings(addressManagerProvider: DefaultAddressManagerProvider(),
+                                         utxoProvider: utxoProvider)
+        avalanche = AvalancheCoreMock(settings: settings, signatureProvider: signer)
         api = AvalancheVMApiMock(avalanche: avalanche)
         testAvalancheAccount = try! Account(
             pubKey: Data(hex: "0x02ccbf163222a621523a477389b2b6318b9c43b424bdf4b74340e9b45443cc0506")!,
@@ -86,17 +88,13 @@ final class AddressManagerTests: XCTestCase {
         return utxoProvider
     }
     
-    func testStart() throws {
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        assert(addressManager.avalanche !== avalanche)
-        addressManager.start(avalanche: avalanche)
-        assert(addressManager.avalanche === avalanche)
+    private var addressManagerProvider: AddressManagerProvider {
+        avalanche.settings.addressManagerProvider
     }
-
+    
     func testAccountsMethod() throws {
         let success = expectation(description: "success")
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        addressManager.start(avalanche: avalanche)
+        let addressManager = addressManagerProvider.manager(ava: avalanche)!
         addressManager.accounts(type: .both) { res in
             let accounts = try! res.get()
             XCTAssertEqual(accounts.avalanche, self.testAccounts.avalanche)
@@ -108,8 +106,7 @@ final class AddressManagerTests: XCTestCase {
 
     func testNew() throws {
         let success = expectation(description: "success")
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        addressManager.start(avalanche: avalanche)
+        let addressManager = addressManagerProvider.manager(ava: avalanche)!
         addressManager.fetch(avm: api) { res in
             try! res.get()
             let addresses = try! addressManager.new(avm: self.api, for: self.testAvalancheAccount, change: false, count: 1)
@@ -127,8 +124,7 @@ final class AddressManagerTests: XCTestCase {
     
     func testGetCached() throws {
         let success = expectation(description: "success")
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        addressManager.start(avalanche: avalanche)
+        let addressManager = addressManagerProvider.manager(ava: avalanche)!
         XCTAssertThrowsError(try addressManager.get(avm: self.api, cached: self.testAvalancheAccount))
         addressManager.fetch(avm: api) { res in
             try! res.get()
@@ -141,8 +137,7 @@ final class AddressManagerTests: XCTestCase {
     
     func testGetForAccount() throws {
         let success = expectation(description: "success")
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        addressManager.start(avalanche: avalanche)
+        let addressManager = addressManagerProvider.manager(ava: avalanche)!
         addressManager.get(avm: self.api, for: self.testAvalancheAccount) { res in
             let addresses = try! res.get()
             XCTAssertEqual(addresses, [self.testAvalancheAddress])
@@ -186,10 +181,14 @@ final class AddressManagerTests: XCTestCase {
                 result(.success((utxos, nil)))
             })
         }
-        avalanche.utxoProvider = utxoProvider
+        let settings = avalanche.settings
+        avalanche.settings = AvalancheSettings(queue: settings.queue,
+                                               networkInfoProvider: settings.networkInfoProvider,
+                                               addressManagerProvider: settings.addressManagerProvider,
+                                               utxoProvider: utxoProvider,
+                                               encoderDecoderProvider: settings.encoderDecoderProvider)
         let success = expectation(description: "success")
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        addressManager.start(avalanche: avalanche)
+        let addressManager = addressManagerProvider.manager(ava: avalanche)!
         addressManager.fetch(avm: api, for: [self.testAvalancheAccount]) { res in
             try! res.get()
             let addresses = try! addressManager.get(avm: self.api, cached: self.testAvalancheAccount)
@@ -201,8 +200,7 @@ final class AddressManagerTests: XCTestCase {
     
     func testFetchForAccounts() throws {
         let success = expectation(description: "success")
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        addressManager.start(avalanche: avalanche)
+        let addressManager = addressManagerProvider.manager(ava: avalanche)!
         addressManager.fetch(avm: api, for: [self.testAvalancheAccount]) { res in
             try! res.get()
             let accounts = addressManager.fetchedAccounts()
@@ -217,8 +215,7 @@ final class AddressManagerTests: XCTestCase {
     
     func testFetchedAccounts() throws {
         let success = expectation(description: "success")
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        addressManager.start(avalanche: avalanche)
+        let addressManager = addressManagerProvider.manager(ava: avalanche)!
         let accounts = addressManager.fetchedAccounts()
         XCTAssertEqual(accounts.avalanche, [])
         XCTAssertEqual(accounts.ethereum, [])
@@ -234,8 +231,7 @@ final class AddressManagerTests: XCTestCase {
     
     func testExtendedAvm() throws {
         let success = expectation(description: "success")
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        addressManager.start(avalanche: avalanche)
+        let addressManager = addressManagerProvider.manager(ava: avalanche)!
         addressManager.fetch(avm: api) { res in
             try! res.get()
             let extended = try! addressManager.extended(avm: [self.testAvalancheAddress])
@@ -247,8 +243,7 @@ final class AddressManagerTests: XCTestCase {
     
     func testExtendedEth() throws {
         let success = expectation(description: "success")
-        let addressManager = AvalancheDefaultAddressManager(signer: signer)
-        addressManager.start(avalanche: avalanche)
+        let addressManager = addressManagerProvider.manager(ava: avalanche)!
         addressManager.fetch(avm: api) { res in
             try! res.get()
             let extended = try! addressManager.extended(eth: [self.testEthereumAddress])

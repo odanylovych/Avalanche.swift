@@ -35,35 +35,20 @@ class AvalancheCoreMock: AvalancheCore {
     var createAPIMock: ((NetworkID, String, Any) -> Any)?
     
     var networkID: NetworkID
-    var web3Network: Networks?
-    var networkInfoProvider: AvalancheNetworkInfoProvider
     var settings: AvalancheSettings
-    var addressManager: AvalancheAddressManager?
-    var utxoProvider: AvalancheUtxoProvider
     var signatureProvider: AvalancheSignatureProvider?
-    var ethereumSignatureProvider: SignatureProvider?
     var connectionProvider: AvalancheConnectionProvider
-    var encoderDecoderProvider: AvalancheEncoderDecoderProvider
     
     init(
         networkID: NetworkID = NetworkID.local,
-        networkInfoProvider: AvalancheNetworkInfoProvider = NetworkInfoProviderMock(),
-        settings: AvalancheSettings = AvalancheSettings.default,
-        addressManager: AvalancheAddressManager? = AddressManagerMock(),
-        utxoProvider: AvalancheUtxoProvider = UtxoProviderMock(),
+        settings: AvalancheSettings = AvalancheSettings(),
         signatureProvider: AvalancheSignatureProvider = SignatureProviderMock(),
-        ethereumSignatureProvider: SignatureProvider? = nil,
-        connectionProvider: AvalancheConnectionProvider = ConnectionProviderMock(),
-        encoderDecoderProvider: AvalancheEncoderDecoderProvider = DefaultAvalancheEncoderDecoderProvider()
+        connectionProvider: AvalancheConnectionProvider = ConnectionProviderMock()
     ) {
         self.networkID = networkID
-        self.networkInfoProvider = networkInfoProvider
         self.settings = settings
-        self.addressManager = addressManager
-        self.utxoProvider = utxoProvider
         self.signatureProvider = signatureProvider
         self.connectionProvider = connectionProvider
-        self.encoderDecoderProvider = encoderDecoderProvider
     }
     
     func getAPI<A: AvalancheApi>() throws -> A {
@@ -225,6 +210,14 @@ class AddressManagerMock: AvalancheAddressManager {
     }
 }
 
+struct AddressManagerProviderMock: AddressManagerProvider {
+    var addressManager: AddressManagerMock
+    
+    func manager(ava: AvalancheCore) -> AvalancheAddressManager? {
+        addressManager
+    }
+}
+
 class UtxoProviderMock: AvalancheUtxoProvider {
     var utxosIdsMock: ((Any, [(txID: TransactionID, index: UInt32)], @escaping ApiCallback<[UTXO]>) -> Void)?
     var utxosAddressesMock: ((Any, [Address]) -> AvalancheUtxoProviderIterator)?
@@ -355,7 +348,8 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         info: AvalancheVMApiInfoMock = AvalancheVMApiInfoMock()
     ) {
         self.avalanche = avalanche
-        addressManager = avalanche.addressManager
+        let addressManagerProvider = avalanche.settings.addressManagerProvider
+        addressManager = addressManagerProvider.manager(ava: avalanche)
         self.networkID = networkID
         self.hrp = hrp
         self.info = info

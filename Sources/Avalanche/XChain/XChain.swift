@@ -69,10 +69,11 @@ public class AvalancheXChainApi: AvalancheVMApi {
         self.networkID = networkID
         self.hrp = hrp
         self.info = info
-        addressManager = avalanche.addressManager
-        utxoProvider = avalanche.utxoProvider
+        let addressManagerProvider = avalanche.settings.addressManagerProvider
+        addressManager = addressManagerProvider.manager(ava: avalanche)
+        utxoProvider = avalanche.settings.utxoProvider
         signer = avalanche.signatureProvider
-        encoderDecoderProvider = avalanche.encoderDecoderProvider
+        encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
         chainIDApiInfos = {
             [
                 avalanche.pChain.info.alias!: avalanche.pChain.info,

@@ -91,10 +91,11 @@ public class AvalancheCChainApi: AvalancheVMApi {
                 avalanche.pChain.info.alias!: avalanche.pChain.info
             ][$0]!
         }
-        addressManager = avalanche.addressManager
+        let addressManagerProvider = avalanche.settings.addressManagerProvider
+        addressManager = addressManagerProvider.manager(ava: avalanche)
         signer = avalanche.signatureProvider
-        encoderDecoderProvider = avalanche.encoderDecoderProvider
-        utxoProvider = avalanche.utxoProvider
+        encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
+        utxoProvider = avalanche.settings.utxoProvider
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: info.connectionType)
         let url = URL(string: "http://notused")!

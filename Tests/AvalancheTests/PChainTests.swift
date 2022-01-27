@@ -24,11 +24,9 @@ final class PChainTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        let avalanche = AvalancheCoreMock()
+        let settings = AvalancheSettings(addressManagerProvider: addressManagerProvider, utxoProvider: utxoProvider)
+        let avalanche = AvalancheCoreMock(settings: settings, connectionProvider: connectionProvider)
         avalanche.getAPIMock = avalanche.defaultGetAPIMock(for: .test)
-        avalanche.utxoProvider = utxoProvider
-        avalanche.addressManager = addressManager
-        avalanche.connectionProvider = connectionProvider
         self.avalanche = avalanche
         testAccount = try! Account(
             pubKey: Data(hex: "0x02ccbf163222a621523a477389b2b6318b9c43b424bdf4b74340e9b45443cc0506")!,
@@ -73,7 +71,7 @@ final class PChainTests: XCTestCase {
         return utxoProvider
     }
     
-    private var addressManager: AvalancheAddressManager {
+    private var addressManagerProvider: AddressManagerProvider {
         let addressManager = AddressManagerMock()
         addressManager.newMock = { api, account, change, count in
             precondition(account == self.testAccount)
@@ -88,7 +86,7 @@ final class PChainTests: XCTestCase {
             precondition(addresses == [self.testFromAddress.address])
             return [self.testFromAddress]
         }
-        return addressManager
+        return AddressManagerProviderMock(addressManager: addressManager)
     }
     
     private var connectionProvider: AvalancheConnectionProvider {
@@ -739,7 +737,12 @@ final class PChainTests: XCTestCase {
                 result(.success((self.testUtxos, nil)))
             })
         }
-        avalanche.utxoProvider = utxoProvider
+        let settings = avalanche.settings
+        avalanche.settings = AvalancheSettings(queue: settings.queue,
+                                               networkInfoProvider: settings.networkInfoProvider,
+                                               addressManagerProvider: settings.addressManagerProvider,
+                                               utxoProvider: utxoProvider,
+                                               encoderDecoderProvider: settings.encoderDecoderProvider)
         let signatureProvider = SignatureProviderMock()
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction

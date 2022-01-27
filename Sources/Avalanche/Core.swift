@@ -16,14 +16,9 @@ public enum AvalancheApiSearchError: Error {
 
 public protocol AvalancheCore: AnyObject {
     var networkID: NetworkID { get set }
-    var networkInfoProvider: AvalancheNetworkInfoProvider { get set }
     var settings: AvalancheSettings { get set }
-    
-    var addressManager: AvalancheAddressManager? { get set }
-    var utxoProvider: AvalancheUtxoProvider { get set }
     var signatureProvider: AvalancheSignatureProvider? { get set }
     var connectionProvider: AvalancheConnectionProvider { get set }
-    var encoderDecoderProvider: AvalancheEncoderDecoderProvider { get set }
     
     func getAPI<A: AvalancheApi>() throws -> A
     func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A

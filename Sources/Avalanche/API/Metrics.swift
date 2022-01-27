@@ -23,7 +23,6 @@ public class AvalancheMetricsApi: AvalancheApi {
     public let info: Info
     
     private let connection: SingleShotConnection
-    private let decoder: ContentDecoder
     
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
@@ -34,7 +33,6 @@ public class AvalancheMetricsApi: AvalancheApi {
         self.hrp = hrp
         self.networkID = networkID
         self.connection = avalanche.connectionProvider.singleShot(api: info.connectionType)
-        self.decoder = avalanche.settings.decoder
     }
     
     public func getMetrics(cb: @escaping ApiCallback<String>) {

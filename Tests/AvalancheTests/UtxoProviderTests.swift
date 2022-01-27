@@ -99,11 +99,11 @@ final class UtxoProviderTests: XCTestCase {
         }
         let endIndex1 = UTXOIndex(
             address: testAddresses[0].bech,
-            utxo: try! avalanche.encoderDecoderProvider.encoder().encode(testUtxos[0]).output.hex()
+            utxo: try! avalanche.settings.encoderDecoderProvider.encoder().encode(testUtxos[0]).output.hex()
         )
         let endIndex2 = UTXOIndex(
             address: testAddresses[1].bech,
-            utxo: try! avalanche.encoderDecoderProvider.encoder().encode(testUtxos[1]).output.hex()
+            utxo: try! avalanche.settings.encoderDecoderProvider.encoder().encode(testUtxos[1]).output.hex()
         )
         api.getUTXOsMock = { addresses, limit, startIndex, sourceChain, encoding, cb in
             guard addresses == testAddresses,

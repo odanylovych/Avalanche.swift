@@ -46,11 +46,11 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
     
     public init(
         url: URL,
-        queue: DispatchQueue,
-        session: URLSession,
-        headers: [String: String],
-        encoder: ContentEncoder,
-        decoder: ContentDecoder
+        queue: DispatchQueue = .main,
+        session: URLSession = .shared,
+        headers: [String: String] = [:],
+        encoder: ContentEncoder = JSONEncoder.rpc,
+        decoder: ContentDecoder = JSONDecoder.rpc
     ) {
         self.url = url
         self.queue = queue
@@ -58,17 +58,6 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
         self.headers = headers
         self.encoder = encoder
         self.decoder = decoder
-    }
-    
-    public init(url: URL, settings: AvalancheSettings) {
-        self.init(
-            url: url,
-            queue: settings.queue,
-            session: settings.session,
-            headers: settings.headers,
-            encoder: settings.encoder,
-            decoder: settings.decoder
-        )
     }
     
     private func getUrl(for api: ApiConnectionType) -> URL {

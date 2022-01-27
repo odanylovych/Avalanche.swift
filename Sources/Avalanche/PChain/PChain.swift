@@ -45,17 +45,17 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     public init(avalanche: AvalancheCore,
                 networkID: NetworkID,
                 hrp: String,
-                info: Info)
-    {
+                info: Info) {
         let settings = avalanche.settings
-        self.addressManager = avalanche.addressManager
+        let addressManagerProvider = avalanche.settings.addressManagerProvider
+        addressManager = addressManagerProvider.manager(ava: avalanche)
         self.info = info
         self.hrp = hrp
         self.networkID = networkID
         self.queue = settings.queue
         signer = avalanche.signatureProvider
-        utxoProvider = avalanche.utxoProvider
-        encoderDecoderProvider = avalanche.encoderDecoderProvider
+        utxoProvider = avalanche.settings.utxoProvider
+        encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
         chainIDApiInfos = {
             [
                 avalanche.xChain.info.alias!: avalanche.xChain.info,
