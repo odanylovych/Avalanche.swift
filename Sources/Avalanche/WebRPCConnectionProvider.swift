@@ -101,11 +101,4 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
         }
         return JsonRpc(.ws(url: url), queue: queue, encoder: encoder, decoder: decoder)
     }
-    
-    public func web3Provider(network: Networks?, api: ApiConnectionType) -> Web3Provider {
-        if let subscribable = subscribableRPC(api: api) {
-            return Web3SubscriptionNetworkProvider(network: network, url: getUrl(subscribable: api)!, service: subscribable)
-        }
-        return Web3NetworkProvider(network: network, url: getUrl(for: api), service: rpc(api: api))
-    }
 }

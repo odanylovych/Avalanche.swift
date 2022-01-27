@@ -22,3 +22,9 @@ public enum ExtendedAvalancheTransactionError: Error {
     case noSuchSignature(Address, in: [Address: Signature])
     case noSuchPath(Address, in: [Address: Bip32Path])
 }
+
+public enum EthereumTransactionError: Error {
+    case encodeError
+    case noSignature
+    case emptyChainID
+}

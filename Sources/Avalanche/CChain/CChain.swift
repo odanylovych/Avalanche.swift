@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import BigInt
 #if !COCOAPODS
+import BigInt
 import web3swift
 import RPC
 import Serializable
@@ -21,10 +21,10 @@ public enum CChainCredentials {
 public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
     public let txFee: BigUInt
     public let gasPrice: BigUInt
-    public let chainId: UInt32
+    public let chainId: BigUInt
     
     public init(
-        txFee: BigUInt, gasPrice: BigUInt, chainId: UInt32, blockchainID: BlockchainID,
+        txFee: BigUInt, gasPrice: BigUInt, chainId: BigUInt, blockchainID: BlockchainID,
         alias: String? = nil, vm: String = "evm"
     ) {
         self.txFee = txFee
@@ -100,8 +100,19 @@ public class AvalancheCChainApi: AvalancheVMApi {
         utxoProvider = avalanche.utxoProvider
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: info.connectionType)
-        let web3Provider = connectionProvider.web3Provider(network: avalanche.web3Network, api: info.connectionType)
-        web3 = web3swift.web3(provider: web3Provider, signer: avalanche.ethereumSignatureProvider)
+        let url = URL(string: "http://notused")!
+        let network: Networks = .Custom(networkID: info.chainId)
+        let web3Provider: Web3Provider
+        if let subscribable = connectionProvider.subscribableRPC(api: info.connectionType) {
+            web3Provider = Web3SubscriptionNetworkProvider(network: network, url: url, service: subscribable)
+        } else {
+            web3Provider = Web3NetworkProvider(network: network, url: url, service: service)
+        }
+        var web3Signer: SignatureProvider? = nil
+        if let signer = signer, let manager = addressManager {
+            web3Signer = Web3SignatureProvider(chainID: info.chainId, signer: signer, manager: manager)
+        }
+        web3 = web3swift.web3(provider: web3Provider, signer: web3Signer)
     }
     
     private func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {

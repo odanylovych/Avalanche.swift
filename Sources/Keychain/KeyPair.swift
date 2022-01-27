@@ -115,10 +115,6 @@ public extension KeyPair {
         "PrivateKey-" + Algos.Base58.cb58(data: _sk)
     }
     
-    var privateData: Data {
-        _sk
-    }
-    
     var publicString: String {
         Algos.Base58.cb58(data: publicKey)
     }

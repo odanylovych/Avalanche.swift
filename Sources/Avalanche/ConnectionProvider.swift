@@ -13,11 +13,7 @@ import web3swift
 
 public typealias Subscribable = Client & Delegator
 
-public protocol Web3NetworkProviderFactory {
-    func web3Provider(network: Networks?, api: ApiConnectionType) -> Web3Provider
-}
-
-public protocol AvalancheConnectionProvider: Web3NetworkProviderFactory {
+public protocol AvalancheConnectionProvider {
     func singleShot(api: ApiConnectionType) -> SingleShotConnection
     func rpc(api: ApiConnectionType) -> Client
     func subscribableRPC(api: ApiConnectionType) -> Subscribable?

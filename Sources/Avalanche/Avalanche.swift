@@ -6,22 +6,17 @@
 //
 
 import Foundation
-#if !COCOAPODS
-import web3swift
-#endif
 
 public class Avalanche: AvalancheCore {
     private var _apis: [String: Any]
     private let _lock: NSRecursiveLock
     
     private var _networkID: NetworkID
-    private var _web3Network: Networks?
     private var _networkInfoProvider: AvalancheNetworkInfoProvider
     private var _settings: AvalancheSettings
     private var _addressManager: AvalancheAddressManager?
     private var _utxoProvider: AvalancheUtxoProvider
     private var _signatureProvider: AvalancheSignatureProvider?
-    private var _ethereumSignatureProvider: SignatureProvider?
     private var _connectionProvider: AvalancheConnectionProvider
     private var _encoderDecoderProvider: AvalancheEncoderDecoderProvider
     
@@ -30,16 +25,6 @@ public class Avalanche: AvalancheCore {
         set {
             _lock.lock()
             _networkID = newValue
-            _apis = [:]
-            _lock.unlock()
-        }
-    }
-    
-    public var web3Network: Networks? {
-        get { _web3Network }
-        set {
-            _lock.lock()
-            _web3Network = newValue
             _apis = [:]
             _lock.unlock()
         }
@@ -96,16 +81,6 @@ public class Avalanche: AvalancheCore {
         }
     }
     
-    public var ethereumSignatureProvider: SignatureProvider? {
-        get { _ethereumSignatureProvider }
-        set {
-            _lock.lock()
-            _ethereumSignatureProvider = newValue
-            _apis = [:]
-            _lock.unlock()
-        }
-    }
-    
     public var connectionProvider: AvalancheConnectionProvider {
         get { _connectionProvider }
         set {
@@ -127,25 +102,21 @@ public class Avalanche: AvalancheCore {
     }
     
     public init(networkID: NetworkID,
-                web3Network: Networks? = nil,
                 networkInfo: AvalancheNetworkInfoProvider = AvalancheDefaultNetworkInfoProvider.default,
                 settings: AvalancheSettings = .default,
                 utxoProvider: AvalancheUtxoProvider = AvalancheDefaultUtxoProvider(),
                 addressManager: AvalancheAddressManager? = nil,
                 signatureProvider: AvalancheSignatureProvider? = nil,
-                ethereumSignatureProvider: SignatureProvider? = nil,
                 connectionProvider: AvalancheConnectionProvider,
                 encoderDecoderProvider: AvalancheEncoderDecoderProvider = DefaultAvalancheEncoderDecoderProvider()) {
         self._apis = [:]
         self._lock = NSRecursiveLock()
         self._networkID = networkID
-        self._web3Network = web3Network
         self._addressManager = addressManager
         self._networkInfoProvider = networkInfo
         self._settings = settings
         self._utxoProvider = utxoProvider
         self._signatureProvider = signatureProvider
-        self._ethereumSignatureProvider = ethereumSignatureProvider
         self._connectionProvider = connectionProvider
         self._encoderDecoderProvider = encoderDecoderProvider
         addressManager?.start(avalanche: self)

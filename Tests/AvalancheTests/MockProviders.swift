@@ -109,7 +109,6 @@ struct ConnectionProviderMock: AvalancheConnectionProvider {
     var singleShotMock: ((ApiConnectionType) -> SingleShotConnection)?
     var rpcMock: ((ApiConnectionType) -> Client)?
     var subscribableRPCMock: ((ApiConnectionType) -> Subscribable?)?
-    var web3ProviderMock: ((Networks?, ApiConnectionType) -> Web3Provider)?
     
     func singleShot(api: ApiConnectionType) -> SingleShotConnection {
         singleShotMock!(api)
@@ -121,10 +120,6 @@ struct ConnectionProviderMock: AvalancheConnectionProvider {
     
     func subscribableRPC(api: ApiConnectionType) -> Subscribable? {
         subscribableRPCMock!(api)
-    }
-    
-    func web3Provider(network: Networks?, api: ApiConnectionType) -> Web3Provider {
-        web3ProviderMock!(network, api)
     }
 }
 
