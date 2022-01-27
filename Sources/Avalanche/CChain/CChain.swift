@@ -77,9 +77,6 @@ public class AvalancheCChainApi: AvalancheVMApi {
     public var eth: web3.Eth { web3.eth }
     public var personal: web3.Personal { web3.personal }
     public var txPool: web3.TxPool { web3.txPool }
-    public var wallet: web3.Web3Wallet { web3.wallet }
-    public var browserFunctions: web3.BrowserFunctions { web3.browserFunctions }
-    public var eventLoop: web3.Eventloop { web3.eventLoop }
     
     public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
         self.hrp = hrp
