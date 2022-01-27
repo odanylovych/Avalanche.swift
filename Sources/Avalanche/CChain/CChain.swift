@@ -103,10 +103,12 @@ public class AvalancheCChainApi: AvalancheVMApi {
         let url = URL(string: "http://notused")!
         let network: Networks = .Custom(networkID: info.chainId)
         let web3Provider: Web3Provider
-        if let subscribable = connectionProvider.subscribableRPC(api: info.connectionType) {
+        if let subscribable = connectionProvider.subscribableRPC(api: info.vmConnectionType) {
             web3Provider = Web3SubscriptionNetworkProvider(network: network, url: url, service: subscribable)
         } else {
-            web3Provider = Web3NetworkProvider(network: network, url: url, service: service)
+            web3Provider = Web3NetworkProvider(network: network,
+                                               url: url,
+                                               service: connectionProvider.rpc(api: info.vmConnectionType))
         }
         var web3Signer: SignatureProvider? = nil
         if let signer = signer, let manager = addressManager {
