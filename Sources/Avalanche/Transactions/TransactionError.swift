@@ -6,6 +6,9 @@
 //
 
 import Foundation
+#if !COCOAPODS
+import web3swift
+#endif
 
 public enum MalformedTransactionError: Error {
     case wrongValue(Any, name: String, message: String)
@@ -23,7 +26,7 @@ public enum ExtendedAvalancheTransactionError: Error {
     case noSuchPath(Address, in: [Address: Bip32Path])
 }
 
-public enum EthereumTransactionError<Addr: AddressProtocol>: Error {
+public enum EthereumTransactionError: Error {
     case encodeError
-    case noSignature(for: Addr)
+    case noSignature(for: EthereumAddress)
 }
