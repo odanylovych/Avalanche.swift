@@ -19,5 +19,4 @@ public protocol ExtendedUnsignedTransaction: UnsignedTransaction {
 }
 
 public protocol SignedTransaction {
-    func serialized() throws -> Data
 }

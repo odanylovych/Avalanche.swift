@@ -11,18 +11,9 @@ import BigInt
 import web3swift
 #endif
 
-extension EthereumTransaction: UnsignedTransaction {
+extension EthereumTransaction: UnsignedTransaction, SignedTransaction {
     public typealias Addr = EthereumAddress
     public typealias Signed = Self
-}
-
-extension EthereumTransaction: SignedTransaction {
-    public func serialized() throws -> Data {
-        guard let data = encode() else {
-            throw EthereumTransactionError.encodeError
-        }
-        return data
-    }
 }
 
 public struct ExtendedEthereumTransaction: ExtendedUnsignedTransaction {

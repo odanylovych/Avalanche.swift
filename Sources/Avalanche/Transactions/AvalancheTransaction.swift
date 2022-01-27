@@ -40,7 +40,7 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
     }
 }
 
-public struct SignedAvalancheTransaction: Equatable {
+public struct SignedAvalancheTransaction: SignedTransaction, Equatable {
     public static let codecID: CodecID = .latest
 
     public let unsignedTransaction: UnsignedAvalancheTransaction
@@ -49,12 +49,6 @@ public struct SignedAvalancheTransaction: Equatable {
     public init(unsignedTransaction: UnsignedAvalancheTransaction, credentials: [Credential]) {
         self.unsignedTransaction = unsignedTransaction
         self.credentials = credentials
-    }
-}
-
-extension SignedAvalancheTransaction: SignedTransaction {
-    public func serialized() throws -> Data {
-        try DefaultAvalancheEncoder().encode(self).output
     }
 }
 
