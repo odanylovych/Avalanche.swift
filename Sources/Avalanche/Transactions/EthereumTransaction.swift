@@ -19,7 +19,7 @@ extension EthereumTransaction: UnsignedTransaction {
 extension EthereumTransaction: SignedTransaction {
     public func serialized() throws -> Data {
         guard let data = encode() else {
-            throw EthereumTransactionError.encodeError
+            throw EthereumTransactionError<Addr>.encodeError
         }
         return data
     }
@@ -41,14 +41,14 @@ public struct ExtendedEthereumTransaction: ExtendedUnsignedTransaction {
     
     public func serialized() throws -> Data {
         guard let data = transaction.encode(forSignature: true, chainID: chainID) else {
-            throw EthereumTransactionError.encodeError
+            throw EthereumTransactionError<Addr>.encodeError
         }
         return data
     }
     
     public func toSigned(signatures: Dictionary<EthereumAddress, Signature>) throws -> EthereumTransaction {
-        guard let signature = signatures.first?.value else {
-            throw EthereumTransactionError.noSignature
+        guard let signature = signatures[account.address] else {
+            throw EthereumTransactionError.noSignature(for: account.address)
         }
         let v = signature.raw[64]
         let r = Data(signature.raw[0..<32])
