@@ -60,6 +60,9 @@ let package = Package(
         .testTarget(
             name: "RPCTests",
             dependencies: ["RPC", "Serializable"]),
+        .testTarget(
+            name: "IntegrationTests",
+            dependencies: ["Avalanche"]),
     ]
 )
 
