@@ -427,14 +427,14 @@ public class AvalancheCChainApi: AvalancheVMApi {
                                     }
                                     let transaction: UnsignedAvalancheTransaction
                                     do {
-                                        let encoder = self.encoderDecoderProvider.encoder()
                                         transaction = CChainExportTransaction(
                                             networkID: self.networkID,
                                             blockchainID: self.info.blockchainID,
                                             destinationChain: destinationChain,
                                             inputs: inputs,
                                             exportedOutputs: try exportedOutputs.sorted {
-                                                try encoder.encode($0).output < encoder.encode($1).output
+                                                try self.encoderDecoderProvider.encoder().encode($0).output <
+                                                    self.encoderDecoderProvider.encoder().encode($1).output
                                             }
                                         )
                                     } catch {
@@ -562,13 +562,13 @@ public class AvalancheCChainApi: AvalancheVMApi {
                             }
                             let transaction: UnsignedAvalancheTransaction
                             do {
-                                let encoder = self.encoderDecoderProvider.encoder()
                                 transaction = CChainImportTransaction(
                                     networkID: self.networkID,
                                     blockchainID: self.info.blockchainID,
                                     sourceChain: sourceChain,
                                     importedInputs: try importInputs.sorted {
-                                        try encoder.encode($0).output < encoder.encode($1).output
+                                        try self.encoderDecoderProvider.encoder().encode($0).output <
+                                            self.encoderDecoderProvider.encoder().encode($1).output
                                     },
                                     outputs: outputs
                                 )

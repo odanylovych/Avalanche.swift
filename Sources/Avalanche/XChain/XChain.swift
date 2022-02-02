@@ -1132,7 +1132,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
         public let assetID: String
         public let name: String
         public let symbol: String
-        public let denomination: UInt32
+        public let denomination: String
     }
     
     public func getAssetDescription(
@@ -1158,7 +1158,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                     assetID: AssetID(cb58: $0.assetID)!,
                     name: $0.name,
                     symbol: $0.symbol,
-                    denomination: $0.denomination
+                    denomination: UInt32($0.denomination)!
                 )
             })
         }
@@ -1499,6 +1499,31 @@ public class AvalancheXChainApi: AvalancheVMApi {
     }
     
     public func send(
+        avax: UInt64,
+        to: Address,
+        memo: String? = nil,
+        from: [Address]? = nil,
+        change: Address? = nil,
+        credentials: AvalancheVmApiCredentials,
+        _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
+    ) {
+        getAvaxAssetID { res in
+            switch res {
+            case .success(let assetID):
+                self.send(amount: avax,
+                     assetID: assetID,
+                     to: to,
+                     memo: memo,
+                     from: from,
+                     change: change,
+                     credentials: credentials, cb)
+            case .failure(let error):
+                self.handleError(error, cb)
+            }
+        }
+    }
+    
+    public func send(
         amount: UInt64,
         assetID: AssetID,
         to: Address,
@@ -1578,8 +1603,14 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 transaction = try BaseTransaction(
                                     networkID: self.networkID,
                                     blockchainID: self.info.blockchainID,
-                                    outputs: outputs,
-                                    inputs: inputs,
+                                    outputs: try outputs.sorted {
+                                        try self.encoderDecoderProvider.encoder().encode($0).output <
+                                            self.encoderDecoderProvider.encoder().encode($1).output
+                                    },
+                                    inputs: try inputs.sorted {
+                                        try self.encoderDecoderProvider.encoder().encode($0).output <
+                                            self.encoderDecoderProvider.encoder().encode($1).output
+                                    },
                                     memo: memo != nil ? memo!.data(using: .utf8)! : Data()
                                 )
                             }

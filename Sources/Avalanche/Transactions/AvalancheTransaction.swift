@@ -11,6 +11,7 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
     public typealias Addr = Address
     public typealias Signed = SignedAvalancheTransaction
     
+    public static let codecID: CodecID = .latest
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public init() {}
@@ -20,6 +21,13 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
     }
     
     public static func from(decoder: AvalancheDecoder) throws -> Self {
+        let codecID: CodecID = try decoder.decode(name: "codecID")
+        guard codecID == Self.codecID else {
+            throw AvalancheDecoderError.dataCorrupted(
+                codecID,
+                AvalancheDecoderError.Context(path: decoder.path)
+            )
+        }
         return try decoder.context.dynamicParser.decode(transaction: decoder) as! Self
     }
     
@@ -41,8 +49,6 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
 }
 
 public struct SignedAvalancheTransaction: SignedTransaction, Equatable {
-    public static let codecID: CodecID = .latest
-
     public let unsignedTransaction: UnsignedAvalancheTransaction
     public let credentials: [Credential]
 
@@ -54,13 +60,6 @@ public struct SignedAvalancheTransaction: SignedTransaction, Equatable {
 
 extension SignedAvalancheTransaction: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let codecID: CodecID = try decoder.decode(name: "codecID")
-        guard codecID == Self.codecID else {
-            throw AvalancheDecoderError.dataCorrupted(
-                codecID,
-                AvalancheDecoderError.Context(path: decoder.path)
-            )
-        }
         self.init(
             unsignedTransaction: try decoder.dynamic(name: "unsignedTransaction"),
             credentials: try decoder.dynamic(name: "credentials")
@@ -68,8 +67,7 @@ extension SignedAvalancheTransaction: AvalancheCodable {
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.codecID, name: "codecID")
-            .encode(unsignedTransaction, name: "unsignedTransaction")
+        try encoder.encode(unsignedTransaction, name: "unsignedTransaction")
             .encode(credentials, name: "credentials")
     }
 }
@@ -185,7 +183,8 @@ public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID, name: "typeID")
+        try encoder.encode(Self.codecID, name: "codecID")
+            .encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")
             .encode(blockchainID, name: "blockchainID")
             .encode(outputs, name: "outputs")

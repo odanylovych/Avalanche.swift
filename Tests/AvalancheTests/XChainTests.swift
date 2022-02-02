@@ -124,7 +124,7 @@ final class XChainTests: XCTestCase {
                         assetID: self.avaxAssetID.cb58(),
                         name: "asset name",
                         symbol: "asset symbol",
-                        denomination: 0
+                        denomination: "0"
                     )))
                 case "avm.issueTx":
                     response(.success(AvalancheXChainApi.IssueTxResponse(

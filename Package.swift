@@ -62,7 +62,7 @@ let package = Package(
             dependencies: ["RPC", "Serializable"]),
         .testTarget(
             name: "IntegrationTests",
-            dependencies: ["Avalanche"]),
+            dependencies: ["AvalancheKeychain"]),
     ]
 )
 
