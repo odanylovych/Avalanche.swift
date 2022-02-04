@@ -47,8 +47,15 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         )
     }
     
+    override public func utxoAddressIndices() -> [
+        (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
+    ] {
+        []
+    }
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID, name: "typeID")
+        try encoder.encode(Self.codecID, name: "codecID")
+            .encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")
             .encode(blockchainID, name: "blockchainID")
             .encode(destinationChain, name: "destinationChain")
@@ -106,8 +113,15 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         )
     }
     
+    override public func utxoAddressIndices() -> [
+        (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
+    ] {
+        importedInputs.map { ($0.input.credentialType(), $0.transactionID, $0.utxoIndex, $0.input.addressIndices) }
+    }
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID, name: "typeID")
+        try encoder.encode(Self.codecID, name: "codecID")
+            .encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")
             .encode(blockchainID, name: "blockchainID")
             .encode(sourceChain, name: "sourceChain")

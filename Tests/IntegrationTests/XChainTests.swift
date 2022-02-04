@@ -25,6 +25,10 @@ final class XChainTests: XCTestCase {
         avalanche.xChain
     }
     
+    private var cChain: AvalancheCChainApi {
+        avalanche.cChain
+    }
+    
     func testSendAvax() throws {
         let sent = expectation(description: "Avax sent")
         try keychain.addAvalancheAccount(index: 0)
@@ -49,6 +53,50 @@ final class XChainTests: XCTestCase {
                 }
             }
         }
-        wait(for: [sent], timeout: 1000)
+        wait(for: [sent], timeout: 100)
+    }
+    
+    func testExportToCChain() throws {
+        let exported = expectation(description: "exported")
+        try keychain.addAvalancheAccount(index: 0)
+        try keychain.addEthereumAccount(index: 0)
+        guard let manager = api.keychain,
+              let cChainManager = cChain.keychain else {
+            XCTFail("Empty address manager in api")
+            return
+        }
+        manager.fetch { res in
+            try! res.get()
+            let account = manager.fetchedAccounts().first!
+            let to = try! account.derive(index: 0,
+                                         change: false,
+                                         hrp: self.api.hrp,
+                                         chainId: self.cChain.info.chainId).address
+            self.api.getAvaxAssetID { res in
+                let assetID = try! res.get()
+                self.api.export(to: to, amount: 10_000_000, assetID: assetID, credentials: .account(account)) { res in
+                    let (txID, _) = try! res.get()
+                    self.api.getTransaction(id: txID) { res in
+                        let signed = try! res.get()
+                        let transaction = signed.unsignedTransaction as? ExportTransaction
+                        XCTAssertNotNil(transaction)
+                        let sourceChain = self.api.info.blockchainID
+                        cChainManager.fetch { res in
+                            try! res.get()
+                            let eth = cChainManager.manager.fetchedAccounts().ethereum.first!
+                            // TODO: async wait for utxos to appear on cchain
+                            self.cChain.import(to: eth.address,
+                                               sourceChain: sourceChain,
+                                               credentials: .account(account)) { res in
+                                let txID = try! res.get()
+                                print("Import Transaction: \(txID.cb58())")
+                                exported.fulfill()
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        wait(for: [exported], timeout: 100)
     }
 }

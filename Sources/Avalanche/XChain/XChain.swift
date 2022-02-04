@@ -1059,8 +1059,14 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 transaction = try ExportTransaction(
                                     networkID: self.networkID,
                                     blockchainID: self.info.blockchainID,
-                                    outputs: outputs,
-                                    inputs: inputs,
+                                    outputs: try outputs.sorted {
+                                        try self.encoderDecoderProvider.encoder().encode($0).output <
+                                            self.encoderDecoderProvider.encoder().encode($1).output
+                                    },
+                                    inputs: try inputs.sorted {
+                                        try self.encoderDecoderProvider.encoder().encode($0).output <
+                                            self.encoderDecoderProvider.encoder().encode($1).output
+                                    },
                                     memo: memo,
                                     destinationChain: destinationChain,
                                     transferableOutputs: exportOutputs
@@ -1593,7 +1599,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 }
                                 let spendable = try UTXOHelper.getMinimumSpendable(aad: aad, utxos: utxos)
                                 inputs = spendable.inputs
-                                outputs = spendable.change + spendable.outputs
+                                outputs = spendable.outputs + spendable.change
                             } catch {
                                 self.handleError(error, cb)
                                 return

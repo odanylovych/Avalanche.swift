@@ -999,7 +999,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     }
     
     public struct GetUTXOsResponse: Decodable {
-        public let numFetched: UInt32
+        public let numFetched: String
         public let utxos: [String]
         public let endIndex: UTXOIndex
         public let encoding: AvalancheEncoding
@@ -1035,7 +1035,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                 .mapError(AvalancheApiError.init)
                 .map {
                     return (
-                        fetched: $0.numFetched,
+                        fetched: UInt32($0.numFetched)!,
                         utxos: $0.utxos.map {
                             let decoder = encoderDecoderProvider.decoder(
                                 context: self.context,

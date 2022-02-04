@@ -15,7 +15,7 @@ import Serializable
 
 public enum CChainCredentials {
     case password(username: String, password: String)
-    case account(Account, EthAccount? = nil)
+    case account(Account, EthAccount)
 }
 
 public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
@@ -253,7 +253,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
     }
     
     public struct GetUTXOsResponse: Decodable {
-        public let numFetched: UInt32
+        public let numFetched: String
         public let utxos: [String]
         public let endIndex: UTXOIndex
         public let encoding: AvalancheEncoding
@@ -289,7 +289,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
                 .mapError(AvalancheApiError.init)
                 .map {
                     return (
-                        fetched: $0.numFetched,
+                        fetched: UInt32($0.numFetched)!,
                         utxos: $0.utxos.map {
                             let decoder = self.encoderDecoderProvider.decoder(
                                 context: self.context,
@@ -356,10 +356,6 @@ public class AvalancheCChainApi: AvalancheVMApi {
                     .map { TransactionID(cb58: $0.txID)! })
             }
         case .account(let account, let ethAccount):
-            guard let ethAccount = ethAccount else {
-                handleError(.custom(description: "EthAccount is not provided", cause: nil), cb)
-                return
-            }
             guard let keychain = keychain else {
                 handleError(.nilAddressManager, cb)
                 return
@@ -473,7 +469,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
         to: EthereumAddress,
         sourceChain: BlockchainID,
         baseFee: UInt64? = nil,
-        credentials: CChainCredentials,
+        credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
         switch credentials {
@@ -495,7 +491,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
                     .mapError(AvalancheApiError.init)
                     .map { TransactionID(cb58: $0.txID)! })
             }
-        case .account(let account, _):
+        case .account(let account):
             guard let keychain = keychain else {
                 handleError(.nilAddressManager, cb)
                 return

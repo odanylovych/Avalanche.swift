@@ -221,6 +221,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
             return
         }
         let iterator = utxoProvider.utxos(api: api, addresses: addresses.map { $0.address })
+        // TODO: add sourceChain for cchain
         UTXOHelper.getAll(iterator: iterator) { res in
             switch res {
             case .success(let utxos):
