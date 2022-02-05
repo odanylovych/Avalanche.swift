@@ -884,7 +884,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                             let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
                             let transaction: UnsignedAvalancheTransaction
                             do {
-                                transaction = try ExportTransaction(
+                                transaction = try PChainExportTransaction(
                                     networkID: self.networkID,
                                     blockchainID: self.info.blockchainID,
                                     outputs: outputs,
@@ -1100,7 +1100,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
             }
             let fromAddresses: [Address]
             do {
-                fromAddresses = try keychain.get(cached: account)
+                fromAddresses = try from ?? keychain.get(cached: account)
             } catch {
                 handleError(error, cb)
                 return
@@ -1192,7 +1192,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
                             }
                             let transaction: UnsignedAvalancheTransaction
                             do {
-                                transaction = try ImportTransaction(
+                                transaction = try PChainImportTransaction(
                                     networkID: self.networkID,
                                     blockchainID: self.info.blockchainID,
                                     outputs: outputs,
