@@ -1170,6 +1170,43 @@ public class AvalancheXChainApi: AvalancheVMApi {
         }
     }
     
+    public struct GetAddressTxsParams: Encodable {
+        public let address: String
+        public let cursor: UInt64?
+        public let assetID: String
+        public let pageSize: UInt64?
+    }
+    
+    public struct GetAddressTxsResponse: Decodable {
+        public let txIDs: [String]
+        public let cursor: UInt64
+    }
+    
+    public func getAddressTxs(
+        address: Address,
+        cursor: UInt64? = nil,
+        assetID: AssetID,
+        pageSize: UInt64? = nil,
+        _ cb: @escaping ApiCallback<(txIDs: [TransactionID], cursor: UInt64)>
+    ) {
+        let params = GetAddressTxsParams(
+            address: address.bech,
+            cursor: cursor,
+            assetID: assetID.cb58(),
+            pageSize: pageSize
+        )
+        service.call(
+            method: "avm.getAddressTxs",
+            params: params,
+            GetAddressTxsResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res.mapError(AvalancheApiError.init).map { response in
+                (txIDs: response.txIDs.map { TransactionID(cb58: $0)! }, cursor: response.cursor)
+            })
+        }
+    }
+    
     public enum GetTransactionEncoding: String, Codable {
         case cb58 = "cb58"
         case hex = "hex"
