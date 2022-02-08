@@ -16,6 +16,7 @@ public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, H
     
     public let address: EthereumAddress
     public let path: Bip32Path
+    public let pubKey: Data
     
     public var index: UInt32 { accountIndex }
     public var isChange: Bool { false }
@@ -28,15 +29,20 @@ public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, H
         } catch AddressError.badPublicKey(key: let pk) {
             throw AccountError.badPublicKey(key: pk)
         }
-        try self.init(address: addr, path: path)
+        try self.init(address: addr, path: path, pubKey: pubKey)
     }
     
-    public init(address: EthereumAddress, path: Bip32Path) throws {
+    public init(address: EthereumAddress, path: Bip32Path, pubKey: Data) throws {
         guard path.isValidEthereumAccount else {
             throw AccountError.badBip32Path(path: path)
         }
         self.address = address
         self.path = path
+        self.pubKey = pubKey
+    }
+    
+    public func avalancheAddress(hrp: String, chainId: String) throws -> Address {
+        try Address(pubKey: pubKey, hrp: hrp, chainId: chainId)
     }
 }
 
@@ -57,14 +63,6 @@ extension EthereumAddress: AddressProtocol {
         Algos.Ethereum.verify(address: addressData,
                               message: message,
                               signature: signature.raw) ?? false
-    }
-    
-    public func extended(path: Bip32Path) throws -> Extended {
-        do {
-            return try EthAccount(address: self, path: path)
-        } catch AccountError.badBip32Path(path: let p) {
-            throw AddressError.badBip32Path(path: p)
-        }
     }
 }
 

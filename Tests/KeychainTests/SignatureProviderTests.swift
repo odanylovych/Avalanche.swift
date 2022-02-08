@@ -120,7 +120,7 @@ final class SignatureProviderTests: XCTestCase {
                     )
                 )
             ],
-            pathes: [avalancheAddress.address: avalancheAddress.path]
+            extended: [avalancheAddress.address: avalancheAddress]
         )
         let data = try transaction.serialized()
         let signatures = [

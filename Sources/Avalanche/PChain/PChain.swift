@@ -77,10 +77,11 @@ public struct AvalanchePChainApi: AvalancheVMApi {
             handleError(.nilSignatureProvider, cb)
             return
         }
-        let pathes: [Address: Bip32Path]
+        let extended: [Address: Address.Extended]
         do {
-            let extended = try keychain.extended(for: addresses)
-            pathes = Dictionary(uniqueKeysWithValues: extended.map { ($0.address, $0.path) })
+            extended = Dictionary(
+                uniqueKeysWithValues: try keychain.extended(for: addresses).map { ($0.address, $0) }
+            )
         } catch {
             handleError(error, cb)
             return
@@ -90,7 +91,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
             extendedTransaction = try ExtendedAvalancheTransaction(
                 transaction: transaction,
                 utxos: utxos,
-                pathes: pathes
+                extended: extended
             )
         } catch {
             handleError(error, cb)

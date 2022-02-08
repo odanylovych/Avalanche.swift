@@ -23,7 +23,7 @@ public enum TransactionBuilderError: Error {
 public enum ExtendedAvalancheTransactionError: Error {
     case noSuchUtxo(TransactionID, utxoIndex: UInt32, in: [UTXO])
     case noSuchSignature(Address, in: [Address: Signature])
-    case noSuchPath(Address, in: [Address: Bip32Path])
+    case noSuchPath(Address, in: [Address: Address.Extended])
 }
 
 public enum EthereumTransactionError: Error {

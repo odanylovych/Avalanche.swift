@@ -77,12 +77,12 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     public typealias Signed = SignedAvalancheTransaction
     
     public let transaction: UnsignedAvalancheTransaction
-    public let pathes: Dictionary<Addr, Bip32Path>
+    public let extended: [Addr: Addr.Extended]
     public let utxoAddresses: [(Credential.Type, [Addr])]
     
-    public init(transaction: UnsignedAvalancheTransaction, utxos: [UTXO], pathes: Dictionary<Addr, Bip32Path>) throws {
+    public init(transaction: UnsignedAvalancheTransaction, utxos: [UTXO], extended: [Addr: Addr.Extended]) throws {
         self.transaction = transaction
-        self.pathes = pathes
+        self.extended = extended
         utxoAddresses = try transaction.utxoAddressIndices().map { credentialType, transactionID, utxoIndex, addressIndices in
             guard let utxo = utxos.first(where: { $0.transactionID == transactionID && $0.utxoIndex == utxoIndex }) else {
                 throw ExtendedAvalancheTransactionError.noSuchUtxo(transactionID, utxoIndex: utxoIndex, in: utxos)
@@ -111,10 +111,10 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     
     public func signingAddresses() throws -> [Addr.Extended] {
         try Set(utxoAddresses.flatMap { $0.1 }).map { address in
-            guard let path = pathes[address] else {
-                throw ExtendedAvalancheTransactionError.noSuchPath(address, in: pathes)
+            guard let extended = extended[address] else {
+                throw ExtendedAvalancheTransactionError.noSuchPath(address, in: extended)
             }
-            return try address.extended(path: path)
+            return extended
         }
     }
 }
