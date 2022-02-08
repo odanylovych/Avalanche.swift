@@ -1104,7 +1104,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     
     public struct Balance: Decodable {
         public let asset: String
-        public let balance: UInt64
+        public let balance: String
     }
     
     public struct GetAllBalancesResponse: Decodable {
@@ -1113,7 +1113,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     
     public func getAllBalances(
         address: Address,
-        _ cb: @escaping ApiCallback<[(asset: AssetID, balance: UInt64)]>
+        _ cb: @escaping ApiCallback<[(asset: String, balance: UInt64)]>
     ) {
         let params = GetAllBalancesParams(
             address: address.bech
@@ -1125,7 +1125,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
             SerializableValue.self
         ) { res in
             cb(res.mapError(AvalancheApiError.init).map { response in
-                response.balances.map { (asset: AssetID(cb58: $0.asset)!, balance: $0.balance) }
+                response.balances.map { (asset: $0.asset, balance: UInt64($0.balance)!) }
             })
         }
     }
@@ -1179,7 +1179,7 @@ public class AvalancheXChainApi: AvalancheVMApi {
     
     public struct GetAddressTxsResponse: Decodable {
         public let txIDs: [String]
-        public let cursor: UInt64
+        public let cursor: String
     }
     
     public func getAddressTxs(
@@ -1202,7 +1202,10 @@ public class AvalancheXChainApi: AvalancheVMApi {
             SerializableValue.self
         ) { res in
             cb(res.mapError(AvalancheApiError.init).map { response in
-                (txIDs: response.txIDs.map { TransactionID(cb58: $0)! }, cursor: response.cursor)
+                (
+                    txIDs: response.txIDs.map { TransactionID(cb58: $0)! },
+                    cursor: UInt64(response.cursor)!
+                )
             })
         }
     }
