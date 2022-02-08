@@ -14,7 +14,7 @@ public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, H
     public typealias Addr = EthereumAddress
     public typealias Base = EthereumAddress
     
-    public var address: EthereumAddress { try! EthereumAddress(pubKey: pubKey) }
+    public let address: EthereumAddress
     public let path: Bip32Path
     public let pubKey: Data
     
@@ -26,6 +26,13 @@ public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, H
         guard path.isValidEthereumAccount else {
             throw AccountError.badBip32Path(path: path)
         }
+        let address: EthereumAddress
+        do {
+            address = try EthereumAddress(pubKey: pubKey)
+        } catch AddressError.badPublicKey(key: let pk) {
+            throw AccountError.badPublicKey(key: pk)
+        }
+        self.address = address
         self.path = path
         self.pubKey = pubKey
     }
@@ -39,7 +46,7 @@ extension EthereumAddress {
     public init(pubKey: Data) throws {
         guard let raw = Algos.Ethereum.address(from: pubKey),
               let address = Self(raw) else {
-            throw AccountError.badPublicKey(key: pubKey)
+            throw AddressError.badPublicKey(key: pubKey)
         }
         self = address
     }
