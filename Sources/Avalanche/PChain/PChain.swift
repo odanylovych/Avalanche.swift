@@ -921,6 +921,53 @@ public struct AvalanchePChainApi: AvalancheVMApi {
         }
     }
     
+    public struct GetBalanceUTXOID: Decodable {
+        public let txID: String
+        public let outputIndex: UInt32
+    }
+    
+    public struct GetBalanceParams: Encodable {
+        public let address: String
+    }
+    
+    public struct GetBalanceResponse: Decodable {
+        public let balance: String
+        public let unlocked: String
+        public let lockedStakeable: String
+        public let lockedNotStakeable: String
+        public let utxoIDs: [GetBalanceUTXOID]?
+    }
+    
+    public func getBalance(
+        address: Address,
+        _ cb: @escaping ApiCallback<(
+            balance: UInt64,
+            unlocked: UInt64,
+            lockedStakeable: UInt64,
+            lockedNotStakeable: UInt64,
+            utxoIDs: [UTXOID]
+        )>
+    ) {
+        let params = GetBalanceParams(address: address.bech)
+        service.call(
+            method: "platform.getBalance",
+            params: params,
+            GetBalanceResponse.self,
+            SerializableValue.self
+        ) { res in
+            cb(res.mapError(AvalancheApiError.init).map { response in (
+                balance: UInt64(response.balance)!,
+                unlocked: UInt64(response.unlocked)!,
+                lockedStakeable: UInt64(response.lockedStakeable)!,
+                lockedNotStakeable: UInt64(response.lockedNotStakeable)!,
+                utxoIDs: response.utxoIDs != nil ? response.utxoIDs!.map { UTXOID(
+                    transactionID: TransactionID(cb58: $0.txID)!,
+                    utxoIndex: $0.outputIndex
+                ) } : []
+            ) })
+        }
+    }
+    
     public struct GetStakingAssetIDParams: Encodable {
         public let subnetID: String?
     }
