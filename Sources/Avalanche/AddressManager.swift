@@ -49,15 +49,18 @@ public protocol AvalancheAddressManager: AnyObject {
     // Fetches list of addresses for account from the network.
     func get<A: AvalancheVMApi>(avm api: A,
                                 for account: Account,
+                                source chain: BlockchainID?,
                                 _ cb: @escaping (Result<[Address], Error>) -> Void)
     
     // Updates cached addresses for Accounts from the network
     func fetch<A: AvalancheVMApi>(avm api: A,
                                   for accounts: [Account],
+                                  source chain: BlockchainID?,
                                   _ cb: @escaping (Result<Void, Error>) -> Void)
     
     // Obtains accounts from Signer and fetches all of them
     func fetch<A: AvalancheVMApi>(avm api: A,
+                                  source chain: BlockchainID?,
                                   _ cb: @escaping (Result<Void, Error>) -> Void)
     
     // Returns list of accounts
@@ -66,6 +69,28 @@ public protocol AvalancheAddressManager: AnyObject {
     // Returns extended addresses for provided addresses
     func extended(avm addresses: [Address]) throws -> [ExtendedAddress]
     func extended(eth addresses: [EthereumAddress]) throws -> [EthAccount]
+}
+
+extension AvalancheAddressManager {
+    public func get<A: AvalancheVMApi>(avm api: A,
+                                       for account: Account,
+                                       source chain: BlockchainID? = nil,
+                                       _ cb: @escaping (Result<[Address], Error>) -> Void) {
+        get(avm: api, for: account, source: chain, cb)
+    }
+    
+    public func fetch<A: AvalancheVMApi>(avm api: A,
+                                         for accounts: [Account],
+                                         source chain: BlockchainID? = nil,
+                                         _ cb: @escaping (Result<Void, Error>) -> Void) {
+        fetch(avm: api, for: accounts, source: chain, cb)
+    }
+    
+    public func fetch<A: AvalancheVMApi>(avm api: A,
+                                         source chain: BlockchainID? = nil,
+                                         _ cb: @escaping (Result<Void, Error>) -> Void) {
+        fetch(avm: api, source: chain, cb)
+    }
 }
 
 public protocol AvalancheApiAddressManager {
@@ -82,10 +107,10 @@ public protocol AvalancheApiUTXOAddressManager: AvalancheApiAddressManager {
     func randomChange(for account: Acct) throws -> Acct.Addr
     
     func get(cached account: Acct) throws -> [Acct.Addr]
-    func get(for account: Acct, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void)
+    func get(for account: Acct, source chain: BlockchainID?, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void)
     
-    func fetch(for accounts: [Acct], _ cb: @escaping (Result<Void, Error>) -> Void)
-    func fetch(_ cb: @escaping (Result<Void, Error>) -> Void)
+    func fetch(for accounts: [Acct], source chain: BlockchainID?, _ cb: @escaping (Result<Void, Error>) -> Void)
+    func fetch(source chain: BlockchainID?, _ cb: @escaping (Result<Void, Error>) -> Void)
     
     func fetchedAccounts() -> [Acct]
 }
@@ -192,8 +217,9 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
     
     public func get<A: AvalancheVMApi>(avm api: A,
                                        for account: Account,
+                                       source chain: BlockchainID? = nil,
                                        _ cb: @escaping (Result<[Address], Error>) -> Void) {
-        fetch(avm: api, for: [account]) { res in
+        fetch(avm: api, for: [account], source: chain) { res in
             cb(res.flatMap {
                 Result { try self.get(avm: api, cached: account) }
             })
@@ -201,11 +227,12 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
     }
     
     private func fetchNext<A: AvalancheVMApi>(avm api: A,
-                           for account: Account,
-                           index: Int,
-                           all: [(ExtendedAddress, Bool)],
-                           change: Bool,
-                           _ cb: @escaping (Result<[ExtendedAddress], Error>) -> Void) {
+                                              for account: Account,
+                                              source chain: BlockchainID? = nil,
+                                              index: Int,
+                                              all: [(ExtendedAddress, Bool)],
+                                              change: Bool,
+                                              _ cb: @escaping (Result<[ExtendedAddress], Error>) -> Void) {
         let addresses: [ExtendedAddress]
         do {
             addresses = try (0..<Self.fetchChunkSize).map { offset in
@@ -221,8 +248,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
             return
         }
         let iterator = utxoProvider.utxos(api: api, addresses: addresses.map { $0.address })
-        // TODO: add sourceChain for cchain
-        UTXOHelper.getAll(iterator: iterator) { res in
+        UTXOHelper.getAll(iterator: iterator, sourceChain: chain) { res in
             switch res {
             case .success(let utxos):
                 let addressesInUtxos = Set(utxos.flatMap { $0.output.addresses })
@@ -240,6 +266,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
                     self.fetchNext(
                         avm: api,
                         for: account,
+                        source: chain,
                         index: index + lastInNewAddresses + 1,
                         all: Array(dropEmpty()),
                         change: change,
@@ -254,12 +281,14 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
     
     public func fetch<A: AvalancheVMApi>(avm api: A,
                                          for accounts: [Account],
+                                         source chain: BlockchainID? = nil,
                                          _ cb: @escaping (Result<Void, Error>) -> Void) {
         [true, false].asyncMap { change, mapped in
             accounts.asyncMap { account, mapped in
                 self.fetchNext(
                     avm: api,
                     for: account,
+                    source: chain,
                     index: self.lastAddressIndex(
                         avm: account,
                         chainId: api.info.chainId,
@@ -284,6 +313,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
     }
     
     public func fetch<A: AvalancheVMApi>(avm api: A,
+                                         source chain: BlockchainID? = nil,
                                          _ cb: @escaping (Result<Void, Error>) -> Void) {
         accounts(type: .both) { res in
             switch res {
@@ -292,7 +322,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
                 self.syncQueue.sync {
                     self.accountsCache = accounts
                 }
-                self.fetch(avm: api, for: accounts.avalanche, cb)
+                self.fetch(avm: api, for: accounts.avalanche, source: chain, cb)
             }
         }
     }

@@ -71,24 +71,20 @@ final class XChainTests: XCTestCase {
         manager.fetch { res in
             try! res.get()
             let account = manager.fetchedAccounts().first!
-            let to = try! account.derive(index: 0,
-                                         change: false,
-                                         hrp: self.api.hrp,
-                                         chainId: self.pChain.info.chainId).address
-            self.api.getAvaxAssetID { res in
-                let assetID = try! res.get()
-                self.api.export(to: to, amount: 10_000_000, assetID: assetID, credentials: .account(account)) { res in
-                    let (txID, _) = try! res.get()
-                    self.api.getTransaction(id: txID) { res in
-                        let signed = try! res.get()
-                        let transaction = signed.unsignedTransaction as? ExportTransaction
-                        XCTAssertNotNil(transaction)
-                        let sourceChain = self.api.info.blockchainID
-                        pChainManager.fetch { res in
-                            try! res.get()
+            pChainManager.fetch { res in
+                try! res.get()
+                let to = try! pChainManager.newAddress(for: account)
+                self.api.getAvaxAssetID { res in
+                    let assetID = try! res.get()
+                    self.api.export(to: to, amount: 10_000_000, assetID: assetID, credentials: .account(account)) { res in
+                        let (txID, _) = try! res.get()
+                        self.api.getTransaction(id: txID) { res in
+                            let signed = try! res.get()
+                            let transaction = signed.unsignedTransaction as? ExportTransaction
+                            XCTAssertNotNil(transaction)
                             // TODO: async wait for utxos to appear on pchain
                             self.pChain.importAVAX(to: to,
-                                                   source: sourceChain,
+                                                   source: self.api.info.blockchainID,
                                                    credentials: .account(account)) { res in
                                 let (txID, _) = try! res.get()
                                 print("Import Transaction: \(txID.cb58())")

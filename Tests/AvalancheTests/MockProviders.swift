@@ -160,9 +160,9 @@ class AddressManagerMock: AvalancheAddressManager {
     ) -> Void)?
     var newMock: ((Any, Account, Bool, Int) throws -> [Address])?
     var getCachedMock: ((Any, Account) throws -> [Address])?
-    var getForAccountMock: ((Any, Account, @escaping (Result<[Address], Error>) -> Void) -> Void)?
-    var fetchForAccountsMock: ((Any, [Account], @escaping (Result<Void, Error>) -> Void) -> Void)?
-    var fetchMock: ((Any, @escaping (Result<Void, Error>) -> Void) -> Void)?
+    var getForAccountMock: ((Any, Account, BlockchainID?, @escaping (Result<[Address], Error>) -> Void) -> Void)?
+    var fetchForAccountsMock: ((Any, [Account], BlockchainID?, @escaping (Result<Void, Error>) -> Void) -> Void)?
+    var fetchMock: ((Any, BlockchainID?, @escaping (Result<Void, Error>) -> Void) -> Void)?
     var fetchedAccountsMock: (() -> AvalancheSignatureProviderAccounts)?
     var extendedAvmMock: (([Address]) throws -> [ExtendedAddress])?
     var extendedEthMock: (([EthereumAddress]) throws -> [EthAccount])?
@@ -185,16 +185,24 @@ class AddressManagerMock: AvalancheAddressManager {
         try getCachedMock!(api, account)
     }
     
-    func get<A>(avm api: A, for account: Account, _ cb: @escaping (Result<[Address], Error>) -> Void) where A : AvalancheVMApi {
-        getForAccountMock!(api, account, cb)
+    func get<A>(avm api: A,
+                for account: Account,
+                source chain: BlockchainID?,
+                _ cb: @escaping (Result<[Address], Error>) -> Void) where A : AvalancheVMApi {
+        getForAccountMock!(api, account, chain, cb)
     }
     
-    func fetch<A>(avm api: A, for accounts: [Account], _ cb: @escaping (Result<Void, Error>) -> Void) where A : AvalancheVMApi {
-        fetchForAccountsMock!(api, accounts, cb)
+    func fetch<A>(avm api: A,
+                  for accounts: [Account],
+                  source chain: BlockchainID?,
+                  _ cb: @escaping (Result<Void, Error>) -> Void) where A : AvalancheVMApi {
+        fetchForAccountsMock!(api, accounts, chain, cb)
     }
     
-    func fetch<A>(avm api: A, _ cb: @escaping (Result<Void, Error>) -> Void) where A : AvalancheVMApi {
-        fetchMock!(api, cb)
+    func fetch<A>(avm api: A,
+                  source chain: BlockchainID?,
+                  _ cb: @escaping (Result<Void, Error>) -> Void) where A : AvalancheVMApi {
+        fetchMock!(api, chain, cb)
     }
     
     func fetchedAccounts() -> AvalancheSignatureProviderAccounts {
@@ -271,16 +279,16 @@ struct AvalancheApiUTXOAddressManagerMock: AvalancheApiUTXOAddressManager {
         try manager.get(avm: api, cached: account)
     }
     
-    func get(for account: Acct, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void) {
-        manager.get(avm: api, for: account, cb)
+    func get(for account: Acct, source chain: BlockchainID?, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void) {
+        manager.get(avm: api, for: account, source: chain, cb)
     }
     
-    func fetch(for accounts: [Acct], _ cb: @escaping (Result<Void, Error>) -> Void) {
-        manager.fetch(avm: api, for: accounts, cb)
+    func fetch(for accounts: [Acct], source chain: BlockchainID?, _ cb: @escaping (Result<Void, Error>) -> Void) {
+        manager.fetch(avm: api, for: accounts, source: chain, cb)
     }
     
-    func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {
-        manager.fetch(avm: api, cb)
+    func fetch(source chain: BlockchainID?, _ cb: @escaping (Result<Void, Error>) -> Void) {
+        manager.fetch(avm: api, source: chain, cb)
     }
     
     func fetchedAccounts() -> [Acct] {

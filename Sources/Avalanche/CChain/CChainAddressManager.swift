@@ -58,16 +58,16 @@ public struct AvalancheCChainApiUTXOAddressManager: AvalancheApiUTXOAddressManag
         try manager.get(avm: api, cached: account)
     }
     
-    public func get(for account: Acct, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void) {
-        manager.get(avm: api, for: account, cb)
+    public func get(for account: Acct, source chain: BlockchainID? = nil, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void) {
+        manager.get(avm: api, for: account, source: chain, cb)
     }
     
-    public func fetch(for accounts: [Acct], _ cb: @escaping (Result<Void, Error>) -> Void) {
-        manager.fetch(avm: api, for: accounts, cb)
+    public func fetch(for accounts: [Acct], source chain: BlockchainID? = nil, _ cb: @escaping (Result<Void, Error>) -> Void) {
+        manager.fetch(avm: api, for: accounts, source: chain, cb)
     }
     
-    public func fetch(_ cb: @escaping (Result<Void, Error>) -> Void) {
-        manager.fetch(avm: api, cb)
+    public func fetch(source chain: BlockchainID? = nil, _ cb: @escaping (Result<Void, Error>) -> Void) {
+        manager.fetch(avm: api, source: chain, cb)
     }
     
     public func fetchedAccounts() -> [Acct] {
