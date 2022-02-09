@@ -422,22 +422,13 @@ public class AvalancheCChainApi: AvalancheVMApi {
                                         self.handleError(error, cb)
                                         return
                                     }
-                                    let transaction: UnsignedAvalancheTransaction
-                                    do {
-                                        transaction = CChainExportTransaction(
-                                            networkID: self.networkID,
-                                            blockchainID: self.info.blockchainID,
-                                            destinationChain: destinationChain,
-                                            inputs: inputs,
-                                            exportedOutputs: try exportedOutputs.sorted {
-                                                try self.encoderDecoderProvider.encoder().encode($0).output <
-                                                    self.encoderDecoderProvider.encoder().encode($1).output
-                                            }
-                                        )
-                                    } catch {
-                                        self.handleError(error, cb)
-                                        return
-                                    }
+                                    let transaction: CChainExportTransaction(
+                                        networkID: self.networkID,
+                                        blockchainID: self.info.blockchainID,
+                                        destinationChain: destinationChain,
+                                        inputs: inputs,
+                                        exportedOutputs: exportedOutputs
+                                    )
                                     self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
                                 case .failure(let error):
                                     self.handleError(error, cb)
@@ -514,7 +505,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
                             let feeAssetID = avaxAssetID
                             let fee = baseFee ?? UInt64(self.info.txFee)
                             var feePaid: UInt64 = 0
-                            var importInputs = [TransferableInput]()
+                            var importedInputs = [TransferableInput]()
                             var assetIDAmount = [AssetID: UInt64]()
                             for utxo in utxos.filter({ type(of: $0.output) == SECP256K1TransferOutput.self }) {
                                 let output = utxo.output as! SECP256K1TransferOutput
@@ -543,7 +534,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
                                     self.handleError(error, cb)
                                     return
                                 }
-                                importInputs.append(input)
+                                importedInputs.append(input)
                                 if let amount = assetIDAmount[utxo.assetID] {
                                     inFeeAmount += amount
                                 }
@@ -557,22 +548,13 @@ public class AvalancheCChainApi: AvalancheVMApi {
                                     assetID: assetID
                                 ))
                             }
-                            let transaction: UnsignedAvalancheTransaction
-                            do {
-                                transaction = CChainImportTransaction(
-                                    networkID: self.networkID,
-                                    blockchainID: self.info.blockchainID,
-                                    sourceChain: sourceChain,
-                                    importedInputs: try importInputs.sorted {
-                                        try self.encoderDecoderProvider.encoder().encode($0).output <
-                                            self.encoderDecoderProvider.encoder().encode($1).output
-                                    },
-                                    outputs: outputs
-                                )
-                            } catch {
-                                self.handleError(error, cb)
-                                return
-                            }
+                            let transaction: CChainImportTransaction(
+                                networkID: self.networkID,
+                                blockchainID: self.info.blockchainID,
+                                sourceChain: sourceChain,
+                                importedInputs: importedInputs,
+                                outputs: outputs
+                            )
                             self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
                         case .failure(let error):
                             self.handleError(error, cb)

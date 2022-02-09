@@ -27,7 +27,7 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         self.blockchainID = blockchainID
         self.destinationChain = destinationChain
         self.inputs = inputs
-        self.exportedOutputs = exportedOutputs
+        self.exportedOutputs = exportedOutputs.sorted()
         super.init()
     }
     
@@ -92,7 +92,7 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         self.networkID = networkID
         self.blockchainID = blockchainID
         self.sourceChain = sourceChain
-        self.importedInputs = importedInputs
+        self.importedInputs = importedInputs.sorted()
         self.outputs = outputs
         super.init()
     }

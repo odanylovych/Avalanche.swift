@@ -1060,14 +1060,8 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 transaction = try ExportTransaction(
                                     networkID: self.networkID,
                                     blockchainID: self.info.blockchainID,
-                                    outputs: try outputs.sorted {
-                                        try self.encoderDecoderProvider.encoder().encode($0).output <
-                                            self.encoderDecoderProvider.encoder().encode($1).output
-                                    },
-                                    inputs: try inputs.sorted {
-                                        try self.encoderDecoderProvider.encoder().encode($0).output <
-                                            self.encoderDecoderProvider.encoder().encode($1).output
-                                    },
+                                    outputs: outputs,
+                                    inputs: inputs,
                                     memo: memo,
                                     destinationChain: destinationChain,
                                     transferableOutputs: exportOutputs
@@ -1650,14 +1644,8 @@ public class AvalancheXChainApi: AvalancheVMApi {
                                 transaction = try BaseTransaction(
                                     networkID: self.networkID,
                                     blockchainID: self.info.blockchainID,
-                                    outputs: try outputs.sorted {
-                                        try self.encoderDecoderProvider.encoder().encode($0).output <
-                                            self.encoderDecoderProvider.encoder().encode($1).output
-                                    },
-                                    inputs: try inputs.sorted {
-                                        try self.encoderDecoderProvider.encoder().encode($0).output <
-                                            self.encoderDecoderProvider.encoder().encode($1).output
-                                    },
+                                    outputs: outputs,
+                                    inputs: inputs,
                                     memo: memo != nil ? memo!.data(using: .utf8)! : Data()
                                 )
                             }

@@ -154,8 +154,8 @@ public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
         }
         self.networkID = networkID
         self.blockchainID = blockchainID
-        self.outputs = outputs
-        self.inputs = inputs
+        self.outputs = outputs.sorted()
+        self.inputs = inputs.sorted()
         self.memo = memo
         super.init()
     }
