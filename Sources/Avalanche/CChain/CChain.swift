@@ -422,7 +422,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
                                         self.handleError(error, cb)
                                         return
                                     }
-                                    let transaction: CChainExportTransaction(
+                                    let transaction = CChainExportTransaction(
                                         networkID: self.networkID,
                                         blockchainID: self.info.blockchainID,
                                         destinationChain: destinationChain,
@@ -548,7 +548,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
                                     assetID: assetID
                                 ))
                             }
-                            let transaction: CChainImportTransaction(
+                            let transaction = CChainImportTransaction(
                                 networkID: self.networkID,
                                 blockchainID: self.info.blockchainID,
                                 sourceChain: sourceChain,

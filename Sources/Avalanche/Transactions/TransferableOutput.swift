@@ -44,6 +44,7 @@ extension TransferableOutput: AvalancheCodable {
 extension TransferableOutput: Comparable {
     public static func < (lhs: TransferableOutput, rhs: TransferableOutput) -> Bool {
         let encoder = { DefaultAvalancheEncoder() }
-        return try! encoder().encode(lhs).output < encoder().encode(rhs).output
+        return try! encoder().encode(lhs).output
+            .lexicographicallyPrecedes(encoder().encode(rhs).output)
     }
 }

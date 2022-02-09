@@ -52,6 +52,7 @@ extension TransferableInput: AvalancheCodable {
 extension TransferableInput: Comparable {
     public static func < (lhs: TransferableInput, rhs: TransferableInput) -> Bool {
         let encoder = { DefaultAvalancheEncoder() }
-        return try! encoder().encode(lhs).output < encoder().encode(rhs).output
+        return try! encoder().encode(lhs).output
+            .lexicographicallyPrecedes(encoder().encode(rhs).output)
     }
 }

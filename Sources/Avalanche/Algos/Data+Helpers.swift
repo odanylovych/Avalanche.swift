@@ -98,16 +98,3 @@ extension Data {
         UInt8(ascii: "c"), UInt8(ascii: "d"), UInt8(ascii: "e"), UInt8(ascii: "f")
     ]
 }
-
-extension Data: Comparable {
-    public static func < (lhs: Data, rhs: Data) -> Bool {
-        let left = Array(lhs)
-        let right = Array(rhs)
-        for index in (0...[left.count, right.count].min()! - 1) {
-            if left[index] != right[index] {
-                return left[index] < right[index]
-            }
-        }
-        return left.count < right.count
-    }
-}
