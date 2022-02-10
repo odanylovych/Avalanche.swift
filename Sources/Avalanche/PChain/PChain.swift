@@ -17,12 +17,12 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     public typealias Keychain = AvalanchePChainApiAddressManager
     
     private let addressManager: AvalancheAddressManager?
-    internal let service: Client
-    internal let queue: DispatchQueue
+    private let service: Client
+    public let queue: DispatchQueue
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
-    public let utxoProvider: AvalancheUtxoProvider
-    public let chainIDApiInfos: (String) -> AvalancheVMApiInfo
+    let utxoProvider: AvalancheUtxoProvider
+    let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     
     public let networkID: NetworkID
     public let hrp: String
@@ -63,18 +63,6 @@ public struct AvalanchePChainApi: AvalancheVMApi {
             ][$0]!
         }
         self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
-    }
-    
-    public func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {
-        self.queue.async {
-            cb(.failure(error))
-        }
-    }
-    
-    public func handleError<R: Any>(_ error: Error, _ cb: @escaping ApiCallback<R>) {
-        self.queue.async {
-            cb(.failure(.custom(cause: error)))
-        }
     }
     
     public struct AddDelegatorParams: Encodable {

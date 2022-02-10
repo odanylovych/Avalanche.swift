@@ -51,12 +51,12 @@ public class AvalancheCChainApi: AvalancheVMApi {
     public let info: Info
     
     public let queue: DispatchQueue
-    public let xchain: AvalancheXChainApi
+    let xchain: AvalancheXChainApi
     private let addressManager: AvalancheAddressManager?
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
-    public let utxoProvider: AvalancheUtxoProvider
-    public let chainIDApiInfos: (String) -> AvalancheVMApiInfo
+    let utxoProvider: AvalancheUtxoProvider
+    let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     private let service: Client
     private let vmService: Client
     private let web3: web3
@@ -115,18 +115,6 @@ public class AvalancheCChainApi: AvalancheVMApi {
             web3Signer = Web3SignatureProvider(chainID: info.chainId, signer: signer, manager: manager)
         }
         web3 = web3swift.web3(provider: web3Provider, signer: web3Signer)
-    }
-    
-    public func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {
-        self.queue.async {
-            cb(.failure(error))
-        }
-    }
-    
-    public func handleError<R: Any>(_ error: Error, _ cb: @escaping ApiCallback<R>) {
-        self.queue.async {
-            cb(.failure(.custom(cause: error)))
-        }
     }
     
     public struct EthChainIDParams: Encodable {

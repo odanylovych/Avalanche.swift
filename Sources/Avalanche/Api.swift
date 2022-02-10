@@ -29,7 +29,7 @@ public protocol AvalancheApiInfo {
     var connectionType: ApiConnectionType { get }
 }
 
-public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
+public protocol AvalancheVMApi: AvalancheApi, TransactionApiSupport where Info: AvalancheVMApiInfo {
     associatedtype Keychain: AvalancheApiAddressManager
     
     var keychain: Keychain? { get }

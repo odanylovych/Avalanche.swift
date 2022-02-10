@@ -11,59 +11,6 @@ import web3swift
 #endif
 
 extension AvalancheCChainApi {
-    private func signAndSend(_ transaction: UnsignedAvalancheTransaction,
-                             with addresses: [Address],
-                             using utxos: [UTXO],
-                             _ cb: @escaping ApiCallback<TransactionID>) {
-        guard let keychain = keychain else {
-            handleError(.nilAddressManager, cb)
-            return
-        }
-        guard let signer = signer else {
-            handleError(.nilSignatureProvider, cb)
-            return
-        }
-        let extended: [Address: Address.Extended]
-        do {
-            extended = Dictionary(
-                uniqueKeysWithValues: try keychain.extended(for: addresses).map { ($0.address, $0) }
-            )
-        } catch {
-            handleError(error, cb)
-            return
-        }
-        let extendedTransaction: ExtendedAvalancheTransaction
-        do {
-            extendedTransaction = try ExtendedAvalancheTransaction(
-                transaction: transaction,
-                utxos: utxos,
-                extended: extended
-            )
-        } catch {
-            handleError(error, cb)
-            return
-        }
-        signer.sign(transaction: extendedTransaction) { res in
-            switch res {
-            case .success(let signed):
-                let tx: String
-                do {
-                    tx = try self.encoderDecoderProvider.encoder().encode(signed).output.cb58()
-                } catch {
-                    self.handleError(error, cb)
-                    return
-                }
-                self.issueTx(tx: tx, encoding: AvalancheEncoding.cb58) { res in
-                    self.queue.async {
-                        cb(res)
-                    }
-                }
-            case .failure(let error):
-                self.handleError(error, cb)
-            }
-        }
-    }
-    
     public func txExport(
         to: Address,
         amount: UInt64,

@@ -89,18 +89,6 @@ public class AvalancheXChainApi: AvalancheVMApi {
         vmService = connectionProvider.rpc(api: info.vmConnectionType)
     }
     
-    public func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {
-        self.queue.async {
-            cb(.failure(error))
-        }
-    }
-    
-    public func handleError<R: Any>(_ error: Error, _ cb: @escaping ApiCallback<R>) {
-        self.queue.async {
-            cb(.failure(.custom(cause: error)))
-        }
-    }
-    
     public func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>) {
         getAssetDescription(assetID: AvalancheConstants.avaxAssetAlias) { res in
             cb(res.map { avaxAssetID, _, _, _ in
