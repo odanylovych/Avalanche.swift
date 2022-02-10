@@ -58,6 +58,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
     private let utxoProvider: AvalancheUtxoProvider
     private let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     private let service: Client
+    private let vmService: Client
     private let web3: web3
     
     public var keychain: AvalancheCChainApiUTXOAddressManager? {
@@ -98,6 +99,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
         utxoProvider = avalanche.settings.utxoProvider
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: info.connectionType)
+        vmService = connectionProvider.rpc(api: info.vmConnectionType)
         let url = URL(string: "http://notused")!
         let network: Networks = .Custom(networkID: info.chainId)
         let web3Provider: Web3Provider
@@ -177,6 +179,23 @@ public class AvalancheCChainApi: AvalancheVMApi {
             case .failure(let error):
                 self.handleError(error, cb)
             }
+        }
+    }
+    
+    public struct EthChainIDParams: Encodable {
+    }
+    
+    public func ethChainID(_ cb: @escaping ApiCallback<BigUInt>) {
+        let params = EthChainIDParams()
+        vmService.call(
+            method: "eth_chainId",
+            params: params,
+            String.self,
+            SerializableValue.self
+        ) { res in
+            cb(res.mapError(AvalancheApiError.init).map {
+                BigUInt($0.dropFirst(2), radix: 16)!
+            })
         }
     }
     
