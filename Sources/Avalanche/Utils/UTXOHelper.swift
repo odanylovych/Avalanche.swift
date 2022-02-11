@@ -1,12 +1,11 @@
 //
-//  Helpers.swift
+//  UTXOHelper.swift
 //  
 //
-//  Created by Ostap Danylovych on 29.11.2021.
+//  Created by Ostap Danylovych on 11.02.2022.
 //
 
 import Foundation
-import BigInt
 
 public struct AssetAmountDestination {
     public let senders: [Address]
@@ -86,7 +85,7 @@ public struct AssetAmount {
 }
 
 public struct UTXOHelper {
-    private static func getUtxos(
+    private static func getUTXOs(
         iterator: AvalancheUtxoProviderIterator,
         limit: UInt32? = nil,
         sourceChain: BlockchainID? = nil,
@@ -100,7 +99,7 @@ public struct UTXOHelper {
                     cb(.success(all + utxos))
                     return
                 }
-                self.getUtxos(iterator: iterator, limit: limit, sourceChain: sourceChain, all: all + utxos, cb)
+                self.getUTXOs(iterator: iterator, limit: limit, sourceChain: sourceChain, all: all + utxos, cb)
             case .failure(let error):
                 cb(.failure(error))
             }
@@ -113,7 +112,7 @@ public struct UTXOHelper {
         sourceChain: BlockchainID? = nil,
         _ cb: @escaping ApiCallback<[UTXO]>
     ) {
-        getUtxos(iterator: iterator, limit: limit, sourceChain: sourceChain, all: [], cb)
+        getUTXOs(iterator: iterator, limit: limit, sourceChain: sourceChain, all: [], cb)
     }
     
     public static func getMinimumSpendable(
@@ -333,46 +332,5 @@ public struct UTXOHelper {
             }
         }
         return (inputs, outputs, change)
-    }
-}
-
-public struct TransactionHelper {
-    public static func getInputTotal(_ inputs: [TransferableInput],
-                                     assetID: AssetID) -> UInt64 {
-        inputs.filter {
-            type(of: $0.input) == SECP256K1TransferInput.self
-            && $0.assetID == assetID
-        }.reduce(0) { total, input in
-            total + (input.input as! SECP256K1TransferInput).amount
-        }
-    }
-    
-    public static func getOutputTotal(_ outputs: [TransferableOutput],
-                                      assetID: AssetID) -> UInt64 {
-        outputs.filter {
-            type(of: $0.output) == SECP256K1TransferOutput.self
-            && $0.assetID == assetID
-        }.reduce(0) { total, output in
-            total + (output.output as! SECP256K1TransferOutput).amount
-        }
-    }
-    
-    public static func getBurn(_ inputs: [TransferableInput],
-                               _ outputs: [TransferableOutput],
-                               assetID: AssetID) -> BigInt {
-        let inputTotal = BigInt(getInputTotal(inputs, assetID: assetID))
-        let outputTotal = BigInt(getOutputTotal(outputs, assetID: assetID))
-        return inputTotal - outputTotal
-    }
-    
-    public static func checkGooseEgg(
-        avax assetID: AssetID,
-        transaction: UnsignedAvalancheTransaction,
-        outputTotal: UInt64? = nil
-    ) -> Bool {
-        let transaction = transaction as! BaseTransaction
-        let outputTotal = outputTotal ?? getOutputTotal(transaction.outputs, assetID: assetID)
-        let fee = getBurn(transaction.inputs, transaction.outputs, assetID: assetID)
-        return fee <= 1_000_000_000 * 10 || fee <= outputTotal
     }
 }
