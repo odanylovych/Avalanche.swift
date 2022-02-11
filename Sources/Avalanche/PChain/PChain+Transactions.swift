@@ -101,7 +101,7 @@ extension AvalanchePChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -211,7 +211,7 @@ extension AvalanchePChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -312,7 +312,7 @@ extension AvalanchePChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -410,7 +410,7 @@ extension AvalanchePChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -506,7 +506,7 @@ extension AvalanchePChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -648,7 +648,7 @@ extension AvalanchePChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })

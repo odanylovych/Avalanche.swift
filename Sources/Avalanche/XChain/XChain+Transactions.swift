@@ -128,7 +128,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (assetID: AssetID(data: transactionID.raw)!, change: changeAddress)
                             })
@@ -244,7 +244,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -352,7 +352,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (assetID: AssetID(data: transactionID.raw)!, change: changeAddress)
                             })
@@ -459,7 +459,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (assetID: AssetID(data: transactionID.raw)!, change: changeAddress)
                             })
@@ -582,7 +582,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -674,7 +674,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -810,7 +810,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
+                        self.signAndSend(transaction, cb)
                     case .failure(let error):
                         self.handleError(error, cb)
                     }
@@ -894,7 +894,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -989,7 +989,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos) { res in
+                        self.signAndSend(transaction) { res in
                             cb(res.map { transactionID in
                                 (txID: transactionID, change: changeAddress)
                             })
@@ -1105,7 +1105,7 @@ extension AvalancheXChainApi {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
+                        self.signAndSend(transaction, cb)
                     case .failure(let error):
                         self.handleError(error, cb)
                     }

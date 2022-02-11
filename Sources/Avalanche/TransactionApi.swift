@@ -1,5 +1,5 @@
 //
-//  TransactionApiSupport.swift
+//  TransactionApi.swift
 //  
 //
 //  Created by Ostap Danylovych on 10.02.2022.
@@ -7,11 +7,12 @@
 
 import Foundation
 
-public protocol TransactionApiSupport {
+public protocol AvalancheTransactionApi: AvalancheVMApi {
     associatedtype AddressManager: AvalancheApiUTXOAddressManager where AddressManager.Acct == Account
     
     var queue: DispatchQueue { get }
     var keychain: AddressManager? { get }
+    var utxoProvider: AvalancheUtxoProvider { get }
     var signer: AvalancheSignatureProvider? { get }
     var encoderDecoderProvider: AvalancheEncoderDecoderProvider { get }
     
@@ -20,7 +21,7 @@ public protocol TransactionApiSupport {
                  _ cb: @escaping ApiCallback<TransactionID>)
 }
 
-extension TransactionApiSupport {
+extension AvalancheTransactionApi {
     func handleError<R: Any>(_ error: AvalancheApiError, _ cb: @escaping ApiCallback<R>) {
         queue.async {
             cb(.failure(error))
@@ -34,8 +35,6 @@ extension TransactionApiSupport {
     }
     
     public func signTransaction(_ transaction: UnsignedAvalancheTransaction,
-                                with addresses: [Address],
-                                using utxos: [UTXO],
                                 _ cb: @escaping ApiCallback<SignedAvalancheTransaction>) {
         guard let keychain = keychain else {
             handleError(.nilAddressManager, cb)
@@ -45,31 +44,44 @@ extension TransactionApiSupport {
             handleError(.nilSignatureProvider, cb)
             return
         }
-        let extendedAddresses: [Address: Address.Extended]
-        do {
-            extendedAddresses = Dictionary(
-                uniqueKeysWithValues: try keychain.extended(for: addresses).map { ($0.address, $0) }
-            )
-        } catch {
-            handleError(error, cb)
-            return
-        }
-        let extendedTransaction: ExtendedAvalancheTransaction
-        do {
-            extendedTransaction = try ExtendedAvalancheTransaction(
-                transaction: transaction,
-                utxos: utxos,
-                extended: extendedAddresses
-            )
-        } catch {
-            handleError(error, cb)
-            return
-        }
-        signer.sign(transaction: extendedTransaction) { res in
+        let inputsData = transaction.inputsData()
+        utxoProvider.utxos(api: self, ids: inputsData.map { ($0.transactionID, $0.utxoIndex) }) { res in
             switch res {
-            case .success(let signed):
-                queue.async {
-                    cb(.success(signed))
+            case .success(let utxos):
+                let credentialAddresses = inputsData.map { inputData -> (Credential.Type, [Address]) in
+                    let utxo = utxos.first(where: {
+                        $0.transactionID == inputData.transactionID
+                        && $0.utxoIndex == inputData.utxoIndex
+                    })!
+                    return (
+                        inputData.credentialType,
+                        inputData.addressIndices.map { utxo.output.addresses[Int($0)] }
+                    )
+                }
+                let extendedAddresses: [Address: Address.Extended]
+                do {
+                    let addresses = credentialAddresses.flatMap { $0.1 }
+                    extendedAddresses = Dictionary(
+                        uniqueKeysWithValues: try keychain.extended(for: addresses).map { ($0.address, $0) }
+                    )
+                } catch {
+                    handleError(error, cb)
+                    return
+                }
+                let extendedTransaction = ExtendedAvalancheTransaction(
+                    transaction: transaction,
+                    credential: credentialAddresses,
+                    extended: extendedAddresses
+                )
+                signer.sign(transaction: extendedTransaction) { res in
+                    switch res {
+                    case .success(let signed):
+                        queue.async {
+                            cb(.success(signed))
+                        }
+                    case .failure(let error):
+                        handleError(error, cb)
+                    }
                 }
             case .failure(let error):
                 handleError(error, cb)
@@ -94,10 +106,8 @@ extension TransactionApiSupport {
     }
     
     public func signAndSend(_ transaction: UnsignedAvalancheTransaction,
-                            with addresses: [Address],
-                            using utxos: [UTXO],
                             _ cb: @escaping ApiCallback<TransactionID>) {
-        signTransaction(transaction, with: addresses, using: utxos) { res in
+        signTransaction(transaction) { res in
             switch res {
             case .success(let signed): issueTransaction(signed, cb)
             case .failure(let error): handleError(error, cb)

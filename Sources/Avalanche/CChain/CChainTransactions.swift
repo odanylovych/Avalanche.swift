@@ -47,9 +47,7 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         )
     }
     
-    override public func utxoAddressIndices() -> [
-        (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
-    ] {
+    override public func inputsData() -> [InputData] {
         []
     }
     
@@ -113,10 +111,13 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         )
     }
     
-    override public func utxoAddressIndices() -> [
-        (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
-    ] {
-        importedInputs.map { ($0.input.credentialType(), $0.transactionID, $0.utxoIndex, $0.input.addressIndices) }
+    override public func inputsData() -> [InputData] {
+        importedInputs.map { InputData(
+            credentialType: $0.input.credentialType(),
+            transactionID: $0.transactionID,
+            utxoIndex: $0.utxoIndex,
+            addressIndices: $0.input.addressIndices
+        ) }
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {

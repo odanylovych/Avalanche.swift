@@ -14,6 +14,13 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
     public static let codecID: CodecID = .latest
     public class var typeID: TypeID { fatalError("Not supported") }
     
+    public struct InputData {
+        public let credentialType: Credential.Type
+        public let transactionID: TransactionID
+        public let utxoIndex: UInt32
+        public let addressIndices: [UInt32]
+    }
+    
     public init() {}
     
     required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
@@ -31,7 +38,7 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
         return try decoder.context.dynamicParser.decode(transaction: decoder) as! Self
     }
     
-    public func utxoAddressIndices() -> [(Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])] {
+    public func inputsData() -> [InputData] {
         fatalError("Not supported")
     }
     
@@ -77,24 +84,21 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     public typealias Signed = SignedAvalancheTransaction
     
     public let transaction: UnsignedAvalancheTransaction
+    public let credential: [(Credential.Type, [Addr])]
     public let extended: [Addr: Addr.Extended]
-    public let utxoAddresses: [(Credential.Type, [Addr])]
     
-    public init(transaction: UnsignedAvalancheTransaction, utxos: [UTXO], extended: [Addr: Addr.Extended]) throws {
+    public init(transaction: UnsignedAvalancheTransaction,
+                credential: [(Credential.Type, [Addr])],
+                extended: [Addr: Addr.Extended]) {
         self.transaction = transaction
+        self.credential = credential
         self.extended = extended
-        utxoAddresses = try transaction.utxoAddressIndices().map { credentialType, transactionID, utxoIndex, addressIndices in
-            guard let utxo = utxos.first(where: { $0.transactionID == transactionID && $0.utxoIndex == utxoIndex }) else {
-                throw ExtendedAvalancheTransactionError.noSuchUtxo(transactionID, utxoIndex: utxoIndex, in: utxos)
-            }
-            return (credentialType, addressIndices.map { utxo.output.addresses[Int($0)] })
-        }
     }
     
     public func toSigned(signatures: Dictionary<Addr, Signature>) throws -> SignedAvalancheTransaction {
         return SignedAvalancheTransaction(
             unsignedTransaction: transaction,
-            credentials: try utxoAddresses.map { credentialType, addresses in
+            credentials: try credential.map { credentialType, addresses in
                 credentialType.init(signatures: try addresses.map { address in
                     guard let signature = signatures[address] else {
                         throw ExtendedAvalancheTransactionError.noSuchSignature(address, in: signatures)
@@ -110,7 +114,7 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     }
     
     public func signingAddresses() throws -> [Addr.Extended] {
-        try Set(utxoAddresses.flatMap { $0.1 }).map { address in
+        try Set(credential.flatMap { $0.1 }).map { address in
             guard let extended = extended[address] else {
                 throw ExtendedAvalancheTransactionError.noSuchPath(address, in: extended)
             }
@@ -176,10 +180,13 @@ public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
         )
     }
     
-    override public func utxoAddressIndices() -> [
-        (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
-    ] {
-        inputs.map { ($0.input.credentialType(), $0.transactionID, $0.utxoIndex, $0.input.addressIndices) }
+    override public func inputsData() -> [InputData] {
+        inputs.map { InputData(
+            credentialType: $0.input.credentialType(),
+            transactionID: $0.transactionID,
+            utxoIndex: $0.utxoIndex,
+            addressIndices: $0.input.addressIndices
+        ) }
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {

@@ -34,7 +34,7 @@ public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
     }
 }
 
-public class AvalancheXChainApi: AvalancheVMApi {
+public class AvalancheXChainApi: AvalancheTransactionApi {
     public typealias Info = AvalancheXChainApiInfo
     public typealias Keychain = AvalancheXChainApiAddressManager
     

@@ -12,7 +12,7 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalanchePChainApi: AvalancheVMApi {
+public struct AvalanchePChainApi: AvalancheTransactionApi {
     public typealias Info = AvalanchePChainApiInfo
     public typealias Keychain = AvalanchePChainApiAddressManager
     
@@ -21,7 +21,7 @@ public struct AvalanchePChainApi: AvalancheVMApi {
     public let queue: DispatchQueue
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
-    let utxoProvider: AvalancheUtxoProvider
+    public let utxoProvider: AvalancheUtxoProvider
     let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     
     public let networkID: NetworkID

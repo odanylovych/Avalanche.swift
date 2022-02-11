@@ -220,8 +220,8 @@ final class PChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
-            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
-            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! AddDelegatorTransaction
             let testTransaction = try! AddDelegatorTransaction(
                 networkID: self.api.networkID,
@@ -358,8 +358,8 @@ final class PChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
-            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
-            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! AddValidatorTransaction
             let testTransaction = try! AddValidatorTransaction(
                 networkID: self.api.networkID,
@@ -494,8 +494,8 @@ final class PChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
-            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
-            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! AddSubnetValidatorTransaction
             let testTransaction = try! AddSubnetValidatorTransaction(
                 networkID: self.api.networkID,
@@ -572,8 +572,8 @@ final class PChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
-            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
-            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! CreateSubnetTransaction
             let testTransaction = try! CreateSubnetTransaction(
                 networkID: self.api.networkID,
@@ -657,8 +657,8 @@ final class PChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
-            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
-            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! ExportTransaction
             let testTransaction = try! ExportTransaction(
                 networkID: self.api.networkID,
@@ -741,8 +741,8 @@ final class PChainTests: XCTestCase {
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
-            XCTAssert(extended.utxoAddresses.first!.0 == SECP256K1Credential.self)
-            XCTAssertEqual(extended.utxoAddresses.first!.1, [fromAddress])
+            XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
+            XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! ImportTransaction
             let testTransaction = try! ImportTransaction(
                 networkID: self.api.networkID,

@@ -42,7 +42,7 @@ public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
     }
 }
 
-public class AvalancheCChainApi: AvalancheVMApi {
+public class AvalancheCChainApi: AvalancheTransactionApi {
     public typealias Info = AvalancheCChainApiInfo
     public typealias Keychain = AvalancheCChainApiUTXOAddressManager
     
@@ -55,7 +55,7 @@ public class AvalancheCChainApi: AvalancheVMApi {
     private let addressManager: AvalancheAddressManager?
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
-    let utxoProvider: AvalancheUtxoProvider
+    public let utxoProvider: AvalancheUtxoProvider
     let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     private let service: Client
     private let vmService: Client

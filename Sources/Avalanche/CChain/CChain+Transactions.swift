@@ -20,83 +20,64 @@ extension AvalancheCChainApi {
         ethAccount: EthAccount,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
-        guard let keychain = keychain else {
-            handleError(.nilAddressManager, cb)
-            return
-        }
-        let fromAddresses: [Address]
-        do {
-            fromAddresses = try keychain.get(cached: account)
-        } catch {
-            handleError(error, cb)
-            return
-        }
-        let iterator = utxoProvider.utxos(api: self, addresses: fromAddresses)
-        UTXOHelper.getAll(iterator: iterator) { res in
+        self.xchain.getAvaxAssetID { res in
             switch res {
-            case .success(let utxos):
-                self.xchain.getAvaxAssetID { res in
+            case .success(let avaxAssetID):
+                let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
+                let fee = baseFee ?? UInt64(self.info.txFee)
+                let address = ethAccount.address
+                self.getTransactionCount(for: address) { res in
                     switch res {
-                    case .success(let avaxAssetID):
-                        let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
-                        let fee = baseFee ?? UInt64(self.info.txFee)
-                        let address = ethAccount.address
-                        self.getTransactionCount(for: address) { res in
-                            switch res {
-                            case .success(let nonce):
-                                var inputs = [EVMInput]()
-                                if assetID == avaxAssetID {
-                                    inputs.append(EVMInput(
-                                        address: address,
-                                        amount: amount + fee,
-                                        assetID: assetID,
-                                        nonce: nonce
-                                    ))
-                                } else {
-                                    inputs.append(contentsOf: [
-                                        EVMInput(
-                                            address: address,
-                                            amount: fee,
-                                            assetID: avaxAssetID,
-                                            nonce: nonce
-                                        ),
-                                        EVMInput(
-                                            address: address,
-                                            amount: amount,
-                                            assetID: assetID,
-                                            nonce: nonce
-                                        )
-                                    ])
-                                }
-                                let exportedOutputs: [TransferableOutput]
-                                do {
-                                    exportedOutputs = [
-                                        TransferableOutput(
-                                            assetID: assetID,
-                                            output: try SECP256K1TransferOutput(
-                                                amount: amount,
-                                                locktime: Date(timeIntervalSince1970: 0),
-                                                threshold: 1,
-                                                addresses: [to]
-                                            )
-                                        )
-                                    ]
-                                } catch {
-                                    self.handleError(error, cb)
-                                    return
-                                }
-                                let transaction = CChainExportTransaction(
-                                    networkID: self.networkID,
-                                    blockchainID: self.info.blockchainID,
-                                    destinationChain: destinationChain,
-                                    inputs: inputs,
-                                    exportedOutputs: exportedOutputs
+                    case .success(let nonce):
+                        var inputs = [EVMInput]()
+                        if assetID == avaxAssetID {
+                            inputs.append(EVMInput(
+                                address: address,
+                                amount: amount + fee,
+                                assetID: assetID,
+                                nonce: nonce
+                            ))
+                        } else {
+                            inputs.append(contentsOf: [
+                                EVMInput(
+                                    address: address,
+                                    amount: fee,
+                                    assetID: avaxAssetID,
+                                    nonce: nonce
+                                ),
+                                EVMInput(
+                                    address: address,
+                                    amount: amount,
+                                    assetID: assetID,
+                                    nonce: nonce
                                 )
-                                self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
-                            case .failure(let error):
-                                self.handleError(error, cb)
-                            }
+                            ])
                         }
+                        let exportedOutputs: [TransferableOutput]
+                        do {
+                            exportedOutputs = [
+                                TransferableOutput(
+                                    assetID: assetID,
+                                    output: try SECP256K1TransferOutput(
+                                        amount: amount,
+                                        locktime: Date(timeIntervalSince1970: 0),
+                                        threshold: 1,
+                                        addresses: [to]
+                                    )
+                                )
+                            ]
+                        } catch {
+                            self.handleError(error, cb)
+                            return
+                        }
+                        let transaction = CChainExportTransaction(
+                            networkID: self.networkID,
+                            blockchainID: self.info.blockchainID,
+                            destinationChain: destinationChain,
+                            inputs: inputs,
+                            exportedOutputs: exportedOutputs
+                        )
+                        self.signAndSend(transaction, cb)
                     case .failure(let error):
                         self.handleError(error, cb)
                     }
@@ -185,7 +166,7 @@ extension AvalancheCChainApi {
                             importedInputs: importedInputs,
                             outputs: outputs
                         )
-                        self.signAndSend(transaction, with: fromAddresses, using: utxos, cb)
+                        self.signAndSend(transaction, cb)
                     case .failure(let error):
                         self.handleError(error, cb)
                     }

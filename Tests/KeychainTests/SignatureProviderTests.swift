@@ -89,7 +89,7 @@ final class SignatureProviderTests: XCTestCase {
     
     func testSignTransaction() throws {
         let success = expectation(description: "success")
-        let transaction = try ExtendedAvalancheTransaction(
+        let transaction = ExtendedAvalancheTransaction(
             transaction: try BaseTransaction(
                 networkID: .test,
                 blockchainID: BlockchainID(data: Data(count: BlockchainID.size))!,
@@ -107,19 +107,7 @@ final class SignatureProviderTests: XCTestCase {
                 ],
                 memo: Data(count: 1)
             ),
-            utxos: [
-                UTXO(
-                    transactionID: TransactionID(data: Data(count: TransactionID.size))!,
-                    utxoIndex: 0,
-                    assetID: AssetID(data: Data(count: AssetID.size))!,
-                    output: SECP256K1TransferOutput(
-                        amount: 1,
-                        locktime: Date(timeIntervalSince1970: 0),
-                        threshold: 1,
-                        addresses: [avalancheAddress.address]
-                    )
-                )
-            ],
+            credential: [(SECP256K1Credential.self, [avalancheAddress.address])],
             extended: [avalancheAddress.address: avalancheAddress]
         )
         let data = try transaction.serialized()

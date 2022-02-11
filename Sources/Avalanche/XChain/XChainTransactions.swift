@@ -155,17 +155,13 @@ public class ImportTransaction: BaseTransaction {
         )
     }
     
-    override public func utxoAddressIndices() -> [
-        (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
-    ] {
-        (inputs + transferableInputs).map {
-            (
-                $0.input.credentialType(),
-                $0.transactionID,
-                $0.utxoIndex,
-                $0.input.addressIndices
-            )
-        }
+    override public func inputsData() -> [InputData] {
+        (inputs + transferableInputs).map { InputData(
+            credentialType: $0.input.credentialType(),
+            transactionID: $0.transactionID,
+            utxoIndex: $0.utxoIndex,
+            addressIndices: $0.input.addressIndices
+        ) }
     }
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
