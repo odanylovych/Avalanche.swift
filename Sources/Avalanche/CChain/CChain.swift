@@ -99,16 +99,15 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         utxoProvider = avalanche.settings.utxoProvider
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: info.connectionType)
-        vmService = connectionProvider.rpc(api: info.vmConnectionType)
         let url = URL(string: "http://notused")!
         let network: Networks = .Custom(networkID: info.chainId)
         let web3Provider: Web3Provider
         if let subscribable = connectionProvider.subscribableRPC(api: info.vmConnectionType) {
+            vmService = subscribable
             web3Provider = Web3SubscriptionNetworkProvider(network: network, url: url, service: subscribable)
         } else {
-            web3Provider = Web3NetworkProvider(network: network,
-                                               url: url,
-                                               service: connectionProvider.rpc(api: info.vmConnectionType))
+            vmService = connectionProvider.rpc(api: info.vmConnectionType)
+            web3Provider = Web3NetworkProvider(network: network, url: url, service: vmService)
         }
         var web3Signer: SignatureProvider? = nil
         if let signer = signer, let manager = addressManager {
@@ -117,14 +116,10 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         web3 = web3swift.web3(provider: web3Provider, signer: web3Signer)
     }
     
-    public struct EthChainIDParams: Encodable {
-    }
-    
     public func ethChainID(_ cb: @escaping ApiCallback<BigUInt>) {
-        let params = EthChainIDParams()
         vmService.call(
             method: "eth_chainId",
-            params: params,
+            params: Nil.nil,
             String.self,
             SerializableValue.self
         ) { res in

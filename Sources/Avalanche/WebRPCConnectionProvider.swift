@@ -60,32 +60,36 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
         self.decoder = decoder
     }
     
-    private func getUrl(for api: ApiConnectionType) -> URL {
+    private func getURL(for api: ApiConnectionType) -> URL {
         URL(string: api.path, relativeTo: url)!
     }
     
-    private func getUrl(subscribable api: ApiConnectionType) -> URL? {
+    private func getURL(subscribable api: ApiConnectionType) -> URL? {
+        let path: String
         switch api {
         case .cChainVM(let alias, let blockchainID):
-            let path = "/ext/bc/\(alias ?? blockchainID.cb58())/ws"
-            return URL(string: path, relativeTo: url)!
-        default: return nil
+            path = "/ext/bc/\(alias ?? blockchainID.cb58())/ws"
+        default:
+            return nil
         }
+        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)!
+        components.scheme = "wss"
+        return URL(string: path, relativeTo: components.url)!
     }
     
     public func singleShot(api: ApiConnectionType) -> SingleShotConnection {
-        HttpConnection(url: getUrl(for: api), queue: queue, headers: [:], session: session)
+        HttpConnection(url: getURL(for: api), queue: queue, headers: [:], session: session)
     }
     
     public func rpc(api: ApiConnectionType) -> Client {
-        JsonRpc(.http(url: getUrl(for: api), session: session, headers: headers),
+        JsonRpc(.http(url: getURL(for: api), session: session, headers: headers),
                 queue: queue,
                 encoder: encoder,
                 decoder: decoder)
     }
     
     public func subscribableRPC(api: ApiConnectionType) -> Subscribable? {
-        guard let url = getUrl(subscribable: api) else {
+        guard let url = getURL(subscribable: api) else {
             return nil
         }
         return JsonRpc(.ws(url: url), queue: queue, encoder: encoder, decoder: decoder)
