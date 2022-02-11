@@ -7,39 +7,57 @@
 
 import Foundation
 
-private let _syncQueue = DispatchQueue(
+private let AsyncValueSyncQueue = DispatchQueue(
     label: "AsyncValueSyncQueue", target: .global()
 )
 
 public class CachedAsyncValue<V, E: Error> {
     private let getter: ((Result<V, E>) -> ()) -> ()
     private var value: Optional<V>
+    private var callbacks: Array<(Result<V,E>) -> ()>
     
     public init(getter: @escaping ((Result<V, E>) -> ()) -> ()) {
         self.getter = getter
+        self.callbacks = []
         self.value = nil
     }
     
-    public func get(force: Bool = false, _ cb: @escaping (Result<V,E>) -> ()) {
-        syncQueue.async {
+    public func get(force: Bool = false,  _ cb: @escaping (Result<V,E>) -> ()) {
+        AsyncValueSyncQueue.async {
+            self.callbacks.append(cb)
             if let val = self.value, !force {
-                cb(.success(val))
-                return
-            }
-            self.getter() { res in
-                switch res {
-                case .success(let val):
-                    self.syncQueue.async { self.value = val }
-                    cb(.success(val))
-                case .failure(let err):
-                    self.syncQueue.async { self.value = nil }
-                    cb(.failure(err))
+                self._fetched(res: .success(val))
+            } else {
+                if self.callbacks.count == 1 {
+                    self._fetch()
                 }
             }
         }
     }
     
-    private var syncQueue: DispatchQueue {
-        return _syncQueue
+    private func _fetch() {
+        self.getter() { res in
+            AsyncValueSyncQueue.async {
+                switch res {
+                case .success(let val):
+                    self.value = val
+                    self._fetched(res: .success(val))
+                case .failure(let err):
+                    self.value = nil
+                    self._fetched(res: .failure(err))
+                }
+            }
+        }
+    }
+    
+    // Should be called in the syncQueue
+    private func _fetched(res: Result<V, E>) {
+        let callbacks = self.callbacks
+        self.callbacks.removeAll()
+        DispatchQueue.global().async {
+            for callback in callbacks {
+                callback(res)
+            }
+        }
     }
 }
