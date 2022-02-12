@@ -8,9 +8,8 @@
 import Foundation
 import BigInt
 
-public struct TransactionHelper {
-    public static func getInputTotal(_ inputs: [TransferableInput],
-                                     assetID: AssetID) -> UInt64 {
+extension BaseTransaction {
+    public func getInputTotal(assetID: AssetID) -> UInt64 {
         inputs.filter {
             type(of: $0.input) == SECP256K1TransferInput.self
             && $0.assetID == assetID
@@ -19,8 +18,7 @@ public struct TransactionHelper {
         }
     }
     
-    public static func getOutputTotal(_ outputs: [TransferableOutput],
-                                      assetID: AssetID) -> UInt64 {
+    public func getOutputTotal(assetID: AssetID) -> UInt64 {
         outputs.filter {
             type(of: $0.output) == SECP256K1TransferOutput.self
             && $0.assetID == assetID
@@ -29,22 +27,15 @@ public struct TransactionHelper {
         }
     }
     
-    public static func getBurn(_ inputs: [TransferableInput],
-                               _ outputs: [TransferableOutput],
-                               assetID: AssetID) -> BigInt {
-        let inputTotal = BigInt(getInputTotal(inputs, assetID: assetID))
-        let outputTotal = BigInt(getOutputTotal(outputs, assetID: assetID))
+    public func getBurn(assetID: AssetID) -> BigInt {
+        let inputTotal = BigInt(getInputTotal(assetID: assetID))
+        let outputTotal = BigInt(getOutputTotal(assetID: assetID))
         return inputTotal - outputTotal
     }
     
-    public static func checkGooseEgg(
-        avax assetID: AssetID,
-        transaction: UnsignedAvalancheTransaction,
-        outputTotal: UInt64? = nil
-    ) -> Bool {
-        let transaction = transaction as! BaseTransaction
-        let outputTotal = outputTotal ?? getOutputTotal(transaction.outputs, assetID: assetID)
-        let fee = getBurn(transaction.inputs, transaction.outputs, assetID: assetID)
+    public func checkGooseEgg(avax assetID: AssetID, outputTotal: UInt64? = nil) -> Bool {
+        let outputTotal = outputTotal ?? getOutputTotal(assetID: assetID)
+        let fee = getBurn(assetID: assetID)
         return fee <= 1_000_000_000 * 10 || fee <= outputTotal
     }
 }

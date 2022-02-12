@@ -68,7 +68,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: AddDelegatorTransaction
                         do {
                             transaction = try AddDelegatorTransaction(
                                 networkID: self.networkID,
@@ -94,10 +94,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -177,7 +174,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: AddValidatorTransaction
                         do {
                             transaction = try AddValidatorTransaction(
                                 networkID: self.networkID,
@@ -204,10 +201,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -283,7 +277,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: AddSubnetValidatorTransaction
                         do {
                             transaction = try AddSubnetValidatorTransaction(
                                 networkID: self.networkID,
@@ -305,10 +299,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -383,7 +374,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: CreateSubnetTransaction
                         do {
                             transaction = try CreateSubnetTransaction(
                                 networkID: self.networkID,
@@ -402,11 +393,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction,
-                            outputTotal: fee
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID, outputTotal: fee) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -483,7 +470,7 @@ extension AvalanchePChainApi {
                             return
                         }
                         let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: PChainExportTransaction
                         do {
                             transaction = try PChainExportTransaction(
                                 networkID: self.networkID,
@@ -499,10 +486,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -626,7 +610,7 @@ extension AvalanchePChainApi {
                                 return
                             }
                         }
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: PChainImportTransaction
                         do {
                             transaction = try PChainImportTransaction(
                                 networkID: self.networkID,
@@ -641,10 +625,7 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }

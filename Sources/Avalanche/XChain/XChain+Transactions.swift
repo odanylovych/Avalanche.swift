@@ -120,11 +120,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction,
-                            outputTotal: fee
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID, outputTotal: fee) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -223,7 +219,7 @@ extension AvalancheXChainApi {
                             ],
                             transferOperation: mintOperation
                         )
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: OperationTransaction
                         do {
                             transaction = try OperationTransaction(
                                 networkID: self.networkID,
@@ -237,10 +233,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -344,11 +337,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction,
-                            outputTotal: fee
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID, outputTotal: fee) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -434,7 +423,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: CreateAssetTransaction
                         do {
                             transaction = try CreateAssetTransaction(
                                 networkID: self.networkID,
@@ -451,11 +440,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction,
-                            outputTotal: fee
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID, outputTotal: fee) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -561,7 +546,7 @@ extension AvalancheXChainApi {
                             ],
                             transferOperation: nftMintOperation
                         )
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: OperationTransaction
                         do {
                             transaction = try OperationTransaction(
                                 networkID: self.networkID,
@@ -575,10 +560,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -652,7 +634,7 @@ extension AvalancheXChainApi {
                             return
                         }
                         let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: ExportTransaction
                         do {
                             transaction = try ExportTransaction(
                                 networkID: self.networkID,
@@ -667,10 +649,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -788,7 +767,7 @@ extension AvalancheXChainApi {
                                 return
                             }
                         }
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: ImportTransaction
                         do {
                             transaction = try ImportTransaction(
                                 networkID: self.networkID,
@@ -803,10 +782,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -873,7 +849,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: BaseTransaction
                         do {
                             transaction = try BaseTransaction(
                                 networkID: self.networkID,
@@ -887,10 +863,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -968,7 +941,7 @@ extension AvalancheXChainApi {
                                 return
                             }
                         }
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: BaseTransaction
                         do {
                             transaction = try BaseTransaction(
                                 networkID: self.networkID,
@@ -982,10 +955,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
@@ -1084,7 +1054,7 @@ extension AvalancheXChainApi {
                             ],
                             transferOperation: nftTransferOperation
                         )
-                        let transaction: UnsignedAvalancheTransaction
+                        let transaction: OperationTransaction
                         do {
                             transaction = try OperationTransaction(
                                 networkID: self.networkID,
@@ -1098,10 +1068,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        guard TransactionHelper.checkGooseEgg(
-                            avax: avaxAssetID,
-                            transaction: transaction
-                        ) else {
+                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
                             self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
                             return
                         }
