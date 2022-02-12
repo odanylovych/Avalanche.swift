@@ -100,7 +100,7 @@ public enum Web3SubscriptionError: Error {
     case parseEventError(CodecError)
 }
 
-public class Web3SubscriptionNetworkProvider: Web3NetworkProvider, Web3SubscriptionProvider, ServerDelegate {
+public class Web3SubscriptionNetworkProvider: Web3NetworkProvider, Web3SubscriptionProvider, ServerDelegate, ErrorDelegate {
     private let internalQueue: DispatchQueue
     private var service: Subscribable
     private var subscriptions = [String: (Parsable) -> Void]()
@@ -178,6 +178,33 @@ public class Web3SubscriptionNetworkProvider: Web3NetworkProvider, Web3Subscript
             }
         }
         return subscription
+    }
+    
+    public func error(_ error: ServiceError) {
+        let format = { (name: String, data: Data) -> String in
+            let text = ", \(name): "
+            if let str = String(data: data, encoding: .utf8) {
+                return text + str
+            }
+            return text + data.hex()
+        }
+        var errorMessage = String(describing: error)
+        switch error {
+        case .connection(let cause):
+            switch cause {
+            case .http(_, let message):
+                if let message = message {
+                    errorMessage += format("message", message)
+                }
+            default:
+                break
+            }
+        case .unregisteredResponse(_, let body):
+            errorMessage += format("body", body)
+        default:
+            break
+        }
+        print("WebSocket error: \(errorMessage)")
     }
     
     public func notification(method: String, params: Parsable) {
