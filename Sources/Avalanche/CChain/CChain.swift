@@ -116,6 +116,12 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         web3 = web3swift.web3(provider: web3Provider, signer: web3Signer)
     }
     
+    deinit {
+        if let vmService = vmService as? Connectable {
+            vmService.disconnect()
+        }
+    }
+    
     public func ethChainID(_ cb: @escaping ApiCallback<BigUInt>) {
         vmService.call(
             method: "eth_chainId",
