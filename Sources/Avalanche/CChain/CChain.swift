@@ -122,6 +122,10 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         }
     }
     
+    public func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>) {
+        xchain.getAvaxAssetID(cb)
+    }
+    
     public func ethChainID(_ cb: @escaping ApiCallback<BigUInt>) {
         vmService.call(
             method: "eth_chainId",

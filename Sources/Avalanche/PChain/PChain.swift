@@ -65,6 +65,10 @@ public struct AvalanchePChainApi: AvalancheTransactionApi {
         self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
     }
     
+    public func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>) {
+        getStakingAssetID(cb)
+    }
+    
     public struct AddDelegatorParams: Encodable {
         public let nodeID: String
         public let startTime: Int64
@@ -691,7 +695,6 @@ public struct AvalanchePChainApi: AvalancheTransactionApi {
             txImportAVAX(
                 from: from,
                 to: to,
-                change: change,
                 source: source,
                 memo: memo,
                 account: account,
