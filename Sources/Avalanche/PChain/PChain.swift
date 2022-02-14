@@ -12,7 +12,7 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalanchePChainApi: AvalancheTransactionApi {
+public class AvalanchePChainApi: AvalancheTransactionApi {
     public typealias Info = AvalanchePChainApiInfo
     public typealias Keychain = AvalanchePChainApiAddressManager
     
@@ -42,10 +42,10 @@ public struct AvalanchePChainApi: AvalancheTransactionApi {
         )
     }
 
-    public init(avalanche: AvalancheCore,
-                networkID: NetworkID,
-                hrp: String,
-                info: Info) {
+    public required init(avalanche: AvalancheCore,
+                         networkID: NetworkID,
+                         hrp: String,
+                         info: Info) {
         let settings = avalanche.settings
         let addressManagerProvider = avalanche.settings.addressManagerProvider
         addressManager = addressManagerProvider.manager(ava: avalanche)
@@ -297,7 +297,7 @@ public struct AvalanchePChainApi: AvalancheTransactionApi {
             }
         case .account(let account):
             self.queue.async {
-                guard let kc = keychain else {
+                guard let kc = self.keychain else {
                     cb(.failure(.nilAddressManager))
                     return
                 }
@@ -575,7 +575,7 @@ public struct AvalanchePChainApi: AvalancheTransactionApi {
                 case .cb58: transactionData = Algos.Base58.from(cb58: response.tx)!
                 case .hex: transactionData = Data(hex: response.tx)!
                 }
-                let decoder = encoderDecoderProvider.decoder(
+                let decoder = self.encoderDecoderProvider.decoder(
                     context: self.context,
                     data: transactionData
                 )
@@ -635,7 +635,7 @@ public struct AvalanchePChainApi: AvalancheTransactionApi {
                     return (
                         fetched: UInt32($0.numFetched)!,
                         utxos: $0.utxos.map {
-                            let decoder = encoderDecoderProvider.decoder(
+                            let decoder = self.encoderDecoderProvider.decoder(
                                 context: self.context,
                                 data: Algos.Base58.from(cb58: $0)!
                             )

@@ -163,7 +163,7 @@ extension AvalanchePChainApi {
                     })
                 }
             case .failure(let error):
-                handleError(error, cb)
+                self.handleError(error, cb)
             }
         }
     }
@@ -235,7 +235,7 @@ extension AvalanchePChainApi {
                     })
                 }
             case .failure(let error):
-                handleError(error, cb)
+                self.handleError(error, cb)
             }
         }
         fatalError("Not implemented")
@@ -303,7 +303,7 @@ extension AvalanchePChainApi {
                     })
                 }
             case .failure(let error):
-                handleError(error, cb)
+                self.handleError(error, cb)
             }
         }
     }
@@ -370,7 +370,7 @@ extension AvalanchePChainApi {
                     })
                 }
             case .failure(let error):
-                handleError(error, cb)
+                self.handleError(error, cb)
             }
         }
     }
