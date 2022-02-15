@@ -44,20 +44,18 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     public let info: Info
     
     public let queue: DispatchQueue
-    let xchain: AvalancheXChainApi
     private let addressManager: AvalancheAddressManager?
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
     public let utxoProvider: AvalancheUtxoProvider
-    public let infoApi: AvalancheInfoApi
     let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     private let service: Client
     private let vmService: Client
     private let web3: web3
-    private var _txFee: UInt64?
-    private var _blockchainID: BlockchainID?
-    private var _avaxAssetID: AssetID?
-    private var _ethChainID: BigUInt?
+    private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
+    private var _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>()
+    private var _avaxAssetID = CachedAsyncValue<AssetID, AvalancheApiError>()
+    private var _ethChainID = CachedAsyncValue<BigUInt, AvalancheApiError>()
     
     public var keychain: AvalancheCChainApiUTXOAddressManager? {
         addressManager.map {
@@ -94,7 +92,6 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         self.info = info
         
         queue = avalanche.settings.queue
-        xchain = avalanche.xChain
         chainIDApiInfos = {
             [
                 avalanche.xChain.info.alias!: avalanche.xChain.info,
@@ -106,7 +103,6 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         signer = avalanche.signatureProvider
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
         utxoProvider = avalanche.settings.utxoProvider
-        infoApi = avalanche.info
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: info.connectionType)
         let url = URL(string: "http://notused")!
@@ -124,6 +120,26 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
             web3Signer = Web3SignatureProvider(chainID: info.chainId, signer: signer, manager: manager)
         }
         web3 = web3swift.web3(provider: web3Provider, signer: web3Signer)
+        _txFee.getter = { cb in
+            avalanche.info.getTxFee { res in
+                cb(res.map { $0.txFee })
+            }
+        }
+        _blockchainID.getter = { cb in
+            avalanche.info.getBlockchainID(alias: info.alias!) { res in
+                cb(res)
+            }
+        }
+        _avaxAssetID.getter = { cb in
+            avalanche.xChain.getAssetDescription(assetID: AvalancheConstants.avaxAssetAlias) { res in
+                cb(res.map { $0.0 })
+            }
+        }
+        _ethChainID.getter = { [weak self] cb in
+            self?.ethChainID { res in
+                cb(res)
+            }
+        }
     }
     
     deinit {
@@ -133,60 +149,32 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     }
     
     public func getTxFee(_ cb: @escaping ApiCallback<UInt64>) {
-        guard let txFee = _txFee else {
-            infoApi.getTxFee { res in
-                cb(res.map { fee in
-                    self._txFee = fee.txFee
-                    return self._txFee!
-                })
-            }
-            return
-        }
-        cb(.success(txFee))
+        _txFee.get(cb)
     }
     
     public func getBlockchainID(_ cb: @escaping ApiCallback<BlockchainID>) {
-        guard let blockchainID = _blockchainID else {
-            infoApi.getBlockchainID(alias: info.alias!) { res in
-                cb(res.map { blockchainID in
-                    self._blockchainID = blockchainID
-                    return self._blockchainID!
-                })
-            }
-            return
-        }
-        cb(.success(blockchainID))
+        _blockchainID.get(cb)
     }
     
     public func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>) {
-        guard let avaxAssetID = _avaxAssetID else {
-            xchain.getAvaxAssetID { res in
-                cb(res.map { avaxAssetID in
-                    self._avaxAssetID = avaxAssetID
-                    return self._avaxAssetID!
-                })
-            }
-            return
-        }
-        cb(.success(avaxAssetID))
+        _avaxAssetID.get(cb)
     }
     
     public func getEthChainID(_ cb: @escaping ApiCallback<BigUInt>) {
-        guard let ethChainID = _ethChainID else {
-            vmService.call(
-                method: "eth_chainId",
-                params: Nil.nil,
-                String.self,
-                SerializableValue.self
-            ) { res in
-                cb(res.mapError(AvalancheApiError.init).map { ethChainID in
-                    self._ethChainID = BigUInt(ethChainID.dropFirst(2), radix: 16)!
-                    return self._ethChainID!
-                })
-            }
-            return
+        _ethChainID.get(cb)
+    }
+    
+    public func ethChainID(_ cb: @escaping ApiCallback<BigUInt>) {
+        vmService.call(
+            method: "eth_chainId",
+            params: Nil.nil,
+            String.self,
+            SerializableValue.self
+        ) { res in
+            cb(res.mapError(AvalancheApiError.init).map {
+                BigUInt($0.dropFirst(2), radix: 16)!
+            })
         }
-        cb(.success(ethChainID))
     }
     
     public struct GetAtomicTxParams: Encodable {

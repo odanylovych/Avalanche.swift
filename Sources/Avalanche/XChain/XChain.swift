@@ -13,10 +13,6 @@ import Serializable
 #endif
 
 public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
-    public override init(blockchainID: BlockchainID, alias: String? = nil) {
-        super.init(blockchainID: blockchainID, alias: alias)
-    }
-    
     override public var connectionType: ApiConnectionType {
         .xChain(alias: alias, blockchainID: blockchainID)
     }
@@ -38,11 +34,10 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     private var vmConnectionType: ApiConnectionType
     private let service: Client
     private let vmService: Client
-    public let infoApi: AvalancheInfoApi
-    private var _txFee: UInt64?
-    private var _creationTxFee: UInt64?
-    private var _blockchainID: BlockchainID?
-    private var _avaxAssetID: AssetID?
+    private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
+    private var _creationTxFee = CachedAsyncValue<UInt64, AvalancheApiError>()
+    private var _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>()
+    private var _avaxAssetID = CachedAsyncValue<AssetID, AvalancheApiError>()
     
     public var keychain: AvalancheXChainApiAddressManager? {
         addressManager.map {
@@ -78,7 +73,6 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
         utxoProvider = avalanche.settings.utxoProvider
         signer = avalanche.signatureProvider
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
-        infoApi = avalanche.info
         chainIDApiInfos = {
             [
                 avalanche.pChain.info.alias!: avalanche.pChain.info,
@@ -91,60 +85,42 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: info.connectionType)
         vmService = connectionProvider.rpc(api: vmConnectionType)
+        _txFee.getter = { cb in
+            avalanche.info.getTxFee { res in
+                cb(res.map { $0.txFee })
+            }
+        }
+        _creationTxFee.getter = { cb in
+            avalanche.info.getTxFee { res in
+                cb(res.map { $0.creationTxFee })
+            }
+        }
+        _blockchainID.getter = { cb in
+            avalanche.info.getBlockchainID(alias: info.alias!) { res in
+                cb(res)
+            }
+        }
+        _avaxAssetID.getter = { [weak self] cb in
+            self?.getAssetDescription(assetID: AvalancheConstants.avaxAssetAlias) { res in
+                cb(res.map { $0.0 })
+            }
+        }
     }
     
     public func getTxFee(_ cb: @escaping ApiCallback<UInt64>) {
-        guard let txFee = _txFee else {
-            infoApi.getTxFee { res in
-                cb(res.map { fee in
-                    self._txFee = fee.txFee
-                    self._creationTxFee = fee.creationTxFee
-                    return self._txFee!
-                })
-            }
-            return
-        }
-        cb(.success(txFee))
+        _txFee.get(cb)
     }
     
     public func getCreationTxFee(_ cb: @escaping ApiCallback<UInt64>) {
-        guard let creationTxFee = _creationTxFee else {
-            infoApi.getTxFee { res in
-                cb(res.map { fee in
-                    self._txFee = fee.txFee
-                    self._creationTxFee = fee.creationTxFee
-                    return self._creationTxFee!
-                })
-            }
-            return
-        }
-        cb(.success(creationTxFee))
+        _creationTxFee.get(cb)
     }
     
     public func getBlockchainID(_ cb: @escaping ApiCallback<BlockchainID>) {
-        guard let blockchainID = _blockchainID else {
-            infoApi.getBlockchainID(alias: info.alias!) { res in
-                cb(res.map { blockchainID in
-                    self._blockchainID = blockchainID
-                    return self._blockchainID!
-                })
-            }
-            return
-        }
-        cb(.success(blockchainID))
+        _blockchainID.get(cb)
     }
     
     public func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>) {
-        guard let avaxAssetID = _avaxAssetID else {
-            getAssetDescription(assetID: AvalancheConstants.avaxAssetAlias) { res in
-                cb(res.map { avaxAssetID, _, _, _ in
-                    self._avaxAssetID = avaxAssetID
-                    return self._avaxAssetID!
-                })
-            }
-            return
-        }
-        cb(.success(avaxAssetID))
+        _avaxAssetID.get(cb)
     }
     
     public struct InitialHolder: Encodable {
