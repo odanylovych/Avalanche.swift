@@ -11,6 +11,9 @@ import XCTest
 import RPC
 
 final class PChainTests: XCTestCase {
+    private let creationTxFee: UInt64 = 10_000_000
+    private let txFee: UInt64 = 1_000_000
+    
     private var avalanche: AvalancheCore!
     private var testAccount: Account!
     private var idIndex: UInt8!
@@ -556,7 +559,7 @@ final class PChainTests: XCTestCase {
                 )
             )
         ]
-        let fee = UInt64(api.info.creationTxFee)
+        let fee = creationTxFee
         let outputs = [
             TransferableOutput(
                 assetID: avaxAssetID,
@@ -629,7 +632,7 @@ final class PChainTests: XCTestCase {
                 )
             )
         ]
-        let fee = UInt64(api.info.txFee)
+        let fee = txFee
         let outputs = [
             TransferableOutput(
                 assetID: avaxAssetID,
@@ -700,7 +703,7 @@ final class PChainTests: XCTestCase {
         let testSourceChain = newID(type: BlockchainID.self)
         let output = utxoForInput.output as! SECP256K1TransferOutput
         let inputs = [TransferableInput]()
-        let fee = UInt64(api.info.txFee)
+        let fee = txFee
         let outputs = [
             TransferableOutput(
                 assetID: avaxAssetID,

@@ -12,6 +12,18 @@ import Serializable
 import RPC
 #endif
 
+public class AvalanchePChainApiInfo: AvalancheBaseVMApiInfo {
+    public override init(blockchainID: BlockchainID,
+                         alias: String? = nil,
+                         vm: String = "platformvm") {
+        super.init(blockchainID: blockchainID, alias: alias, vm: vm)
+    }
+    
+    override public var connectionType: ApiConnectionType {
+        .pChain(alias: alias, blockchainID: blockchainID)
+    }
+}
+
 public class AvalanchePChainApi: AvalancheTransactionApi {
     public typealias Info = AvalanchePChainApiInfo
     public typealias Keychain = AvalanchePChainApiAddressManager
@@ -22,11 +34,15 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
     public let utxoProvider: AvalancheUtxoProvider
+    public let infoApi: AvalancheInfoApi
     let chainIDApiInfos: (String) -> AvalancheVMApiInfo
-    
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
+    private var _txFee: UInt64?
+    private var _creationTxFee: UInt64?
+    private var _blockchainID: BlockchainID?
+    private var _avaxAssetID: AssetID?
     
     public var keychain: AvalanchePChainApiAddressManager? {
         addressManager.map {
@@ -56,6 +72,7 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
         signer = avalanche.signatureProvider
         utxoProvider = avalanche.settings.utxoProvider
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
+        infoApi = avalanche.info
         chainIDApiInfos = {
             [
                 avalanche.xChain.info.alias!: avalanche.xChain.info,
@@ -65,8 +82,58 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
         self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
     }
     
+    public func getTxFee(_ cb: @escaping ApiCallback<UInt64>) {
+        guard let txFee = _txFee else {
+            infoApi.getTxFee { res in
+                cb(res.map { fee in
+                    self._txFee = fee.txFee
+                    self._creationTxFee = fee.creationTxFee
+                    return self._txFee!
+                })
+            }
+            return
+        }
+        cb(.success(txFee))
+    }
+    
+    public func getCreationTxFee(_ cb: @escaping ApiCallback<UInt64>) {
+        guard let creationTxFee = _creationTxFee else {
+            infoApi.getTxFee { res in
+                cb(res.map { fee in
+                    self._txFee = fee.txFee
+                    self._creationTxFee = fee.creationTxFee
+                    return self._creationTxFee!
+                })
+            }
+            return
+        }
+        cb(.success(creationTxFee))
+    }
+    
+    public func getBlockchainID(_ cb: @escaping ApiCallback<BlockchainID>) {
+        guard let blockchainID = _blockchainID else {
+            infoApi.getBlockchainID(alias: info.alias!) { res in
+                cb(res.map { blockchainID in
+                    self._blockchainID = blockchainID
+                    return self._blockchainID!
+                })
+            }
+            return
+        }
+        cb(.success(blockchainID))
+    }
+    
     public func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>) {
-        getStakingAssetID(cb)
+        guard let avaxAssetID = _avaxAssetID else {
+            getStakingAssetID { res in
+                cb(res.map { avaxAssetID in
+                    self._avaxAssetID = avaxAssetID
+                    return self._avaxAssetID!
+                })
+            }
+            return
+        }
+        cb(.success(avaxAssetID))
     }
     
     public struct AddDelegatorParams: Encodable {

@@ -95,8 +95,6 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         addNonVmApis(to: netApis)
         netApis.setInfo(
             info: AvalancheXChainApi.Info(
-                txFee: .milliAVAX,
-                creationTxFee: .centiAVAX,
                 blockchainID: BlockchainID(cb58: "2vrXWHgGxh5n3YsLHMV16YVVJTpT4z45Fmb4y3bL6si8kLCyg9")!,
                 alias: "X"
             ),
@@ -104,8 +102,6 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         netApis.setInfo(
             info: AvalancheCChainApi.Info(
-                txFee: .milliAVAX,
-                gasPrice: 470.gwei,
                 chainId: 43111,
                 blockchainID: BlockchainID(cb58: "2fFZQibQXcd6LTE4rpBPBAkLVXFE91Kit8pgxaBG1mRnh5xqbb")!,
                 alias: "C"
@@ -114,17 +110,6 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         netApis.setInfo(
             info: AvalanchePChainApi.Info(
-                minConsumption: 0.1,
-                maxConsumption: 0.12,
-                maxStakingDuration: 31536000,
-                maxSupply: 720000000.AVAX,
-                minStake: 2000.AVAX,
-                minStakeDuration: 2 * 7 * 24 * 60 * 60, //two weeks
-                maxStakeDuration: 365 * 24 * 60 * 60, // one year
-                minDelegationStake: 25.AVAX,
-                minDelegationFee: 2.AVAX,
-                txFee: .milliAVAX,
-                creationTxFee: .centiAVAX,
                 blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
                 alias: "P"
             ),
@@ -132,15 +117,13 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         return AvalancheDefaultNetworkInfo(hrp: "custom", apiInfo: netApis)
     }
-    
+
     // NetworkID.main || NetworkID.avalanche
     private static func avalancheNetInfo() -> AvalancheDefaultNetworkInfo {
         let netApis = AvalancheDefaultApiInfoProvider()
         addNonVmApis(to: netApis)
         netApis.setInfo(
             info: AvalancheXChainApi.Info(
-                txFee: .milliAVAX,
-                creationTxFee: .centiAVAX,
                 blockchainID: BlockchainID(cb58: "2oYMBNV4eNHyqk2fjjV5nVQLDbtmNJzq5s3qs3Lo6ftnC6FByM")!,
                 alias: "X"
             ),
@@ -148,8 +131,6 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         netApis.setInfo(
             info: AvalancheCChainApi.Info(
-                txFee: .milliAVAX,
-                gasPrice: 470.gwei,
                 chainId: 43114,
                 blockchainID: BlockchainID(cb58: "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5")!,
                 alias: "C"
@@ -158,17 +139,6 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         netApis.setInfo(
             info: AvalanchePChainApi.Info(
-                minConsumption: 0.1,
-                maxConsumption: 0.12,
-                maxStakingDuration: 31536000,
-                maxSupply: 720000000.AVAX,
-                minStake: 2000.AVAX,
-                minStakeDuration: 2 * 7 * 24 * 60 * 60, //two weeks
-                maxStakeDuration: 365 * 24 * 60 * 60, // one year
-                minDelegationStake: 25.AVAX,
-                minDelegationFee: 2.AVAX,
-                txFee: .milliAVAX,
-                creationTxFee: .centiAVAX,
                 blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
                 alias: "P"
             ),
@@ -176,15 +146,13 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         return AvalancheDefaultNetworkInfo(hrp: "avax", apiInfo: netApis)
     }
-    
+
     // NetworkID.test || NetworkID.fuji
     private static func fujiNetInfo() -> AvalancheDefaultNetworkInfo {
         let netApis = AvalancheDefaultApiInfoProvider()
         addNonVmApis(to: netApis)
         netApis.setInfo(
             info: AvalancheXChainApi.Info(
-                txFee: .milliAVAX,
-                creationTxFee: .centiAVAX,
                 blockchainID: BlockchainID(cb58: "2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm")!,
                 alias: "X"
             ),
@@ -192,8 +160,6 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         netApis.setInfo(
             info: AvalancheCChainApi.Info(
-                txFee: .milliAVAX,
-                gasPrice: 470.gwei,
                 chainId: 43113,
                 blockchainID: BlockchainID(cb58: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")!,
                 alias: "C"
@@ -202,17 +168,6 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         )
         netApis.setInfo(
             info: AvalanchePChainApi.Info(
-                minConsumption: 0.1,
-                maxConsumption: 0.12,
-                maxStakingDuration: 31536000,
-                maxSupply: 720000000.AVAX,
-                minStake: 1.AVAX,
-                minStakeDuration: 24 * 60 * 60, //one day
-                maxStakeDuration: 365 * 24 * 60 * 60, // one year
-                minDelegationStake: 1.AVAX,
-                minDelegationFee: 2.AVAX,
-                txFee: .milliAVAX,
-                creationTxFee: .centiAVAX,
                 blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
                 alias: "P"
             ),
