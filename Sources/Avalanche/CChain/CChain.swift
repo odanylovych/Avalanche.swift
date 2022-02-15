@@ -19,13 +19,6 @@ public enum CChainCredentials {
 }
 
 public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
-    public let chainId: BigUInt
-    
-    public init(chainId: BigUInt, blockchainID: BlockchainID, alias: String? = nil) {
-        self.chainId = chainId
-        super.init(blockchainID: blockchainID, alias: alias)
-    }
-    
     override public var connectionType: ApiConnectionType {
         .cChain(alias: alias, blockchainID: blockchainID)
     }
@@ -51,7 +44,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     let chainIDApiInfos: (String) -> AvalancheVMApiInfo
     private let service: Client
     private let vmService: Client
-    private let web3: web3
+    private let _web3 = CachedAsyncValue<web3, AvalancheApiError>()
     private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
     private var _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>()
     private var _avaxAssetID = CachedAsyncValue<AssetID, AvalancheApiError>()
@@ -70,10 +63,6 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
             dynamicParser: CChainDynamicTypeRegistry.instance
         )
     }
-    
-    public var eth: web3.Eth { web3.eth }
-    public var personal: web3.Personal { web3.personal }
-    public var txPool: web3.TxPool { web3.txPool }
     
     public required convenience init(avalanche: AvalancheCore,
                                      networkID: NetworkID,
@@ -105,21 +94,33 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         utxoProvider = avalanche.settings.utxoProvider
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: info.connectionType)
-        let url = URL(string: "http://notused")!
-        let network: Networks = .Custom(networkID: info.chainId)
-        let web3Provider: Web3Provider
         if let subscribable = connectionProvider.subscribableRPC(api: info.vmConnectionType) {
             vmService = subscribable
-            web3Provider = Web3SubscriptionNetworkProvider(network: network, url: url, service: subscribable)
         } else {
             vmService = connectionProvider.rpc(api: info.vmConnectionType)
-            web3Provider = Web3NetworkProvider(network: network, url: url, service: vmService)
         }
-        var web3Signer: SignatureProvider? = nil
-        if let signer = signer, let manager = addressManager {
-            web3Signer = Web3SignatureProvider(chainID: info.chainId, signer: signer, manager: manager)
+        _web3.getter = { [weak self] cb in
+            guard let this = self else {
+                return
+            }
+            this.getEthChainID { res in
+                cb(res.map { chainID in
+                    let url = URL(string: "http://notused")!
+                    let network: Networks = .Custom(networkID: chainID)
+                    let web3Provider: Web3Provider
+                    if let vmService = this.vmService as? Subscribable {
+                        web3Provider = Web3SubscriptionNetworkProvider(network: network, url: url, service: vmService)
+                    } else {
+                        web3Provider = Web3NetworkProvider(network: network, url: url, service: this.vmService)
+                    }
+                    var web3Signer: SignatureProvider? = nil
+                    if let signer = this.signer, let manager = this.addressManager {
+                        web3Signer = Web3SignatureProvider(chainID: chainID, signer: signer, manager: manager)
+                    }
+                    return web3swift.web3(provider: web3Provider, signer: web3Signer)
+                })
+            }
         }
-        web3 = web3swift.web3(provider: web3Provider, signer: web3Signer)
         _txFee.getter = { cb in
             avalanche.info.getTxFee { res in
                 cb(res.map { $0.txFee })
@@ -162,6 +163,28 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     
     public func getEthChainID(_ cb: @escaping ApiCallback<BigUInt>) {
         _ethChainID.get(cb)
+    }
+    
+    public func getWeb3(_ cb: @escaping ApiCallback<web3>) {
+        _web3.get(cb)
+    }
+    
+    public func getEth(_ cb: @escaping ApiCallback<web3.Eth>) {
+        getWeb3 { res in
+            cb(res.map { $0.eth })
+        }
+    }
+    
+    public func getPersonal(_ cb: @escaping ApiCallback<web3.Personal>) {
+        getWeb3 { res in
+            cb(res.map { $0.personal })
+        }
+    }
+    
+    public func getTxPool(_ cb: @escaping ApiCallback<web3.TxPool>) {
+        getWeb3 { res in
+            cb(res.map { $0.txPool })
+        }
     }
     
     public func ethChainID(_ cb: @escaping ApiCallback<BigUInt>) {
@@ -307,8 +330,15 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         for address: EthereumAddress,
         _ cb: @escaping ApiCallback<UInt64>
     ) {
-        eth.getTransactionCountPromise(address: address).asCallback {
-            cb($0.map(UInt64.init))
+        getEth { res in
+            switch res {
+            case .success(let eth):
+                eth.getTransactionCountPromise(address: address).asCallback {
+                    cb($0.map(UInt64.init))
+                }
+            case .failure(let error):
+                self.handleError(error, cb)
+            }
         }
     }
     
