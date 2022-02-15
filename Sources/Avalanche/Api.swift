@@ -55,7 +55,6 @@ public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
 public protocol AvalancheVMApiInfo: AvalancheApiInfo {
     var blockchainID: BlockchainID { get }
     var alias: String? { get }
-    var vm: String { get }
     
     var chainId: String { get }
 }
@@ -69,14 +68,11 @@ extension AvalancheVMApiInfo {
 public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
     public let blockchainID: BlockchainID
     public let alias: String?
-    public let vm: String
     
-    public init(blockchainID: BlockchainID,
-                alias: String?, vm: String)
+    public init(blockchainID: BlockchainID, alias: String?)
     {
         self.blockchainID = blockchainID
         self.alias = alias
-        self.vm = vm
     }
     
     public var connectionType: ApiConnectionType {

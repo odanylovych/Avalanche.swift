@@ -13,18 +13,12 @@ import Serializable
 #endif
 
 public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
-    public override init(blockchainID: BlockchainID,
-                         alias: String? = nil,
-                         vm: String = "avm") {
-        super.init(blockchainID: blockchainID, alias: alias, vm: vm)
+    public override init(blockchainID: BlockchainID, alias: String? = nil) {
+        super.init(blockchainID: blockchainID, alias: alias)
     }
     
     override public var connectionType: ApiConnectionType {
         .xChain(alias: alias, blockchainID: blockchainID)
-    }
-    
-    public var vmConnectionType: ApiConnectionType {
-        .xChainVM(vm: vm)
     }
 }
 
@@ -41,6 +35,7 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
+    private var vmConnectionType: ApiConnectionType
     private let service: Client
     private let vmService: Client
     public let infoApi: AvalancheInfoApi
@@ -63,7 +58,18 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
         )
     }
     
-    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
+    public required convenience init(avalanche: AvalancheCore,
+                                     networkID: NetworkID,
+                                     hrp: String,
+                                     info: Info) {
+        self.init(avalanche: avalanche, networkID: networkID, hrp: hrp, info: info, vm: "avm")
+    }
+    
+    public required init(avalanche: AvalancheCore,
+                         networkID: NetworkID,
+                         hrp: String,
+                         info: Info,
+                         vm: String) {
         self.networkID = networkID
         self.hrp = hrp
         self.info = info
@@ -79,13 +85,12 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
                 avalanche.cChain.info.alias!: avalanche.cChain.info
             ][$0]!
         }
-        
         let settings = avalanche.settings
         queue = settings.queue
-        
+        vmConnectionType = .xChainVM(vm: vm)
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: info.connectionType)
-        vmService = connectionProvider.rpc(api: info.vmConnectionType)
+        vmService = connectionProvider.rpc(api: vmConnectionType)
     }
     
     public func getTxFee(_ cb: @escaping ApiCallback<UInt64>) {

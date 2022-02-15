@@ -13,10 +13,8 @@ import RPC
 #endif
 
 public class AvalanchePChainApiInfo: AvalancheBaseVMApiInfo {
-    public override init(blockchainID: BlockchainID,
-                         alias: String? = nil,
-                         vm: String = "platformvm") {
-        super.init(blockchainID: blockchainID, alias: alias, vm: vm)
+    public override init(blockchainID: BlockchainID, alias: String? = nil) {
+        super.init(blockchainID: blockchainID, alias: alias)
     }
     
     override public var connectionType: ApiConnectionType {
@@ -57,11 +55,19 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
             dynamicParser: PChainDynamicTypeRegistry.instance
         )
     }
-
+    
+    public required convenience init(avalanche: AvalancheCore,
+                                     networkID: NetworkID,
+                                     hrp: String,
+                                     info: Info) {
+        self.init(avalanche: avalanche, networkID: networkID, hrp: hrp, info: info, vm: "platformvm")
+    }
+    
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
                          hrp: String,
-                         info: Info) {
+                         info: Info,
+                         vm: String) {
         let settings = avalanche.settings
         let addressManagerProvider = avalanche.settings.addressManagerProvider
         addressManager = addressManagerProvider.manager(ava: avalanche)

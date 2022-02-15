@@ -21,12 +21,9 @@ public enum CChainCredentials {
 public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
     public let chainId: BigUInt
     
-    public init(chainId: BigUInt,
-                blockchainID: BlockchainID,
-                alias: String? = nil,
-                vm: String = "evm") {
+    public init(chainId: BigUInt, blockchainID: BlockchainID, alias: String? = nil) {
         self.chainId = chainId
-        super.init(blockchainID: blockchainID, alias: alias, vm: vm)
+        super.init(blockchainID: blockchainID, alias: alias)
     }
     
     override public var connectionType: ApiConnectionType {
@@ -80,7 +77,18 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     public var personal: web3.Personal { web3.personal }
     public var txPool: web3.TxPool { web3.txPool }
     
-    public required init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info) {
+    public required convenience init(avalanche: AvalancheCore,
+                                     networkID: NetworkID,
+                                     hrp: String,
+                                     info: Info) {
+        self.init(avalanche: avalanche, networkID: networkID, hrp: hrp, info: info, vm: "evm")
+    }
+    
+    public required init(avalanche: AvalancheCore,
+                         networkID: NetworkID,
+                         hrp: String,
+                         info: Info,
+                         vm: String) {
         self.hrp = hrp
         self.networkID = networkID
         self.info = info
