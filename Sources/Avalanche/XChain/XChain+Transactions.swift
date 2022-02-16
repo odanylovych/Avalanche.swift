@@ -41,7 +41,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getCreationTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -86,7 +86,7 @@ extension AvalancheXChainApi {
                         do {
                             transaction = try CreateAssetTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo,
@@ -130,7 +130,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -182,7 +182,7 @@ extension AvalancheXChainApi {
                         do {
                             transaction = try OperationTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo,
@@ -224,7 +224,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getCreationTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -262,7 +262,7 @@ extension AvalancheXChainApi {
                         do {
                             transaction = try CreateAssetTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo,
@@ -307,7 +307,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getCreationTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -346,7 +346,7 @@ extension AvalancheXChainApi {
                         do {
                             transaction = try CreateAssetTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo,
@@ -391,7 +391,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -449,7 +449,7 @@ extension AvalancheXChainApi {
                         do {
                             transaction = try OperationTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo,
@@ -490,7 +490,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change ?? to) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -518,30 +518,36 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        let destinationChain = self.chainIDApiInfos(ChainID(to.chainId)).blockchainID
-                        let transaction: ExportTransaction
-                        do {
-                            transaction = try ExportTransaction(
-                                networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
-                                outputs: outputs,
-                                inputs: inputs,
-                                memo: memo,
-                                destinationChain: destinationChain,
-                                transferableOutputs: exportOutputs
-                            )
-                        } catch {
-                            self.handleError(error, cb)
-                            return
-                        }
-                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
-                            self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
-                            return
-                        }
-                        self.signAndSend(transaction) { res in
-                            cb(res.map { transactionID in
-                                (txID: transactionID, change: changeAddress)
-                            })
+                        self.blockchainIDs(ChainID(to.chainId)) { res in
+                            switch res {
+                            case .success(let destinationChain):
+                                let transaction: ExportTransaction
+                                do {
+                                    transaction = try ExportTransaction(
+                                        networkID: self.networkID,
+                                        blockchainID: blockchainID,
+                                        outputs: outputs,
+                                        inputs: inputs,
+                                        memo: memo,
+                                        destinationChain: destinationChain,
+                                        transferableOutputs: exportOutputs
+                                    )
+                                } catch {
+                                    self.handleError(error, cb)
+                                    return
+                                }
+                                guard transaction.checkGooseEgg(avax: avaxAssetID) else {
+                                    self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
+                                    return
+                                }
+                                self.signAndSend(transaction) { res in
+                                    cb(res.map { transactionID in
+                                        (txID: transactionID, change: changeAddress)
+                                    })
+                                }
+                            case .failure(let error):
+                                self.handleError(error, cb)
+                            }
                         }
                     case .failure(let error):
                         self.handleError(error, cb)
@@ -562,7 +568,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, sourceChain: sourceChain) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(var fee):
@@ -636,7 +642,7 @@ extension AvalancheXChainApi {
                         do {
                             transaction = try ImportTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo,
@@ -674,7 +680,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change ?? to) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -704,7 +710,7 @@ extension AvalancheXChainApi {
                         do {
                             transaction = try BaseTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo != nil ? memo!.data(using: .utf8)! : Data()
@@ -743,7 +749,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -776,7 +782,7 @@ extension AvalancheXChainApi {
                         do {
                             transaction = try BaseTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: transferableOutputs,
                                 inputs: inputs,
                                 memo: memo != nil ? memo!.data(using: .utf8)! : Data()
@@ -817,7 +823,7 @@ extension AvalancheXChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -869,7 +875,7 @@ extension AvalancheXChainApi {
                         do {
                             transaction = try OperationTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo,

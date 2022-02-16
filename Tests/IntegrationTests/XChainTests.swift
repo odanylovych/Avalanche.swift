@@ -83,12 +83,15 @@ final class XChainTests: XCTestCase {
                             let transaction = signed.unsignedTransaction as? ExportTransaction
                             XCTAssertNotNil(transaction)
                             // TODO: async wait for utxos to appear on pchain
-                            self.pChain.importAVAX(to: to,
-                                                   source: self.api.info.blockchainID,
-                                                   credentials: .account(account)) { res in
-                                let (txID, _) = try! res.get()
-                                print("Import Transaction: \(txID.cb58())")
-                                exported.fulfill()
+                            self.api.getBlockchainID { res in
+                                let source = try! res.get()
+                                self.pChain.importAVAX(to: to,
+                                                       source: source,
+                                                       credentials: .account(account)) { res in
+                                    let (txID, _) = try! res.get()
+                                    print("Import Transaction: \(txID.cb58())")
+                                    exported.fulfill()
+                                }
                             }
                         }
                     }
@@ -122,17 +125,19 @@ final class XChainTests: XCTestCase {
                         let signed = try! res.get()
                         let transaction = signed.unsignedTransaction as? ExportTransaction
                         XCTAssertNotNil(transaction)
-                        let sourceChain = self.api.info.blockchainID
                         cChainManager.fetch { res in
                             try! res.get()
                             let eth = cChainManager.manager.fetchedAccounts().ethereum.first!
                             // TODO: async wait for utxos to appear on cchain
-                            self.cChain.import(to: eth.address,
-                                               sourceChain: sourceChain,
-                                               credentials: .account(account)) { res in
-                                let txID = try! res.get()
-                                print("Import Transaction: \(txID.cb58())")
-                                exported.fulfill()
+                            self.api.getBlockchainID { res in
+                                let sourceChain = try! res.get()
+                                self.cChain.import(to: eth.address,
+                                                   sourceChain: sourceChain,
+                                                   credentials: .account(account)) { res in
+                                    let txID = try! res.get()
+                                    print("Import Transaction: \(txID.cb58())")
+                                    exported.fulfill()
+                                }
                             }
                         }
                     }

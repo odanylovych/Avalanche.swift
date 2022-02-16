@@ -23,64 +23,77 @@ extension AvalancheCChainApi {
         getAvaxAssetID { res in
             switch res {
             case .success(let avaxAssetID):
-                self.getTxFee { res in
+                self.getBlockchainID { res in
                     switch res {
-                    case .success(let txFee):
-                        let destinationChain = self.chainIDApiInfos(ChainID(to.chainId)).blockchainID
-                        let fee = baseFee ?? txFee
-                        let address = ethAccount.address
-                        self.getTransactionCount(for: address) { res in
+                    case .success(let blockchainID):
+                        self.getTxFee { res in
                             switch res {
-                            case .success(let nonce):
-                                var inputs = [EVMInput]()
-                                if assetID == avaxAssetID {
-                                    inputs.append(EVMInput(
-                                        address: address,
-                                        amount: amount + fee,
-                                        assetID: assetID,
-                                        nonce: nonce
-                                    ))
-                                } else {
-                                    inputs.append(contentsOf: [
-                                        EVMInput(
-                                            address: address,
-                                            amount: fee,
-                                            assetID: avaxAssetID,
-                                            nonce: nonce
-                                        ),
-                                        EVMInput(
-                                            address: address,
-                                            amount: amount,
-                                            assetID: assetID,
-                                            nonce: nonce
-                                        )
-                                    ])
+                            case .success(let txFee):
+                                self.blockchainIDs(ChainID(to.chainId)) { res in
+                                    switch res {
+                                    case .success(let destinationChain):
+                                        let fee = baseFee ?? txFee
+                                        let address = ethAccount.address
+                                        self.getTransactionCount(for: address) { res in
+                                            switch res {
+                                            case .success(let nonce):
+                                                var inputs = [EVMInput]()
+                                                if assetID == avaxAssetID {
+                                                    inputs.append(EVMInput(
+                                                        address: address,
+                                                        amount: amount + fee,
+                                                        assetID: assetID,
+                                                        nonce: nonce
+                                                    ))
+                                                } else {
+                                                    inputs.append(contentsOf: [
+                                                        EVMInput(
+                                                            address: address,
+                                                            amount: fee,
+                                                            assetID: avaxAssetID,
+                                                            nonce: nonce
+                                                        ),
+                                                        EVMInput(
+                                                            address: address,
+                                                            amount: amount,
+                                                            assetID: assetID,
+                                                            nonce: nonce
+                                                        )
+                                                    ])
+                                                }
+                                                let exportedOutputs: [TransferableOutput]
+                                                do {
+                                                    exportedOutputs = [
+                                                        TransferableOutput(
+                                                            assetID: assetID,
+                                                            output: try SECP256K1TransferOutput(
+                                                                amount: amount,
+                                                                locktime: Date(timeIntervalSince1970: 0),
+                                                                threshold: 1,
+                                                                addresses: [to]
+                                                            )
+                                                        )
+                                                    ]
+                                                } catch {
+                                                    self.handleError(error, cb)
+                                                    return
+                                                }
+                                                let transaction = CChainExportTransaction(
+                                                    networkID: self.networkID,
+                                                    blockchainID: blockchainID,
+                                                    destinationChain: destinationChain,
+                                                    inputs: inputs,
+                                                    exportedOutputs: exportedOutputs
+                                                )
+                                                self.signAndSend(transaction, cb)
+                                            case .failure(let error):
+                                                self.handleError(error, cb)
+                                            }
+                                        }
+                                    case .failure(let error):
+                                        self.handleError(error, cb)
+                                    }
                                 }
-                                let exportedOutputs: [TransferableOutput]
-                                do {
-                                    exportedOutputs = [
-                                        TransferableOutput(
-                                            assetID: assetID,
-                                            output: try SECP256K1TransferOutput(
-                                                amount: amount,
-                                                locktime: Date(timeIntervalSince1970: 0),
-                                                threshold: 1,
-                                                addresses: [to]
-                                            )
-                                        )
-                                    ]
-                                } catch {
-                                    self.handleError(error, cb)
-                                    return
-                                }
-                                let transaction = CChainExportTransaction(
-                                    networkID: self.networkID,
-                                    blockchainID: self.info.blockchainID,
-                                    destinationChain: destinationChain,
-                                    inputs: inputs,
-                                    exportedOutputs: exportedOutputs
-                                )
-                                self.signAndSend(transaction, cb)
                             case .failure(let error):
                                 self.handleError(error, cb)
                             }
@@ -104,7 +117,7 @@ extension AvalancheCChainApi {
     ) {
         withTransactionData(for: account, sourceChain: sourceChain) { res in
             switch res {
-            case .success((let utxos, _, _, let avaxAssetID)):
+            case .success((let utxos, _, _, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(let txFee):
@@ -156,7 +169,7 @@ extension AvalancheCChainApi {
                     }
                     let transaction = CChainImportTransaction(
                         networkID: self.networkID,
-                        blockchainID: self.info.blockchainID,
+                        blockchainID: blockchainID,
                         sourceChain: sourceChain,
                         importedInputs: importedInputs,
                         outputs: outputs

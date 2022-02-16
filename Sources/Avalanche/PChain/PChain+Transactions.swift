@@ -23,7 +23,7 @@ extension AvalanchePChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 let inputs: [TransferableInput]
                 let outputs: [TransferableOutput]
                 let stakeOutputs: [TransferableOutput]
@@ -50,7 +50,7 @@ extension AvalanchePChainApi {
                 do {
                     transaction = try AddDelegatorTransaction(
                         networkID: self.networkID,
-                        blockchainID: self.info.blockchainID,
+                        blockchainID: blockchainID,
                         outputs: outputs,
                         inputs: inputs,
                         memo: memo,
@@ -103,7 +103,7 @@ extension AvalanchePChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 let inputs: [TransferableInput]
                 let outputs: [TransferableOutput]
                 let stakeOutputs: [TransferableOutput]
@@ -130,7 +130,7 @@ extension AvalanchePChainApi {
                 do {
                     transaction = try AddValidatorTransaction(
                         networkID: self.networkID,
-                        blockchainID: self.info.blockchainID,
+                        blockchainID: blockchainID,
                         outputs: outputs,
                         inputs: inputs,
                         memo: memo,
@@ -182,7 +182,7 @@ extension AvalanchePChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 let inputs: [TransferableInput]
                 let outputs: [TransferableOutput]
                 do {
@@ -207,7 +207,7 @@ extension AvalanchePChainApi {
                 do {
                     transaction = try AddSubnetValidatorTransaction(
                         networkID: self.networkID,
-                        blockchainID: self.info.blockchainID,
+                        blockchainID: blockchainID,
                         outputs: outputs,
                         inputs: inputs,
                         memo: memo,
@@ -252,7 +252,7 @@ extension AvalanchePChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getCreationTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -280,7 +280,7 @@ extension AvalanchePChainApi {
                         do {
                             transaction = try CreateSubnetTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo,
@@ -325,7 +325,7 @@ extension AvalanchePChainApi {
     ) {
         withTransactionData(for: account, from: from, change: change) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(let fee):
@@ -351,31 +351,37 @@ extension AvalanchePChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        let destinationChain = self.chainIDApiInfos(ChainID(to.chainId)).blockchainID
-                        let transaction: PChainExportTransaction
-                        do {
-                            transaction = try PChainExportTransaction(
-                                networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
-                                outputs: outputs,
-                                inputs: inputs,
-                                memo: memo,
-                                destinationChain: destinationChain,
-                                transferableOutputs: exportOutputs
-                            )
-                        }
-                        catch {
-                            self.handleError(error, cb)
-                            return
-                        }
-                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
-                            self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
-                            return
-                        }
-                        self.signAndSend(transaction) { res in
-                            cb(res.map { transactionID in
-                                (txID: transactionID, change: changeAddress)
-                            })
+                        self.blockchainIDs(ChainID(to.chainId)) { res in
+                            switch res {
+                            case .success(let destinationChain):
+                                let transaction: PChainExportTransaction
+                                do {
+                                    transaction = try PChainExportTransaction(
+                                        networkID: self.networkID,
+                                        blockchainID: blockchainID,
+                                        outputs: outputs,
+                                        inputs: inputs,
+                                        memo: memo,
+                                        destinationChain: destinationChain,
+                                        transferableOutputs: exportOutputs
+                                    )
+                                }
+                                catch {
+                                    self.handleError(error, cb)
+                                    return
+                                }
+                                guard transaction.checkGooseEgg(avax: avaxAssetID) else {
+                                    self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
+                                    return
+                                }
+                                self.signAndSend(transaction) { res in
+                                    cb(res.map { transactionID in
+                                        (txID: transactionID, change: changeAddress)
+                                    })
+                                }
+                            case .failure(let error):
+                                self.handleError(error, cb)
+                            }
                         }
                     case .failure(let error):
                         self.handleError(error, cb)
@@ -397,7 +403,7 @@ extension AvalanchePChainApi {
     ) {
         withTransactionData(for: account, from: from, sourceChain: source) { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID)):
+            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
                     switch res {
                     case .success(var fee):
@@ -475,7 +481,7 @@ extension AvalanchePChainApi {
                         do {
                             transaction = try PChainImportTransaction(
                                 networkID: self.networkID,
-                                blockchainID: self.info.blockchainID,
+                                blockchainID: blockchainID,
                                 outputs: outputs,
                                 inputs: inputs,
                                 memo: memo,

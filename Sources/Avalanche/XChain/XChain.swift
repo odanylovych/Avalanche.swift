@@ -24,13 +24,13 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     public let utxoProvider: AvalancheUtxoProvider
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
-    public let chainIDApiInfos: (ChainID) -> AvalancheVMApiInfo
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
     public let chainID: ChainID
     private let service: Client
     private let vmService: Client
+    let blockchainIDs: (ChainID, @escaping ApiCallback<BlockchainID>) -> ()
     private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
     private var _creationTxFee = CachedAsyncValue<UInt64, AvalancheApiError>()
     private var _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>()
@@ -77,17 +77,21 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
         utxoProvider = avalanche.settings.utxoProvider
         signer = avalanche.signatureProvider
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
-        chainIDApiInfos = {
-            [
-                avalanche.pChain.chainID: avalanche.pChain.info,
-                avalanche.cChain.chainID: avalanche.cChain.info
-            ][$0]!
-        }
         let settings = avalanche.settings
         queue = settings.queue
         let connectionProvider = avalanche.connectionProvider
         service = connectionProvider.rpc(api: .xChain(chainID: chainID))
         vmService = connectionProvider.rpc(api: .xChainVM(vm: vm))
+        blockchainIDs = { chainID, cb in
+            switch chainID {
+            case .alias(let alias):
+                avalanche.info.getBlockchainID(alias: alias) { res in
+                    cb(res)
+                }
+            case .blockchainID(let blockchainID):
+                cb(.success(blockchainID))
+            }
+        }
         _txFee.getter = { cb in
             avalanche.info.getTxFee { res in
                 cb(res.map { $0.txFee })

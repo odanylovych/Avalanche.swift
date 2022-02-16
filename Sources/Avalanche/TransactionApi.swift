@@ -16,6 +16,7 @@ public protocol AvalancheTransactionApi: AvalancheVMApi {
     var signer: AvalancheSignatureProvider? { get }
     var encoderDecoderProvider: AvalancheEncoderDecoderProvider { get }
     
+    func getBlockchainID(_ cb: @escaping ApiCallback<BlockchainID>)
     func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>)
     func issueTx(tx: String,
                  encoding: AvalancheEncoding?,
@@ -39,7 +40,7 @@ extension AvalancheTransactionApi {
                              from: [Address]? = nil,
                              change: Address? = nil,
                              sourceChain: BlockchainID? = nil,
-                             _ cb: @escaping ApiCallback<([UTXO], [Address], Address, AssetID)>) {
+                             _ cb: @escaping ApiCallback<([UTXO], [Address], Address, AssetID, BlockchainID)>) {
         guard let keychain = keychain else {
             handleError(.nilAddressManager, cb)
             return
@@ -55,17 +56,24 @@ extension AvalancheTransactionApi {
         UTXOHelper.getAll(iterator: utxoIterator, sourceChain: sourceChain) { res in
             switch res {
             case .success(let utxos):
-                getAvaxAssetID { res in
+                getBlockchainID { res in
                     switch res {
-                    case .success(let avaxAssetID):
-                        let changeAddress: Address
-                        do {
-                            changeAddress = try change ?? keychain.newChange(for: account)
-                        } catch {
-                            handleError(error, cb)
-                            return
+                    case .success(let blockchainID):
+                        getAvaxAssetID { res in
+                            switch res {
+                            case .success(let avaxAssetID):
+                                let changeAddress: Address
+                                do {
+                                    changeAddress = try change ?? keychain.newChange(for: account)
+                                } catch {
+                                    handleError(error, cb)
+                                    return
+                                }
+                                cb(.success((utxos, fromAddresses, changeAddress, avaxAssetID, blockchainID)))
+                            case .failure(let error):
+                                handleError(error, cb)
+                            }
                         }
-                        cb(.success((utxos, fromAddresses, changeAddress, avaxAssetID)))
                     case .failure(let error):
                         handleError(error, cb)
                     }

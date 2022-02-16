@@ -52,7 +52,7 @@ public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
     )
 }
 
-public enum ChainID: Hashable {
+public enum ChainID {
     case alias(String)
     case blockchainID(BlockchainID)
     
@@ -75,16 +75,9 @@ public enum ChainID: Hashable {
 }
 
 public protocol AvalancheVMApiInfo: AvalancheApiInfo {
-    var blockchainID: BlockchainID { get }
 }
 
 public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
-    public let blockchainID: BlockchainID
-    
-    public init(blockchainID: BlockchainID)
-    {
-        self.blockchainID = blockchainID
-    }
 }
 
 public enum AvalancheVmApiCredentials: Equatable, Hashable {

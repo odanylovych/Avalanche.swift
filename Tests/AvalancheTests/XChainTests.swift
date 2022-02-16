@@ -241,22 +241,25 @@ final class XChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! CreateAssetTransaction
-            let testTransaction = try! CreateAssetTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo,
-                name: name,
-                symbol: symbol,
-                denomination: denomination,
-                initialStates: testInitialStates
-            )
-            XCTAssertEqual(transaction, testTransaction)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                let testTransaction = try! CreateAssetTransaction(
+                    networkID: self.api.networkID,
+                    blockchainID: blockchainID,
+                    outputs: outputs,
+                    inputs: inputs,
+                    memo: memo,
+                    name: name,
+                    symbol: symbol,
+                    denomination: denomination,
+                    initialStates: testInitialStates
+                )
+                XCTAssertEqual(transaction, testTransaction)
+                cb(.success(SignedAvalancheTransaction(
+                    unsignedTransaction: transaction,
+                    credentials: []
+                )))
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.createFixedCapAsset(
@@ -321,19 +324,22 @@ final class XChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! OperationTransaction
-            let testTransaction = try! OperationTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo,
-                operations: [transferableOperation]
-            )
-            XCTAssertEqual(transaction, testTransaction)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                let testTransaction = try! OperationTransaction(
+                    networkID: self.api.networkID,
+                    blockchainID: blockchainID,
+                    outputs: outputs,
+                    inputs: inputs,
+                    memo: memo,
+                    operations: [transferableOperation]
+                )
+                XCTAssertEqual(transaction, testTransaction)
+                cb(.success(SignedAvalancheTransaction(
+                    unsignedTransaction: transaction,
+                    credentials: []
+                )))
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.mint(
@@ -387,22 +393,25 @@ final class XChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! CreateAssetTransaction
-            let testTransaction = try! CreateAssetTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo,
-                name: name,
-                symbol: symbol,
-                denomination: denomination,
-                initialStates: testInitialStates
-            )
-            XCTAssertEqual(transaction, testTransaction)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                let testTransaction = try! CreateAssetTransaction(
+                    networkID: self.api.networkID,
+                    blockchainID: blockchainID,
+                    outputs: outputs,
+                    inputs: inputs,
+                    memo: memo,
+                    name: name,
+                    symbol: symbol,
+                    denomination: denomination,
+                    initialStates: testInitialStates
+                )
+                XCTAssertEqual(transaction, testTransaction)
+                cb(.success(SignedAvalancheTransaction(
+                    unsignedTransaction: transaction,
+                    credentials: []
+                )))
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.createVariableCapAsset(
@@ -457,22 +466,25 @@ final class XChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! CreateAssetTransaction
-            let testTransaction = try! CreateAssetTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo,
-                name: name,
-                symbol: symbol,
-                denomination: 0,
-                initialStates: testInitialStates
-            )
-            XCTAssertEqual(transaction, testTransaction)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                let testTransaction = try! CreateAssetTransaction(
+                    networkID: self.api.networkID,
+                    blockchainID: blockchainID,
+                    outputs: outputs,
+                    inputs: inputs,
+                    memo: memo,
+                    name: name,
+                    symbol: symbol,
+                    denomination: 0,
+                    initialStates: testInitialStates
+                )
+                XCTAssertEqual(transaction, testTransaction)
+                cb(.success(SignedAvalancheTransaction(
+                    unsignedTransaction: transaction,
+                    credentials: []
+                )))
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.createNFTAsset(
@@ -536,19 +548,22 @@ final class XChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction2 = extended.transaction as! OperationTransaction
-            let testTransaction = try! OperationTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo,
-                operations: [transferableOperation]
-            )
-            XCTAssertEqual(transaction2, testTransaction)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction2,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                let testTransaction = try! OperationTransaction(
+                    networkID: self.api.networkID,
+                    blockchainID: blockchainID,
+                    outputs: outputs,
+                    inputs: inputs,
+                    memo: memo,
+                    operations: [transferableOperation]
+                )
+                XCTAssertEqual(transaction2, testTransaction)
+                cb(.success(SignedAvalancheTransaction(
+                    unsignedTransaction: transaction2,
+                    credentials: []
+                )))
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.mintNFT(
@@ -624,35 +639,40 @@ final class XChainTests: XCTestCase {
                 )
             )
         ]
-        let destinationChain = toChain.info.blockchainID
         signatureProvider.signTransactionMock = { tx, cb in
             let extended = tx as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! ExportTransaction
-            let testTransaction = try! ExportTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo,
-                destinationChain: destinationChain,
-                transferableOutputs: exportOutputs
-            )
-            XCTAssertEqual(transaction.networkID, testTransaction.networkID)
-            XCTAssertEqual(transaction.blockchainID, testTransaction.blockchainID)
-            XCTAssertEqual(transaction.outputs.count, testTransaction.outputs.count)
-            XCTAssert(transaction.outputs.allSatisfy(testTransaction.outputs.contains))
-            XCTAssertEqual(transaction.inputs.count, testTransaction.inputs.count)
-            XCTAssert(transaction.inputs.allSatisfy(testTransaction.inputs.contains))
-            XCTAssertEqual(transaction.memo, testTransaction.memo)
-            XCTAssertEqual(transaction.destinationChain, testTransaction.destinationChain)
-            XCTAssertEqual(transaction.transferableOutputs, testTransaction.transferableOutputs)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                self.api.blockchainIDs(toChain.chainID) { res in
+                    let destinationChain = try! res.get()
+                    let testTransaction = try! ExportTransaction(
+                        networkID: self.api.networkID,
+                        blockchainID: blockchainID,
+                        outputs: outputs,
+                        inputs: inputs,
+                        memo: memo,
+                        destinationChain: destinationChain,
+                        transferableOutputs: exportOutputs
+                    )
+                    XCTAssertEqual(transaction.networkID, testTransaction.networkID)
+                    XCTAssertEqual(transaction.blockchainID, testTransaction.blockchainID)
+                    XCTAssertEqual(transaction.outputs.count, testTransaction.outputs.count)
+                    XCTAssert(transaction.outputs.allSatisfy(testTransaction.outputs.contains))
+                    XCTAssertEqual(transaction.inputs.count, testTransaction.inputs.count)
+                    XCTAssert(transaction.inputs.allSatisfy(testTransaction.inputs.contains))
+                    XCTAssertEqual(transaction.memo, testTransaction.memo)
+                    XCTAssertEqual(transaction.destinationChain, testTransaction.destinationChain)
+                    XCTAssertEqual(transaction.transferableOutputs, testTransaction.transferableOutputs)
+                    cb(.success(SignedAvalancheTransaction(
+                        unsignedTransaction: transaction,
+                        credentials: []
+                    )))
+                }
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.export(
@@ -727,20 +747,23 @@ final class XChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! ImportTransaction
-            let testTransaction = try! ImportTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo,
-                sourceChain: testSourceChain,
-                transferableInputs: importInputs
-            )
-            XCTAssertEqual(transaction, testTransaction)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                let testTransaction = try! ImportTransaction(
+                    networkID: self.api.networkID,
+                    blockchainID: blockchainID,
+                    outputs: outputs,
+                    inputs: inputs,
+                    memo: memo,
+                    sourceChain: testSourceChain,
+                    transferableInputs: importInputs
+                )
+                XCTAssertEqual(transaction, testTransaction)
+                cb(.success(SignedAvalancheTransaction(
+                    unsignedTransaction: transaction,
+                    credentials: []
+                )))
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.import(
@@ -816,24 +839,27 @@ final class XChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! BaseTransaction
-            let testTransaction = try! BaseTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo.data(using: .utf8)!
-            )
-            XCTAssertEqual(transaction.networkID, testTransaction.networkID)
-            XCTAssertEqual(transaction.blockchainID, testTransaction.blockchainID)
-            XCTAssertEqual(transaction.outputs.count, testTransaction.outputs.count)
-            XCTAssert(transaction.outputs.allSatisfy(testTransaction.outputs.contains))
-            XCTAssertEqual(transaction.inputs.count, testTransaction.inputs.count)
-            XCTAssert(transaction.inputs.allSatisfy(testTransaction.inputs.contains))
-            XCTAssertEqual(transaction.memo, testTransaction.memo)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                let testTransaction = try! BaseTransaction(
+                    networkID: self.api.networkID,
+                    blockchainID: blockchainID,
+                    outputs: outputs,
+                    inputs: inputs,
+                    memo: memo.data(using: .utf8)!
+                )
+                XCTAssertEqual(transaction.networkID, testTransaction.networkID)
+                XCTAssertEqual(transaction.blockchainID, testTransaction.blockchainID)
+                XCTAssertEqual(transaction.outputs.count, testTransaction.outputs.count)
+                XCTAssert(transaction.outputs.allSatisfy(testTransaction.outputs.contains))
+                XCTAssertEqual(transaction.inputs.count, testTransaction.inputs.count)
+                XCTAssert(transaction.inputs.allSatisfy(testTransaction.inputs.contains))
+                XCTAssertEqual(transaction.memo, testTransaction.memo)
+                cb(.success(SignedAvalancheTransaction(
+                    unsignedTransaction: transaction,
+                    credentials: []
+                )))
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.send(
@@ -937,24 +963,27 @@ final class XChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! BaseTransaction
-            let testTransaction = try! BaseTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo.data(using: .utf8)!
-            )
-            XCTAssertEqual(transaction.networkID, testTransaction.networkID)
-            XCTAssertEqual(transaction.blockchainID, testTransaction.blockchainID)
-            XCTAssertEqual(transaction.outputs.count, testTransaction.outputs.count)
-            XCTAssert(transaction.outputs.allSatisfy(testTransaction.outputs.contains))
-            XCTAssertEqual(transaction.inputs.count, testTransaction.inputs.count)
-            XCTAssert(transaction.inputs.allSatisfy(testTransaction.inputs.contains))
-            XCTAssertEqual(transaction.memo, testTransaction.memo)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                let testTransaction = try! BaseTransaction(
+                    networkID: self.api.networkID,
+                    blockchainID: blockchainID,
+                    outputs: outputs,
+                    inputs: inputs,
+                    memo: memo.data(using: .utf8)!
+                )
+                XCTAssertEqual(transaction.networkID, testTransaction.networkID)
+                XCTAssertEqual(transaction.blockchainID, testTransaction.blockchainID)
+                XCTAssertEqual(transaction.outputs.count, testTransaction.outputs.count)
+                XCTAssert(transaction.outputs.allSatisfy(testTransaction.outputs.contains))
+                XCTAssertEqual(transaction.inputs.count, testTransaction.inputs.count)
+                XCTAssert(transaction.inputs.allSatisfy(testTransaction.inputs.contains))
+                XCTAssertEqual(transaction.memo, testTransaction.memo)
+                cb(.success(SignedAvalancheTransaction(
+                    unsignedTransaction: transaction,
+                    credentials: []
+                )))
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.sendMultiple(
@@ -1030,19 +1059,22 @@ final class XChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction2 = extended.transaction as! OperationTransaction
-            let testTransaction = try! OperationTransaction(
-                networkID: self.api.networkID,
-                blockchainID: self.api.info.blockchainID,
-                outputs: outputs,
-                inputs: inputs,
-                memo: memo,
-                operations: [transferableOperation]
-            )
-            XCTAssertEqual(transaction2, testTransaction)
-            cb(.success(SignedAvalancheTransaction(
-                unsignedTransaction: transaction2,
-                credentials: []
-            )))
+            self.api.getBlockchainID { res in
+                let blockchainID = try! res.get()
+                let testTransaction = try! OperationTransaction(
+                    networkID: self.api.networkID,
+                    blockchainID: blockchainID,
+                    outputs: outputs,
+                    inputs: inputs,
+                    memo: memo,
+                    operations: [transferableOperation]
+                )
+                XCTAssertEqual(transaction2, testTransaction)
+                cb(.success(SignedAvalancheTransaction(
+                    unsignedTransaction: transaction2,
+                    credentials: []
+                )))
+            }
         }
         avalanche.signatureProvider = signatureProvider
         api.sendNFT(

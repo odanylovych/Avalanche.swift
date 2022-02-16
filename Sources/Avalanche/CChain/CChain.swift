@@ -34,9 +34,9 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
     public let utxoProvider: AvalancheUtxoProvider
-    let chainIDApiInfos: (ChainID) -> AvalancheVMApiInfo
     private let service: Client
     private let vmService: Client
+    let blockchainIDs: (ChainID, @escaping ApiCallback<BlockchainID>) -> ()
     private let _web3 = CachedAsyncValue<web3, AvalancheApiError>()
     private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
     private var _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>()
@@ -80,12 +80,6 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         self.info = info
         self.chainID = chainID
         queue = avalanche.settings.queue
-        chainIDApiInfos = {
-            [
-                avalanche.xChain.chainID: avalanche.xChain.info,
-                avalanche.pChain.chainID: avalanche.pChain.info
-            ][$0]!
-        }
         let addressManagerProvider = avalanche.settings.addressManagerProvider
         addressManager = addressManagerProvider.manager(ava: avalanche)
         signer = avalanche.signatureProvider
@@ -97,6 +91,16 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
             vmService = subscribable
         } else {
             vmService = connectionProvider.rpc(api: .cChainVM(chainID: chainID))
+        }
+        blockchainIDs = { chainID, cb in
+            switch chainID {
+            case .alias(let alias):
+                avalanche.info.getBlockchainID(alias: alias) { res in
+                    cb(res)
+                }
+            case .blockchainID(let blockchainID):
+                cb(.success(blockchainID))
+            }
         }
         _web3.getter = { [weak self] cb in
             guard let this = self else {
