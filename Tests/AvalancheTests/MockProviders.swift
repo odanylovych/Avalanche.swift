@@ -32,7 +32,7 @@ struct NetworkInfoProviderMock: AvalancheNetworkInfoProvider {
 
 class AvalancheCoreMock: AvalancheCore {
     var getAPIMock: ((Any.Type) throws -> Any)?
-    var createAPIMock: ((NetworkID, String, Any) -> Any)?
+    var createAPIMock: ((NetworkID, String) -> Any)?
     
     var networkID: NetworkID
     var settings: AvalancheSettings
@@ -55,8 +55,8 @@ class AvalancheCoreMock: AvalancheCore {
         try getAPIMock!(A.self) as! A
     }
     
-    func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A {
-        createAPIMock!(networkID, hrp, info) as! A
+    func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String) -> A {
+        createAPIMock!(networkID, hrp) as! A
     }
     
     func defaultGetAPIMock(for networkID: NetworkID) -> (Any.Type) throws -> Any {
@@ -66,22 +66,19 @@ class AvalancheCoreMock: AvalancheCore {
                 return AvalancheXChainApi(
                     avalanche: self,
                     networkID: networkID,
-                    hrp: networkInfo.hrp,
-                    info: networkInfo.apiInfo.info(for: AvalancheXChainApi.self)!
+                    hrp: networkInfo.hrp
                 )
             } else if apiType == AvalanchePChainApi.self {
                 return AvalanchePChainApi(
                     avalanche: self,
                     networkID: networkID,
-                    hrp: networkInfo.hrp,
-                    info: networkInfo.apiInfo.info(for: AvalanchePChainApi.self)!
+                    hrp: networkInfo.hrp
                 )
             } else if apiType == AvalancheCChainApi.self {
                 return AvalancheCChainApi(
                     avalanche: self,
                     networkID: networkID,
-                    hrp: networkInfo.hrp,
-                    info: networkInfo.apiInfo.info(for: AvalancheCChainApi.self)!
+                    hrp: networkInfo.hrp
                 )
             } else {
                 throw ApiTestsError.error(from: "getAPIMock")
@@ -296,19 +293,6 @@ struct AvalancheApiUTXOAddressManagerMock: AvalancheApiUTXOAddressManager {
     }
 }
 
-class AvalancheVMApiInfoMock: AvalancheVMApiInfo {
-    let blockchainID: BlockchainID
-    let alias: String?
-    
-    init(
-        blockchainID: BlockchainID = BlockchainID(data: Data(count: BlockchainID.size))!,
-        alias: String? = nil
-    ) {
-        self.blockchainID = blockchainID
-        self.alias = alias
-    }
-}
-
 struct AvalancheVMApiMock: AvalancheVMApi {
     var getTransactionMock: ((TransactionID, @escaping ApiCallback<SignedAvalancheTransaction>) -> Void)?
     var getUTXOsMock: ((
@@ -327,7 +311,6 @@ struct AvalancheVMApiMock: AvalancheVMApi {
     var issueTxMock: ((String, AvalancheEncoding?, @escaping ApiCallback<TransactionID>) -> Void)?
     
     typealias Keychain = AvalancheApiUTXOAddressManagerMock
-    typealias Info = AvalancheVMApiInfoMock
     
     var avalanche: AvalancheCore
     var addressManager: AvalancheAddressManager?
@@ -336,7 +319,6 @@ struct AvalancheVMApiMock: AvalancheVMApi {
     var encoderDecoderProvider: AvalancheEncoderDecoderProvider
     var networkID: NetworkID
     var hrp: String
-    var info: AvalancheVMApiInfoMock
     var chainID: ChainID
     
     public var keychain: AvalancheApiUTXOAddressManagerMock? {
@@ -345,15 +327,14 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         }
     }
     
-    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheVMApiInfoMock) {
-        self.init(avalanche: avalanche, networkID: networkID, hrp: hrp, info: info, chainID: .alias("alias"))
+    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String) {
+        self.init(avalanche: avalanche, networkID: networkID, hrp: hrp, chainID: .alias("alias"))
     }
     
     init(
         avalanche: AvalancheCore,
         networkID: NetworkID = NetworkID.local,
         hrp: String = "hrp",
-        info: AvalancheVMApiInfoMock = AvalancheVMApiInfoMock(),
         chainID: ChainID = .alias("alias")
     ) {
         self.avalanche = avalanche
@@ -364,7 +345,6 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
         self.networkID = networkID
         self.hrp = hrp
-        self.info = info
         self.chainID = chainID
     }
     

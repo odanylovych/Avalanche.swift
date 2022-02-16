@@ -18,16 +18,11 @@ public enum CChainCredentials {
     case account(Account, EthAccount)
 }
 
-public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
-}
-
 public class AvalancheCChainApi: AvalancheTransactionApi {
-    public typealias Info = AvalancheCChainApiInfo
     public typealias Keychain = AvalancheCChainApiUTXOAddressManager
     
     public let networkID: NetworkID
     public let hrp: String
-    public let info: Info
     public let chainID: ChainID
     public let queue: DispatchQueue
     private let addressManager: AvalancheAddressManager?
@@ -59,12 +54,10 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     
     public required convenience init(avalanche: AvalancheCore,
                                      networkID: NetworkID,
-                                     hrp: String,
-                                     info: Info) {
+                                     hrp: String) {
         self.init(avalanche: avalanche,
                   networkID: networkID,
                   hrp: hrp,
-                  info: info,
                   chainID: .alias("C"),
                   vm: "evm")
     }
@@ -72,12 +65,10 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
                          hrp: String,
-                         info: Info,
                          chainID: ChainID,
                          vm: String) {
         self.hrp = hrp
         self.networkID = networkID
-        self.info = info
         self.chainID = chainID
         queue = avalanche.settings.queue
         let addressManagerProvider = avalanche.settings.addressManagerProvider
@@ -489,7 +480,7 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func cChain(networkID: NetworkID, hrp: String, info: AvalancheCChainApi.Info) -> AvalancheCChainApi {
-        return self.createAPI(networkID: networkID, hrp: hrp, info: info)
+    public func cChain(networkID: NetworkID, hrp: String) -> AvalancheCChainApi {
+        return self.createAPI(networkID: networkID, hrp: hrp)
     }
 }

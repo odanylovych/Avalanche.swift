@@ -11,7 +11,6 @@ public typealias AvalancheResponseCallback<R, E: Error> = (Result<R, E>) -> ()
 
 public enum AvalancheApiSearchError: Error {
     case networkInfoNotFound(net: NetworkID)
-    case apiInfoNotFound(net: NetworkID, apiId: String)
 }
 
 public protocol AvalancheCore: AnyObject {
@@ -21,7 +20,7 @@ public protocol AvalancheCore: AnyObject {
     var connectionProvider: AvalancheConnectionProvider { get set }
     
     func getAPI<A: AvalancheApi>() throws -> A
-    func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String, info: A.Info) -> A
+    func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String) -> A
 }
 
 public struct AvalancheConstants {

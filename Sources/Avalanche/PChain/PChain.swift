@@ -12,11 +12,7 @@ import Serializable
 import RPC
 #endif
 
-public class AvalanchePChainApiInfo: AvalancheBaseVMApiInfo {
-}
-
 public class AvalanchePChainApi: AvalancheTransactionApi {
-    public typealias Info = AvalanchePChainApiInfo
     public typealias Keychain = AvalanchePChainApiAddressManager
     
     private let addressManager: AvalancheAddressManager?
@@ -27,7 +23,6 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
     public let utxoProvider: AvalancheUtxoProvider
     public let networkID: NetworkID
     public let hrp: String
-    public let info: Info
     public let chainID: ChainID
     let blockchainIDs: (ChainID, @escaping ApiCallback<BlockchainID>) -> ()
     private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
@@ -51,12 +46,10 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
     
     public required convenience init(avalanche: AvalancheCore,
                                      networkID: NetworkID,
-                                     hrp: String,
-                                     info: Info) {
+                                     hrp: String) {
         self.init(avalanche: avalanche,
                   networkID: networkID,
                   hrp: hrp,
-                  info: info,
                   chainID: .alias("P"),
                   vm: "platformvm")
     }
@@ -64,13 +57,11 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
                          hrp: String,
-                         info: Info,
                          chainID: ChainID,
                          vm: String) {
         let settings = avalanche.settings
         let addressManagerProvider = avalanche.settings.addressManagerProvider
         addressManager = addressManagerProvider.manager(ava: avalanche)
-        self.info = info
         self.hrp = hrp
         self.networkID = networkID
         self.chainID = chainID
@@ -802,7 +793,7 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func pChain(networkID: NetworkID, hrp: String, info: AvalanchePChainApi.Info) -> AvalanchePChainApi {
-        return self.createAPI(networkID: networkID, hrp: hrp, info: info)
+    public func pChain(networkID: NetworkID, hrp: String) -> AvalanchePChainApi {
+        return self.createAPI(networkID: networkID, hrp: hrp)
     }
 }

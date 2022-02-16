@@ -11,24 +11,16 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalancheIPCApiInfo: AvalancheApiInfo {
-}
-
 public class AvalancheIPCApi: AvalancheApi {
-    public typealias Info = AvalancheIPCApiInfo
-
     public let networkID: NetworkID
     public let hrp: String
-    public let info: Info
     
     private let service: Client
 
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
-                         hrp: String,
-                         info: AvalancheIPCApiInfo)
+                         hrp: String)
     {
-        self.info = info
         self.hrp = hrp
         self.networkID = networkID
         

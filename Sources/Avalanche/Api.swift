@@ -8,13 +8,10 @@
 import Foundation
 
 public protocol AvalancheApi {
-    associatedtype Info: AvalancheApiInfo
-    
     var networkID: NetworkID { get }
     var hrp: String { get }
-    var info: Info { get }
     
-    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info)
+    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String)
     
     static var id: String { get }
 }
@@ -25,10 +22,7 @@ extension AvalancheApi {
     }
 }
 
-public protocol AvalancheApiInfo {
-}
-
-public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
+public protocol AvalancheVMApi: AvalancheApi {
     associatedtype Keychain: AvalancheApiAddressManager
     
     var chainID: ChainID { get }
@@ -72,12 +66,6 @@ public enum ChainID {
             return blockchainID.cb58()
         }
     }
-}
-
-public protocol AvalancheVMApiInfo: AvalancheApiInfo {
-}
-
-public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
 }
 
 public enum AvalancheVmApiCredentials: Equatable, Hashable {

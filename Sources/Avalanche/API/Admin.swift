@@ -11,25 +11,17 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalancheAdminApiInfo: AvalancheApiInfo {
-}
-
 public class AvalancheAdminApi: AvalancheApi {
-    public typealias Info = AvalancheAdminApiInfo
-
     public let networkID: NetworkID
     public let hrp: String
-    public let info: Info
     
     private let service: Client
 
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
-                         hrp: String,
-                         info: AvalancheAdminApiInfo) {
+                         hrp: String) {
         self.networkID = networkID
         self.hrp = hrp
-        self.info = info
         
         self.service = avalanche.connectionProvider.rpc(api: .admin)
     }

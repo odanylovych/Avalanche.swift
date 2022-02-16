@@ -12,11 +12,7 @@ import RPC
 import Serializable
 #endif
 
-public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
-}
-
 public class AvalancheXChainApi: AvalancheTransactionApi {
-    public typealias Info = AvalancheXChainApiInfo
     public typealias Keychain = AvalancheXChainApiAddressManager
     
     public let queue: DispatchQueue
@@ -26,7 +22,6 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
     public let networkID: NetworkID
     public let hrp: String
-    public let info: Info
     public let chainID: ChainID
     private let service: Client
     private let vmService: Client
@@ -52,12 +47,10 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     
     public required convenience init(avalanche: AvalancheCore,
                                      networkID: NetworkID,
-                                     hrp: String,
-                                     info: Info) {
+                                     hrp: String) {
         self.init(avalanche: avalanche,
                   networkID: networkID,
                   hrp: hrp,
-                  info: info,
                   chainID: .alias("X"),
                   vm: "avm")
     }
@@ -65,12 +58,10 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
                          hrp: String,
-                         info: Info,
                          chainID: ChainID,
                          vm: String) {
         self.networkID = networkID
         self.hrp = hrp
-        self.info = info
         self.chainID = chainID
         let addressManagerProvider = avalanche.settings.addressManagerProvider
         addressManager = addressManagerProvider.manager(ava: avalanche)
@@ -1051,7 +1042,7 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func xChain(networkID: NetworkID, hrp: String, info: AvalancheXChainApi.Info) -> AvalancheXChainApi {
-        return self.createAPI(networkID: networkID, hrp: hrp, info: info)
+    public func xChain(networkID: NetworkID, hrp: String) -> AvalancheXChainApi {
+        return self.createAPI(networkID: networkID, hrp: hrp)
     }
 }

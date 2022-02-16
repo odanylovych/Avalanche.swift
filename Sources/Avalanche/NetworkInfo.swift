@@ -7,14 +7,8 @@
 
 import Foundation
 
-public protocol AvalancheApiInfoProvider {
-    func info<A: AvalancheApi>(for: A.Type) -> A.Info?
-    func setInfo<A: AvalancheApi>(info: A.Info, for: A.Type)
-}
-
 public protocol AvalancheNetworkInfo {
     var hrp: String { get }
-    var apiInfo: AvalancheApiInfoProvider { get }
 }
 
 public protocol AvalancheNetworkInfoProvider {
@@ -22,29 +16,11 @@ public protocol AvalancheNetworkInfoProvider {
     func setInfo(info: AvalancheNetworkInfo, for net: NetworkID)
 }
 
-public class AvalancheDefaultApiInfoProvider: AvalancheApiInfoProvider {
-    private var infos: Dictionary<String, AvalancheApiInfo>
-    
-    public init(infos: Dictionary<String, AvalancheApiInfo> = [:]) {
-        self.infos = infos
-    }
-    
-    public func info<A: AvalancheApi>(for: A.Type) -> A.Info? {
-        return infos[A.id] as? A.Info
-    }
-    
-    public func setInfo<A: AvalancheApi>(info: A.Info, for: A.Type) {
-        infos[A.id] = info
-    }
-}
-
 public class AvalancheDefaultNetworkInfo: AvalancheNetworkInfo {
     public let hrp: String
-    public let apiInfo: AvalancheApiInfoProvider
     
-    public init(hrp: String, apiInfo: AvalancheApiInfoProvider) {
+    public init(hrp: String) {
         self.hrp = hrp
-        self.apiInfo = apiInfo
     }
 }
 
@@ -79,70 +55,18 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         return provider
     }()
     
-    private static func addNonVmApis(to info: AvalancheDefaultApiInfoProvider) {
-        info.setInfo(info: AvalancheInfoApiInfo(), for: AvalancheInfoApi.self)
-        info.setInfo(info: AvalancheHealthApiInfo(), for: AvalancheHealthApi.self)
-        info.setInfo(info: AvalancheMetricsApiInfo(), for: AvalancheMetricsApi.self)
-        info.setInfo(info: AvalancheAdminApiInfo(), for: AvalancheAdminApi.self)
-        info.setInfo(info: AvalancheAuthApiInfo(), for: AvalancheAuthApi.self)
-        info.setInfo(info: AvalancheIPCApiInfo(), for: AvalancheIPCApi.self)
-        info.setInfo(info: AvalancheKeystoreApiInfo(), for: AvalancheKeystoreApi.self)
-    }
-    
     // NetworkID.manhattan
     private static func manhattanNetInfo() -> AvalancheDefaultNetworkInfo {
-        let netApis = AvalancheDefaultApiInfoProvider()
-        addNonVmApis(to: netApis)
-        netApis.setInfo(
-            info: AvalancheXChainApi.Info(),
-            for: AvalancheXChainApi.self
-        )
-        netApis.setInfo(
-            info: AvalancheCChainApi.Info(),
-            for: AvalancheCChainApi.self
-        )
-        netApis.setInfo(
-            info: AvalanchePChainApi.Info(),
-            for: AvalanchePChainApi.self
-        )
-        return AvalancheDefaultNetworkInfo(hrp: "custom", apiInfo: netApis)
+        return AvalancheDefaultNetworkInfo(hrp: "custom")
     }
 
     // NetworkID.main || NetworkID.avalanche
     private static func avalancheNetInfo() -> AvalancheDefaultNetworkInfo {
-        let netApis = AvalancheDefaultApiInfoProvider()
-        addNonVmApis(to: netApis)
-        netApis.setInfo(
-            info: AvalancheXChainApi.Info(),
-            for: AvalancheXChainApi.self
-        )
-        netApis.setInfo(
-            info: AvalancheCChainApi.Info(),
-            for: AvalancheCChainApi.self
-        )
-        netApis.setInfo(
-            info: AvalanchePChainApi.Info(),
-            for: AvalanchePChainApi.self
-        )
-        return AvalancheDefaultNetworkInfo(hrp: "avax", apiInfo: netApis)
+        return AvalancheDefaultNetworkInfo(hrp: "avax")
     }
 
     // NetworkID.test || NetworkID.fuji
     private static func fujiNetInfo() -> AvalancheDefaultNetworkInfo {
-        let netApis = AvalancheDefaultApiInfoProvider()
-        addNonVmApis(to: netApis)
-        netApis.setInfo(
-            info: AvalancheXChainApi.Info(),
-            for: AvalancheXChainApi.self
-        )
-        netApis.setInfo(
-            info: AvalancheCChainApi.Info(),
-            for: AvalancheCChainApi.self
-        )
-        netApis.setInfo(
-            info: AvalanchePChainApi.Info(),
-            for: AvalanchePChainApi.self
-        )
-        return AvalancheDefaultNetworkInfo(hrp: "fuji", apiInfo: netApis)
+        return AvalancheDefaultNetworkInfo(hrp: "fuji")
     }
 }

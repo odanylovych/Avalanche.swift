@@ -11,9 +11,6 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalancheHealthApiInfo: AvalancheApiInfo {
-}
-
 public struct AvalancheLivenessResponse: Decodable {
     public struct Check: Decodable {
         public let message: Dictionary<String, SerializableValue>?
@@ -29,19 +26,14 @@ public struct AvalancheLivenessResponse: Decodable {
 }
 
 public class AvalancheHealthApi: AvalancheApi {
-    public typealias Info = AvalancheHealthApiInfo
-    
     private let service: Client
     
     public let networkID: NetworkID
     public let hrp: String
-    public let info: Info
     
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
-                         hrp: String,
-                         info: AvalancheHealthApiInfo) {
-        self.info = info
+                         hrp: String) {
         self.hrp = hrp
         self.networkID = networkID
         
