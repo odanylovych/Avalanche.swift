@@ -26,7 +26,7 @@ extension AvalancheCChainApi {
                 self.getTxFee { res in
                     switch res {
                     case .success(let txFee):
-                        let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
+                        let destinationChain = self.chainIDApiInfos(ChainID(to.chainId)).blockchainID
                         let fee = baseFee ?? txFee
                         let address = ethAccount.address
                         self.getTransactionCount(for: address) { res in

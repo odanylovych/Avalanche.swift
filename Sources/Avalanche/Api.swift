@@ -52,9 +52,17 @@ public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
     )
 }
 
-public enum ChainID {
+public enum ChainID: Hashable {
     case alias(String)
     case blockchainID(BlockchainID)
+    
+    public init(_ value: String) {
+        guard let blockchainID = BlockchainID(cb58: value) else {
+            self = .alias(value)
+            return
+        }
+        self = .blockchainID(blockchainID)
+    }
     
     public var value: String {
         switch self {
@@ -68,17 +76,14 @@ public enum ChainID {
 
 public protocol AvalancheVMApiInfo: AvalancheApiInfo {
     var blockchainID: BlockchainID { get }
-    var alias: String? { get }
 }
 
 public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
     public let blockchainID: BlockchainID
-    public let alias: String?
     
-    public init(blockchainID: BlockchainID, alias: String?)
+    public init(blockchainID: BlockchainID)
     {
         self.blockchainID = blockchainID
-        self.alias = alias
     }
 }
 

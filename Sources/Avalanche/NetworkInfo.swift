@@ -95,22 +95,19 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         addNonVmApis(to: netApis)
         netApis.setInfo(
             info: AvalancheXChainApi.Info(
-                blockchainID: BlockchainID(cb58: "2vrXWHgGxh5n3YsLHMV16YVVJTpT4z45Fmb4y3bL6si8kLCyg9")!,
-                alias: "X"
+                blockchainID: BlockchainID(cb58: "2vrXWHgGxh5n3YsLHMV16YVVJTpT4z45Fmb4y3bL6si8kLCyg9")!
             ),
             for: AvalancheXChainApi.self
         )
         netApis.setInfo(
             info: AvalancheCChainApi.Info(
-                blockchainID: BlockchainID(cb58: "2fFZQibQXcd6LTE4rpBPBAkLVXFE91Kit8pgxaBG1mRnh5xqbb")!,
-                alias: "C"
+                blockchainID: BlockchainID(cb58: "2fFZQibQXcd6LTE4rpBPBAkLVXFE91Kit8pgxaBG1mRnh5xqbb")!
             ),
             for: AvalancheCChainApi.self
         )
         netApis.setInfo(
             info: AvalanchePChainApi.Info(
-                blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
-                alias: "P"
+                blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!
             ),
             for: AvalanchePChainApi.self
         )
@@ -123,22 +120,19 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         addNonVmApis(to: netApis)
         netApis.setInfo(
             info: AvalancheXChainApi.Info(
-                blockchainID: BlockchainID(cb58: "2oYMBNV4eNHyqk2fjjV5nVQLDbtmNJzq5s3qs3Lo6ftnC6FByM")!,
-                alias: "X"
+                blockchainID: BlockchainID(cb58: "2oYMBNV4eNHyqk2fjjV5nVQLDbtmNJzq5s3qs3Lo6ftnC6FByM")!
             ),
             for: AvalancheXChainApi.self
         )
         netApis.setInfo(
             info: AvalancheCChainApi.Info(
-                blockchainID: BlockchainID(cb58: "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5")!,
-                alias: "C"
+                blockchainID: BlockchainID(cb58: "2q9e4r6Mu3U68nU1fYjgbR6JvwrRx36CohpAX5UQxse55x1Q5")!
             ),
             for: AvalancheCChainApi.self
         )
         netApis.setInfo(
             info: AvalanchePChainApi.Info(
-                blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
-                alias: "P"
+                blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!
             ),
             for: AvalanchePChainApi.self
         )
@@ -151,22 +145,19 @@ public class AvalancheDefaultNetworkInfoProvider: AvalancheNetworkInfoProvider {
         addNonVmApis(to: netApis)
         netApis.setInfo(
             info: AvalancheXChainApi.Info(
-                blockchainID: BlockchainID(cb58: "2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm")!,
-                alias: "X"
+                blockchainID: BlockchainID(cb58: "2JVSBoinj9C2J33VntvzYtVJNZdN2NKiwwKjcumHUWEb5DbBrm")!
             ),
             for: AvalancheXChainApi.self
         )
         netApis.setInfo(
             info: AvalancheCChainApi.Info(
-                blockchainID: BlockchainID(cb58: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")!,
-                alias: "C"
+                blockchainID: BlockchainID(cb58: "yH8D7ThNJkxmtkuv2jgBa4P1Rn3Qpr4pPr7QYNfcdoS6k6HWp")!
             ),
             for: AvalancheCChainApi.self
         )
         netApis.setInfo(
             info: AvalanchePChainApi.Info(
-                blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!,
-                alias: "P"
+                blockchainID: BlockchainID(cb58: "11111111111111111111111111111111LpoYY")!
             ),
             for: AvalanchePChainApi.self
         )

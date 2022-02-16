@@ -24,7 +24,7 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     public let utxoProvider: AvalancheUtxoProvider
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
-    public let chainIDApiInfos: (String) -> AvalancheVMApiInfo
+    public let chainIDApiInfos: (ChainID) -> AvalancheVMApiInfo
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
@@ -79,8 +79,8 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
         chainIDApiInfos = {
             [
-                avalanche.pChain.info.alias!: avalanche.pChain.info,
-                avalanche.cChain.info.alias!: avalanche.cChain.info
+                avalanche.pChain.chainID: avalanche.pChain.info,
+                avalanche.cChain.chainID: avalanche.cChain.info
             ][$0]!
         }
         let settings = avalanche.settings

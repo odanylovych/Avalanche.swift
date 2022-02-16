@@ -34,7 +34,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
     public let utxoProvider: AvalancheUtxoProvider
-    let chainIDApiInfos: (String) -> AvalancheVMApiInfo
+    let chainIDApiInfos: (ChainID) -> AvalancheVMApiInfo
     private let service: Client
     private let vmService: Client
     private let _web3 = CachedAsyncValue<web3, AvalancheApiError>()
@@ -82,8 +82,8 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         queue = avalanche.settings.queue
         chainIDApiInfos = {
             [
-                avalanche.xChain.info.alias!: avalanche.xChain.info,
-                avalanche.pChain.info.alias!: avalanche.pChain.info
+                avalanche.xChain.chainID: avalanche.xChain.info,
+                avalanche.pChain.chainID: avalanche.pChain.info
             ][$0]!
         }
         let addressManagerProvider = avalanche.settings.addressManagerProvider

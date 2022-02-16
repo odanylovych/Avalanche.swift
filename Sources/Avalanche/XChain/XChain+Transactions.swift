@@ -518,7 +518,7 @@ extension AvalancheXChainApi {
                             self.handleError(error, cb)
                             return
                         }
-                        let destinationChain = self.chainIDApiInfos(to.chainId).blockchainID
+                        let destinationChain = self.chainIDApiInfos(ChainID(to.chainId)).blockchainID
                         let transaction: ExportTransaction
                         do {
                             transaction = try ExportTransaction(
