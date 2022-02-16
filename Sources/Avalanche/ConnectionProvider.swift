@@ -28,9 +28,9 @@ public enum ApiConnectionType {
     case keystore
     case metrics
     
-    case xChain(alias: String?, blockchainID: BlockchainID)
+    case xChain(chainID: ChainID)
     case xChainVM(vm: String)
-    case pChain(alias: String?, blockchainID: BlockchainID)
-    case cChain(alias: String?, blockchainID: BlockchainID)
-    case cChainVM(alias: String?, blockchainID: BlockchainID)
+    case pChain(chainID: ChainID)
+    case cChain(chainID: ChainID)
+    case cChainVM(chainID: ChainID)
 }

@@ -125,7 +125,7 @@ final class PChainTests: XCTestCase {
             index: addressIndex,
             change: false,
             hrp: api.hrp,
-            chainId: api.info.chainId
+            chainId: api.chainID.value
         )
         addressIndex += 1
         return extended

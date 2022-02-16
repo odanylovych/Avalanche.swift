@@ -113,7 +113,7 @@ final class XChainTests: XCTestCase {
             let to = try! account.derive(index: 0,
                                          change: false,
                                          hrp: self.api.hrp,
-                                         chainId: self.cChain.info.chainId).address
+                                         chainId: self.cChain.chainID.value).address
             self.api.getAvaxAssetID { res in
                 let assetID = try! res.get()
                 self.api.export(to: to, amount: 10_000_000, assetID: assetID, credentials: .account(account)) { res in

@@ -12,7 +12,6 @@ import RPC
 #endif
 
 public struct AvalancheMetricsApiInfo: AvalancheApiInfo {
-    public let connectionType: ApiConnectionType = .metrics
 }
 
 public class AvalancheMetricsApi: AvalancheApi {
@@ -32,7 +31,7 @@ public class AvalancheMetricsApi: AvalancheApi {
         self.info = info
         self.hrp = hrp
         self.networkID = networkID
-        self.connection = avalanche.connectionProvider.singleShot(api: info.connectionType)
+        self.connection = avalanche.connectionProvider.singleShot(api: .metrics)
     }
     
     public func getMetrics(cb: @escaping ApiCallback<String>) {

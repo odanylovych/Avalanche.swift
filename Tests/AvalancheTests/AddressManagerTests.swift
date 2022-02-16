@@ -37,7 +37,7 @@ final class AddressManagerTests: XCTestCase {
             index: 0,
             change: false,
             hrp: api.hrp,
-            chainId: api.info.chainId
+            chainId: api.chainID.value
         )
         testAvalancheAddress = testExtendedAvalancheAddress.address
         testEthereumAccount = try! EthAccount(
@@ -114,7 +114,7 @@ final class AddressManagerTests: XCTestCase {
                 index: 1,
                 change: false,
                 hrp: self.api.hrp,
-                chainId: self.api.info.chainId
+                chainId: self.api.chainID.value
             ).address
             XCTAssertEqual(addresses, [newAddress])
             success.fulfill()
@@ -152,7 +152,7 @@ final class AddressManagerTests: XCTestCase {
                 index: index,
                 change: false,
                 hrp: api.hrp,
-                chainId: api.info.chainId
+                chainId: api.chainID.value
             ).address
         }
         let addressUtxo = { address in

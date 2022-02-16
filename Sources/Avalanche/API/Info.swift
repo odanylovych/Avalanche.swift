@@ -12,7 +12,6 @@ import RPC
 #endif
 
 public struct AvalancheInfoApiInfo: AvalancheApiInfo {
-    public let connectionType: ApiConnectionType = .info
 }
 
 public class AvalancheInfoApi: AvalancheApi {
@@ -33,7 +32,7 @@ public class AvalancheInfoApi: AvalancheApi {
         self.hrp = hrp
         self.info = info
         
-        self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
+        self.service = avalanche.connectionProvider.rpc(api: .info)
     }
     
     /// methods

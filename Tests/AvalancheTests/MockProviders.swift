@@ -299,22 +299,13 @@ struct AvalancheApiUTXOAddressManagerMock: AvalancheApiUTXOAddressManager {
 class AvalancheVMApiInfoMock: AvalancheVMApiInfo {
     let blockchainID: BlockchainID
     let alias: String?
-    let vm: String
-    let connectionType: ApiConnectionType
     
     init(
         blockchainID: BlockchainID = BlockchainID(data: Data(count: BlockchainID.size))!,
-        alias: String? = nil,
-        vm: String = "vm",
-        apiPath: ApiConnectionType = .xChain(
-            alias: "alias",
-            blockchainID: BlockchainID(data: Data(count: BlockchainID.size))!
-        )
+        alias: String? = nil
     ) {
         self.blockchainID = blockchainID
         self.alias = alias
-        self.vm = vm
-        self.connectionType = apiPath
     }
 }
 
@@ -346,6 +337,7 @@ struct AvalancheVMApiMock: AvalancheVMApi {
     var networkID: NetworkID
     var hrp: String
     var info: AvalancheVMApiInfoMock
+    var chainID: ChainID
     
     public var keychain: AvalancheApiUTXOAddressManagerMock? {
         addressManager.map {
@@ -353,11 +345,16 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         }
     }
     
+    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: AvalancheVMApiInfoMock) {
+        self.init(avalanche: avalanche, networkID: networkID, hrp: hrp, info: info, chainID: .alias("alias"))
+    }
+    
     init(
         avalanche: AvalancheCore,
         networkID: NetworkID = NetworkID.local,
         hrp: String = "hrp",
-        info: AvalancheVMApiInfoMock = AvalancheVMApiInfoMock()
+        info: AvalancheVMApiInfoMock = AvalancheVMApiInfoMock(),
+        chainID: ChainID = .alias("alias")
     ) {
         self.avalanche = avalanche
         let addressManagerProvider = avalanche.settings.addressManagerProvider
@@ -368,6 +365,7 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         self.networkID = networkID
         self.hrp = hrp
         self.info = info
+        self.chainID = chainID
     }
     
     func getTransaction(id: TransactionID, result: @escaping ApiCallback<SignedAvalancheTransaction>) {

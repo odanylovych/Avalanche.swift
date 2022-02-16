@@ -22,15 +22,15 @@ extension ApiConnectionType {
         case .ipc: path = "/ipcs"
         case .keystore: path = "/keystore"
         case .metrics: path = "/admin"
-        case .xChain(let alias, let blockchainID):
-            path = "/bc/\(alias ?? blockchainID.cb58())"
+        case .xChain(let chainID):
+            path = "/bc/\(chainID.value)"
         case .xChainVM(let vm): path = "/vm/\(vm)"
-        case .pChain(let alias, let blockchainID):
-            path = "/\(alias ?? blockchainID.cb58())"
-        case .cChain(let alias, let blockchainID):
-            path = "/bc/\(alias ?? blockchainID.cb58())/avax"
-        case .cChainVM(let alias, let blockchainID):
-            path = "/bc/\(alias ?? blockchainID.cb58())/rpc"
+        case .pChain(let chainID):
+            path = "/\(chainID.value)"
+        case .cChain(let chainID):
+            path = "/bc/\(chainID.value)/avax"
+        case .cChainVM(let chainID):
+            path = "/bc/\(chainID.value)/rpc"
         }
         return "/ext\(path)"
     }
@@ -67,8 +67,8 @@ public struct WebRPCAvalancheConnectionProvider: AvalancheConnectionProvider {
     private func getURL(subscribable api: ApiConnectionType) -> URL? {
         let path: String
         switch api {
-        case .cChainVM(let alias, let blockchainID):
-            path = "/ext/bc/\(alias ?? blockchainID.cb58())/ws"
+        case .cChainVM(let chainID):
+            path = "/ext/bc/\(chainID.value)/ws"
         default:
             return nil
         }

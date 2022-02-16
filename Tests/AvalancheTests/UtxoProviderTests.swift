@@ -81,7 +81,7 @@ final class UtxoProviderTests: XCTestCase {
                 index: index,
                 change: false,
                 hrp: api.hrp,
-                chainId: api.info.chainId
+                chainId: api.chainID.value
             ).address
         }
         let testUtxos = try (0..<2).map { index in

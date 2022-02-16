@@ -19,13 +19,6 @@ public enum CChainCredentials {
 }
 
 public class AvalancheCChainApiInfo: AvalancheBaseVMApiInfo {
-    override public var connectionType: ApiConnectionType {
-        .cChain(alias: alias, blockchainID: blockchainID)
-    }
-    
-    public var vmConnectionType: ApiConnectionType {
-        .cChainVM(alias: alias, blockchainID: blockchainID)
-    }
 }
 
 public class AvalancheCChainApi: AvalancheTransactionApi {
@@ -35,7 +28,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
-    
+    public let chainID: ChainID
     public let queue: DispatchQueue
     private let addressManager: AvalancheAddressManager?
     public let signer: AvalancheSignatureProvider?
@@ -59,7 +52,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     private var context: AvalancheDecoderContext {
         DefaultAvalancheDecoderContext(
             hrp: hrp,
-            chainId: info.chainId,
+            chainId: chainID.value,
             dynamicParser: CChainDynamicTypeRegistry.instance
         )
     }
@@ -68,18 +61,24 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
                                      networkID: NetworkID,
                                      hrp: String,
                                      info: Info) {
-        self.init(avalanche: avalanche, networkID: networkID, hrp: hrp, info: info, vm: "evm")
+        self.init(avalanche: avalanche,
+                  networkID: networkID,
+                  hrp: hrp,
+                  info: info,
+                  chainID: .alias("C"),
+                  vm: "evm")
     }
     
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
                          hrp: String,
                          info: Info,
+                         chainID: ChainID,
                          vm: String) {
         self.hrp = hrp
         self.networkID = networkID
         self.info = info
-        
+        self.chainID = chainID
         queue = avalanche.settings.queue
         chainIDApiInfos = {
             [
@@ -93,11 +92,11 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
         utxoProvider = avalanche.settings.utxoProvider
         let connectionProvider = avalanche.connectionProvider
-        service = connectionProvider.rpc(api: info.connectionType)
-        if let subscribable = connectionProvider.subscribableRPC(api: info.vmConnectionType) {
+        service = connectionProvider.rpc(api: .cChain(chainID: chainID))
+        if let subscribable = connectionProvider.subscribableRPC(api: .cChainVM(chainID: chainID)) {
             vmService = subscribable
         } else {
-            vmService = connectionProvider.rpc(api: info.vmConnectionType)
+            vmService = connectionProvider.rpc(api: .cChainVM(chainID: chainID))
         }
         _web3.getter = { [weak self] cb in
             guard let this = self else {
@@ -127,8 +126,13 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
             }
         }
         _blockchainID.getter = { cb in
-            avalanche.info.getBlockchainID(alias: info.alias!) { res in
-                cb(res)
+            switch chainID {
+            case .alias(let alias):
+                avalanche.info.getBlockchainID(alias: alias) { res in
+                    cb(res)
+                }
+            case .blockchainID(let blockchainID):
+                cb(.success(blockchainID))
             }
         }
         _avaxAssetID.getter = { cb in

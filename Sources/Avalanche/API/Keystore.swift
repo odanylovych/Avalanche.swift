@@ -12,7 +12,6 @@ import RPC
 #endif
 
 public struct AvalancheKeystoreApiInfo: AvalancheApiInfo {
-    public let connectionType: ApiConnectionType = .keystore
 }
 
 public class AvalancheKeystoreApi: AvalancheApi {
@@ -33,7 +32,7 @@ public class AvalancheKeystoreApi: AvalancheApi {
         self.hrp = hrp
         self.networkID = networkID
         
-        self.service = avalanche.connectionProvider.rpc(api: info.connectionType)
+        self.service = avalanche.connectionProvider.rpc(api: .keystore)
     }
     
     private struct CredentialsParams: Encodable {

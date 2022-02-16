@@ -13,9 +13,6 @@ import Serializable
 #endif
 
 public class AvalancheXChainApiInfo: AvalancheBaseVMApiInfo {
-    override public var connectionType: ApiConnectionType {
-        .xChain(alias: alias, blockchainID: blockchainID)
-    }
 }
 
 public class AvalancheXChainApi: AvalancheTransactionApi {
@@ -31,7 +28,7 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     public let networkID: NetworkID
     public let hrp: String
     public let info: Info
-    private var vmConnectionType: ApiConnectionType
+    public let chainID: ChainID
     private let service: Client
     private let vmService: Client
     private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
@@ -48,7 +45,7 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     private var context: AvalancheDecoderContext {
         DefaultAvalancheDecoderContext(
             hrp: hrp,
-            chainId: info.chainId,
+            chainId: chainID.value,
             dynamicParser: XChainDynamicTypeRegistry.instance
         )
     }
@@ -57,17 +54,24 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
                                      networkID: NetworkID,
                                      hrp: String,
                                      info: Info) {
-        self.init(avalanche: avalanche, networkID: networkID, hrp: hrp, info: info, vm: "avm")
+        self.init(avalanche: avalanche,
+                  networkID: networkID,
+                  hrp: hrp,
+                  info: info,
+                  chainID: .alias("X"),
+                  vm: "avm")
     }
     
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
                          hrp: String,
                          info: Info,
+                         chainID: ChainID,
                          vm: String) {
         self.networkID = networkID
         self.hrp = hrp
         self.info = info
+        self.chainID = chainID
         let addressManagerProvider = avalanche.settings.addressManagerProvider
         addressManager = addressManagerProvider.manager(ava: avalanche)
         utxoProvider = avalanche.settings.utxoProvider
@@ -81,10 +85,9 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
         }
         let settings = avalanche.settings
         queue = settings.queue
-        vmConnectionType = .xChainVM(vm: vm)
         let connectionProvider = avalanche.connectionProvider
-        service = connectionProvider.rpc(api: info.connectionType)
-        vmService = connectionProvider.rpc(api: vmConnectionType)
+        service = connectionProvider.rpc(api: .xChain(chainID: chainID))
+        vmService = connectionProvider.rpc(api: .xChainVM(vm: vm))
         _txFee.getter = { cb in
             avalanche.info.getTxFee { res in
                 cb(res.map { $0.txFee })
@@ -96,8 +99,13 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
             }
         }
         _blockchainID.getter = { cb in
-            avalanche.info.getBlockchainID(alias: info.alias!) { res in
-                cb(res)
+            switch chainID {
+            case .alias(let alias):
+                avalanche.info.getBlockchainID(alias: alias) { res in
+                    cb(res)
+                }
+            case .blockchainID(let blockchainID):
+                cb(.success(blockchainID))
             }
         }
         _avaxAssetID.getter = { [weak self] cb in

@@ -26,12 +26,12 @@ extension AvalancheApi {
 }
 
 public protocol AvalancheApiInfo {
-    var connectionType: ApiConnectionType { get }
 }
 
 public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
     associatedtype Keychain: AvalancheApiAddressManager
     
+    var chainID: ChainID { get }
     var keychain: Keychain? { get }
     
     func getTransaction(id: TransactionID,
@@ -52,17 +52,23 @@ public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
     )
 }
 
+public enum ChainID {
+    case alias(String)
+    case blockchainID(BlockchainID)
+    
+    public var value: String {
+        switch self {
+        case .alias(let alias):
+            return alias
+        case .blockchainID(let blockchainID):
+            return blockchainID.cb58()
+        }
+    }
+}
+
 public protocol AvalancheVMApiInfo: AvalancheApiInfo {
     var blockchainID: BlockchainID { get }
     var alias: String? { get }
-    
-    var chainId: String { get }
-}
-
-extension AvalancheVMApiInfo {
-    public var chainId: String {
-        alias ?? blockchainID.cb58()
-    }
 }
 
 public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
@@ -73,10 +79,6 @@ public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
     {
         self.blockchainID = blockchainID
         self.alias = alias
-    }
-    
-    public var connectionType: ApiConnectionType {
-        fatalError("Not supported")
     }
 }
 

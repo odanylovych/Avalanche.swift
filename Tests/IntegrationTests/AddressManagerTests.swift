@@ -35,9 +35,9 @@ final class AddressManagerTests: XCTestCase {
                                    chainCode: TestEnvironment.instance.chainCode,
                                    path: try! Bip32Path.prefixAvalanche.appending(0, hard: true))
         let testAddresses = (0..<45).map {
-            try! account.derive(index: $0, change: false, hrp: api.hrp, chainId: api.info.chainId).address
+            try! account.derive(index: $0, change: false, hrp: api.hrp, chainId: api.chainID.value).address
         } + (0..<4).map {
-            try! account.derive(index: $0, change: true, hrp: api.hrp, chainId: api.info.chainId).address
+            try! account.derive(index: $0, change: true, hrp: api.hrp, chainId: api.chainID.value).address
         }
         let signatureProvider = SignatureProviderMock()
         signatureProvider.accountsMock = { type, cb in

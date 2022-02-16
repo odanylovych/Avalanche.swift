@@ -184,10 +184,10 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
                                        change: Bool,
                                        count: Int) throws -> [Address] {
         let from = lastAddressIndex(
-            avm: account, chainId: api.info.chainId, hrp: api.hrp, change: change
+            avm: account, chainId: api.chainID.value, hrp: api.hrp, change: change
         ) + 1
         let newAddresses = generateMoreAddresses(
-            avm: account, chainId: api.info.chainId, hrp: api.hrp, change: change, from: from, count: count
+            avm: account, chainId: api.chainID.value, hrp: api.hrp, change: change, from: from, count: count
         )
         try self.syncQueue.sync {
             guard var addresses = self.addresses[account] else {
@@ -208,7 +208,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
             }
             return addresses
                 .filter {
-                    $0.key.chainId == api.info.chainId
+                    $0.key.chainId == api.chainID.value
                         && $0.key.hrp == api.hrp
                 }
                 .map { $0.key }
@@ -240,7 +240,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
                     index: UInt32(index + offset),
                     change: change,
                     hrp: api.hrp,
-                    chainId: api.info.chainId
+                    chainId: api.chainID.value
                 )
             }
         } catch {
@@ -291,7 +291,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
                     source: chain,
                     index: self.lastAddressIndex(
                         avm: account,
-                        chainId: api.info.chainId,
+                        chainId: api.chainID.value,
                         hrp: api.hrp,
                         change: change
                     ) + 1,
