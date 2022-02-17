@@ -95,21 +95,38 @@ final class PChainTests: XCTestCase {
     private var connectionProvider: AvalancheConnectionProvider {
         var connectionProvider = ConnectionProviderMock()
         connectionProvider.rpcMock = { api in
-            guard case .pChain = api else {
+            if case .pChain = api {
+                return ClientMock(callMock: { method, params, response in
+                    switch method {
+                    case "platform.getStakingAssetID":
+                        response(.success(AvalanchePChainApi.GetStakingAssetIDResponse(assetID: self.avaxAssetID.cb58())))
+                    case "platform.issueTx":
+                        response(.success(AvalanchePChainApi.IssueTxResponse(
+                            txID: self.testTransactionID.cb58()
+                        )))
+                    default:
+                        response(.failure(ApiTestsError.error(description: "no mock for api method \(method)")))
+                    }
+                })
+            } else if case .info = api {
+                return ClientMock(callMock: { method, params, response in
+                    switch method {
+                    case "info.getTxFee":
+                        response(.success(AvalancheInfoApi.TxFee(
+                            creationTxFee: self.creationTxFee,
+                            txFee: self.txFee
+                        )))
+                    case "info.getBlockchainID":
+                        response(.success(AvalancheInfoApi.GetBlockchainIDResponse(
+                            blockchainID: self.newID(type: BlockchainID.self).cb58()
+                        )))
+                    default:
+                        response(.failure(ApiTestsError.error(description: "no mock for api method \(method)")))
+                    }
+                })
+            } else {
                 return ClientMock(callMock: { $2(.failure(ApiTestsError.error(from: "rpcMock"))) })
             }
-            return ClientMock(callMock: { method, params, response in
-                switch method {
-                case "platform.getStakingAssetID":
-                    response(.success(AvalanchePChainApi.GetStakingAssetIDResponse(assetID: self.avaxAssetID.cb58())))
-                case "platform.issueTx":
-                    response(.success(AvalanchePChainApi.IssueTxResponse(
-                        txID: self.testTransactionID.cb58()
-                    )))
-                default:
-                    response(.failure(ApiTestsError.error(description: "no mock for api method \(method)")))
-                }
-            })
         }
         return connectionProvider
     }

@@ -54,6 +54,8 @@ class AvalancheCoreMock: AvalancheCore {
                 return AvalanchePChainApi(avalanche: self, networkID: networkID)
             } else if apiType == AvalancheCChainApi.self {
                 return AvalancheCChainApi(avalanche: self, networkID: networkID)
+            } else if apiType == AvalancheInfoApi.self {
+                return AvalancheInfoApi(avalanche: self, networkID: networkID)
             } else {
                 throw ApiTestsError.error(from: "getAPIMock")
             }

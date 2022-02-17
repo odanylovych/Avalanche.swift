@@ -115,28 +115,45 @@ final class XChainTests: XCTestCase {
     private var connectionProvider: AvalancheConnectionProvider {
         var connectionProvider = ConnectionProviderMock()
         connectionProvider.rpcMock = { api in
-            guard case .xChain = api else {
+            if case .xChain = api {
+                return ClientMock(callMock: { method, params, response in
+                    switch method {
+                    case "avm.getAssetDescription":
+                        let params = params as! AvalancheXChainApi.GetAssetDescriptionParams
+                        XCTAssertEqual(params.assetID, AvalancheConstants.avaxAssetAlias)
+                        response(.success(AvalancheXChainApi.GetAssetDescriptionResponse(
+                            assetID: self.avaxAssetID.cb58(),
+                            name: "asset name",
+                            symbol: "asset symbol",
+                            denomination: "0"
+                        )))
+                    case "avm.issueTx":
+                        response(.success(AvalancheXChainApi.IssueTxResponse(
+                            txID: self.testTransactionID.cb58()
+                        )))
+                    default:
+                        response(.failure(ApiTestsError.error(description: "no mock for api method \(method)")))
+                    }
+                })
+            } else if case .info = api {
+                return ClientMock(callMock: { method, params, response in
+                    switch method {
+                    case "info.getTxFee":
+                        response(.success(AvalancheInfoApi.TxFee(
+                            creationTxFee: self.creationTxFee,
+                            txFee: self.txFee
+                        )))
+                    case "info.getBlockchainID":
+                        response(.success(AvalancheInfoApi.GetBlockchainIDResponse(
+                            blockchainID: self.newBlockchainID().cb58()
+                        )))
+                    default:
+                        response(.failure(ApiTestsError.error(description: "no mock for api method \(method)")))
+                    }
+                })
+            } else {
                 return ClientMock(callMock: { $2(.failure(ApiTestsError.error(from: "rpcMock"))) })
             }
-            return ClientMock(callMock: { method, params, response in
-                switch method {
-                case "avm.getAssetDescription":
-                    let params = params as! AvalancheXChainApi.GetAssetDescriptionParams
-                    XCTAssertEqual(params.assetID, AvalancheConstants.avaxAssetAlias)
-                    response(.success(AvalancheXChainApi.GetAssetDescriptionResponse(
-                        assetID: self.avaxAssetID.cb58(),
-                        name: "asset name",
-                        symbol: "asset symbol",
-                        denomination: "0"
-                    )))
-                case "avm.issueTx":
-                    response(.success(AvalancheXChainApi.IssueTxResponse(
-                        txID: self.testTransactionID.cb58()
-                    )))
-                default:
-                    response(.failure(ApiTestsError.error(description: "no mock for api method \(method)")))
-                }
-            })
         }
         return connectionProvider
     }
@@ -151,6 +168,12 @@ final class XChainTests: XCTestCase {
         let transactionID = TransactionID(data: Data(repeating: idIndex, count: TransactionID.size))!
         idIndex += 1
         return transactionID
+    }
+    
+    private func newBlockchainID() -> BlockchainID {
+        let blockchainID = BlockchainID(data: Data(repeating: idIndex, count: BlockchainID.size))!
+        idIndex += 1
+        return blockchainID
     }
     
     private func newAddress<API: AvalancheVMApi>(api: API) -> ExtendedAddress {

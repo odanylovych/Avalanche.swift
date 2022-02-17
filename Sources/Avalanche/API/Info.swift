@@ -20,15 +20,15 @@ public class AvalancheInfoApi: AvalancheApi {
         self.service = avalanche.connectionProvider.rpc(api: .info)
     }
     
-    /// methods
+    struct GetBlockchainIDParams: Encodable {
+        let alias: String
+    }
+    struct GetBlockchainIDResponse: Decodable {
+        let blockchainID: String
+    }
+    
     public func getBlockchainID(alias: String,
                                 cb: @escaping ApiCallback<BlockchainID>) {
-        struct GetBlockchainIDParams: Encodable {
-            let alias: String
-        }
-        struct GetBlockchainIDResponse: Decodable {
-            let blockchainID: String
-        }
         service.call(
             method: "info.getBlockchainID",
             params: GetBlockchainIDParams(alias: alias),
