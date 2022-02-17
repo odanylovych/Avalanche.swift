@@ -6,8 +6,8 @@
 //
 
 import Foundation
-import BigInt
 #if !COCOAPODS
+import BigInt
 import RPC
 import Serializable
 #endif
@@ -15,15 +15,17 @@ import Serializable
 public class AvalancheXChainApi: AvalancheTransactionApi {
     public typealias Keychain = AvalancheXChainApiAddressManager
     
+    public let networkID: NetworkID
+    public let chainID: ChainID
+    
     public let queue: DispatchQueue
-    private let addressManager: AvalancheAddressManager?
     public let utxoProvider: AvalancheUtxoProvider
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
-    public let networkID: NetworkID
-    public let chainID: ChainID
+    private let addressManager: AvalancheAddressManager?
     private let service: Client
     private let vmService: Client
+    
     let blockchainIDs: (ChainID, @escaping ApiCallback<BlockchainID>) -> ()
     private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
     private var _creationTxFee = CachedAsyncValue<UInt64, AvalancheApiError>()
@@ -57,16 +59,13 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
                          vm: String) {
         self.networkID = networkID
         self.chainID = chainID
-        let addressManagerProvider = avalanche.settings.addressManagerProvider
-        addressManager = addressManagerProvider.manager(ava: avalanche)
+        queue = avalanche.settings.queue
         utxoProvider = avalanche.settings.utxoProvider
         signer = avalanche.signatureProvider
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
-        let settings = avalanche.settings
-        queue = settings.queue
-        let connectionProvider = avalanche.connectionProvider
-        service = connectionProvider.rpc(api: .xChain(chainID: chainID))
-        vmService = connectionProvider.rpc(api: .xChainVM(vm: vm))
+        addressManager = avalanche.settings.addressManagerProvider.manager(ava: avalanche)
+        service = avalanche.connectionProvider.rpc(api: .xChain(chainID: chainID))
+        vmService = avalanche.connectionProvider.rpc(api: .xChainVM(vm: vm))
         blockchainIDs = { chainID, cb in
             switch chainID {
             case .alias(let alias):
@@ -1036,7 +1035,10 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func xChain(networkID: NetworkID) -> AvalancheXChainApi {
-        return self.createAPI(networkID: networkID)
+    public func xChain(networkID: NetworkID, chainID: ChainID, vm: String) -> AvalancheXChainApi {
+        return AvalancheXChainApi(avalanche: self,
+                                  networkID: networkID,
+                                  chainID: chainID,
+                                  vm: vm)
     }
 }

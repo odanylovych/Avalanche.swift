@@ -13,23 +13,20 @@ import RPC
 import Serializable
 #endif
 
-public enum CChainCredentials {
-    case password(username: String, password: String)
-    case account(Account, EthAccount)
-}
-
 public class AvalancheCChainApi: AvalancheTransactionApi {
     public typealias Keychain = AvalancheCChainApiUTXOAddressManager
     
     public let networkID: NetworkID
     public let chainID: ChainID
+    
     public let queue: DispatchQueue
-    private let addressManager: AvalancheAddressManager?
+    public let utxoProvider: AvalancheUtxoProvider
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
-    public let utxoProvider: AvalancheUtxoProvider
+    private let addressManager: AvalancheAddressManager?
     private let service: Client
     private let vmService: Client
+    
     let blockchainIDs: (ChainID, @escaping ApiCallback<BlockchainID>) -> ()
     private let _web3 = CachedAsyncValue<web3, AvalancheApiError>()
     private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
@@ -65,17 +62,15 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         self.networkID = networkID
         self.chainID = chainID
         queue = avalanche.settings.queue
-        let addressManagerProvider = avalanche.settings.addressManagerProvider
-        addressManager = addressManagerProvider.manager(ava: avalanche)
+        utxoProvider = avalanche.settings.utxoProvider
         signer = avalanche.signatureProvider
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
-        utxoProvider = avalanche.settings.utxoProvider
-        let connectionProvider = avalanche.connectionProvider
-        service = connectionProvider.rpc(api: .cChain(chainID: chainID))
-        if let subscribable = connectionProvider.subscribableRPC(api: .cChainVM(chainID: chainID)) {
+        addressManager = avalanche.settings.addressManagerProvider.manager(ava: avalanche)
+        service = avalanche.connectionProvider.rpc(api: .cChain(chainID: chainID))
+        if let subscribable = avalanche.connectionProvider.subscribableRPC(api: .cChainVM(chainID: chainID)) {
             vmService = subscribable
         } else {
-            vmService = connectionProvider.rpc(api: .cChainVM(chainID: chainID))
+            vmService = avalanche.connectionProvider.rpc(api: .cChainVM(chainID: chainID))
         }
         blockchainIDs = { chainID, cb in
             switch chainID {
@@ -353,7 +348,8 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         amount: UInt64,
         assetID: AssetID,
         baseFee: UInt64? = nil,
-        credentials: CChainCredentials,
+        credentials: AvalancheVmApiCredentials,
+        ethAccount: EthAccount,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
         switch credentials {
@@ -376,7 +372,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
                     .mapError(AvalancheApiError.init)
                     .map { TransactionID(cb58: $0.txID)! })
             }
-        case .account(let account, let ethAccount):
+        case .account(let account):
             txExport(
                 to: to,
                 amount: amount,
@@ -474,7 +470,10 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func cChain(networkID: NetworkID) -> AvalancheCChainApi {
-        return self.createAPI(networkID: networkID)
+    public func cChain(networkID: NetworkID, chainID: ChainID, vm: String) -> AvalancheCChainApi {
+        return AvalancheCChainApi(avalanche: self,
+                                  networkID: networkID,
+                                  chainID: chainID,
+                                  vm: vm)
     }
 }
