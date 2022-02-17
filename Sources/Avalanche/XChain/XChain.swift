@@ -21,7 +21,6 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
     public let networkID: NetworkID
-    public let hrp: String
     public let chainID: ChainID
     private let service: Client
     private let vmService: Client
@@ -39,29 +38,24 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     
     private var context: AvalancheDecoderContext {
         DefaultAvalancheDecoderContext(
-            hrp: hrp,
+            hrp: networkID.hrp,
             chainId: chainID.value,
             dynamicParser: XChainDynamicTypeRegistry.instance
         )
     }
     
-    public required convenience init(avalanche: AvalancheCore,
-                                     networkID: NetworkID,
-                                     hrp: String) {
+    public required convenience init(avalanche: AvalancheCore, networkID: NetworkID) {
         self.init(avalanche: avalanche,
                   networkID: networkID,
-                  hrp: hrp,
                   chainID: .alias("X"),
                   vm: "avm")
     }
     
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
-                         hrp: String,
                          chainID: ChainID,
                          vm: String) {
         self.networkID = networkID
-        self.hrp = hrp
         self.chainID = chainID
         let addressManagerProvider = avalanche.settings.addressManagerProvider
         addressManager = addressManagerProvider.manager(ava: avalanche)
@@ -1042,7 +1036,7 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func xChain(networkID: NetworkID, hrp: String) -> AvalancheXChainApi {
-        return self.createAPI(networkID: networkID, hrp: hrp)
+    public func xChain(networkID: NetworkID) -> AvalancheXChainApi {
+        return self.createAPI(networkID: networkID)
     }
 }

@@ -22,7 +22,6 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     public typealias Keychain = AvalancheCChainApiUTXOAddressManager
     
     public let networkID: NetworkID
-    public let hrp: String
     public let chainID: ChainID
     public let queue: DispatchQueue
     private let addressManager: AvalancheAddressManager?
@@ -46,28 +45,23 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     
     private var context: AvalancheDecoderContext {
         DefaultAvalancheDecoderContext(
-            hrp: hrp,
+            hrp: networkID.hrp,
             chainId: chainID.value,
             dynamicParser: CChainDynamicTypeRegistry.instance
         )
     }
     
-    public required convenience init(avalanche: AvalancheCore,
-                                     networkID: NetworkID,
-                                     hrp: String) {
+    public required convenience init(avalanche: AvalancheCore, networkID: NetworkID) {
         self.init(avalanche: avalanche,
                   networkID: networkID,
-                  hrp: hrp,
                   chainID: .alias("C"),
                   vm: "evm")
     }
     
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
-                         hrp: String,
                          chainID: ChainID,
                          vm: String) {
-        self.hrp = hrp
         self.networkID = networkID
         self.chainID = chainID
         queue = avalanche.settings.queue
@@ -480,7 +474,7 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func cChain(networkID: NetworkID, hrp: String) -> AvalancheCChainApi {
-        return self.createAPI(networkID: networkID, hrp: hrp)
+    public func cChain(networkID: NetworkID) -> AvalancheCChainApi {
+        return self.createAPI(networkID: networkID)
     }
 }

@@ -115,7 +115,7 @@ final class XChainTests: XCTestCase {
             let account = manager.fetchedAccounts().first!
             let to = try! account.derive(index: 0,
                                          change: false,
-                                         hrp: self.api.hrp,
+                                         hrp: self.api.networkID.hrp,
                                          chainId: self.cChain.chainID.value).address
             self.api.getAvaxAssetID { res in
                 let assetID = try! res.get()

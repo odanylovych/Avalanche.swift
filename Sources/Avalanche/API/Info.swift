@@ -13,17 +13,10 @@ import RPC
 
 public class AvalancheInfoApi: AvalancheApi {
     public let networkID: NetworkID
-    public let hrp: String
-    
     private let service: Client
     
-    public required init(avalanche: AvalancheCore,
-                         networkID: NetworkID,
-                         hrp: String)
-    {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID) {
         self.networkID = networkID
-        self.hrp = hrp
-        
         self.service = avalanche.connectionProvider.rpc(api: .info)
     }
     

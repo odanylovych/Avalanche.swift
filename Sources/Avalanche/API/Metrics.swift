@@ -13,15 +13,9 @@ import RPC
 
 public class AvalancheMetricsApi: AvalancheApi {
     public let networkID: NetworkID
-    public let hrp: String
-    
     private let connection: SingleShotConnection
     
-    public required init(avalanche: AvalancheCore,
-                         networkID: NetworkID,
-                         hrp: String)
-    {
-        self.hrp = hrp
+    public required init(avalanche: AvalancheCore, networkID: NetworkID) {
         self.networkID = networkID
         self.connection = avalanche.connectionProvider.singleShot(api: .metrics)
     }

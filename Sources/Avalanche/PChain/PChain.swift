@@ -22,7 +22,6 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
     public let utxoProvider: AvalancheUtxoProvider
     public let networkID: NetworkID
-    public let hrp: String
     public let chainID: ChainID
     let blockchainIDs: (ChainID, @escaping ApiCallback<BlockchainID>) -> ()
     private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
@@ -38,31 +37,26 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
     
     private var context: AvalancheDecoderContext {
         DefaultAvalancheDecoderContext(
-            hrp: hrp,
+            hrp: networkID.hrp,
             chainId: chainID.value,
             dynamicParser: PChainDynamicTypeRegistry.instance
         )
     }
     
-    public required convenience init(avalanche: AvalancheCore,
-                                     networkID: NetworkID,
-                                     hrp: String) {
+    public required convenience init(avalanche: AvalancheCore, networkID: NetworkID) {
         self.init(avalanche: avalanche,
                   networkID: networkID,
-                  hrp: hrp,
                   chainID: .alias("P"),
                   vm: "platformvm")
     }
     
     public required init(avalanche: AvalancheCore,
                          networkID: NetworkID,
-                         hrp: String,
                          chainID: ChainID,
                          vm: String) {
         let settings = avalanche.settings
         let addressManagerProvider = avalanche.settings.addressManagerProvider
         addressManager = addressManagerProvider.manager(ava: avalanche)
-        self.hrp = hrp
         self.networkID = networkID
         self.chainID = chainID
         self.queue = settings.queue
@@ -793,7 +787,7 @@ extension AvalancheCore {
         return try! self.getAPI()
     }
     
-    public func pChain(networkID: NetworkID, hrp: String) -> AvalanchePChainApi {
-        return self.createAPI(networkID: networkID, hrp: hrp)
+    public func pChain(networkID: NetworkID) -> AvalanchePChainApi {
+        return self.createAPI(networkID: networkID)
     }
 }

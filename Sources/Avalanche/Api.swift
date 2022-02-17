@@ -9,9 +9,8 @@ import Foundation
 
 public protocol AvalancheApi {
     var networkID: NetworkID { get }
-    var hrp: String { get }
     
-    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String)
+    init(avalanche: AvalancheCore, networkID: NetworkID)
     
     static var id: String { get }
 }

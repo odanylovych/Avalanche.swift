@@ -80,7 +80,7 @@ final class UtxoProviderTests: XCTestCase {
             try account.derive(
                 index: index,
                 change: false,
-                hrp: api.hrp,
+                hrp: api.networkID.hrp,
                 chainId: api.chainID.value
             ).address
         }

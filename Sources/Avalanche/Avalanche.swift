@@ -75,18 +75,15 @@ public class Avalanche: AvalancheCore {
         if let api = _apis[API.id] as? API {
             return api
         }
-        guard let netInfo = _settings.networkInfoProvider.info(for: networkID) else {
-            throw AvalancheApiSearchError.networkInfoNotFound(net: networkID)
-        }
-        let api: API = self.createAPI(networkID: networkID, hrp: netInfo.hrp)
+        let api: API = self.createAPI(networkID: networkID)
         _apis[API.id] = api
         return api
     }
     
-    public func createAPI<API: AvalancheApi>(networkID: NetworkID, hrp: String) -> API {
+    public func createAPI<API: AvalancheApi>(networkID: NetworkID) -> API {
         _lock.lock()
         defer { _lock.unlock() }
-        return API(avalanche: self, networkID: networkID, hrp: hrp)
+        return API(avalanche: self, networkID: networkID)
     }
 }
 

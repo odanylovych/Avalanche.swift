@@ -124,7 +124,7 @@ final class PChainTests: XCTestCase {
         let extended = try! testAccount.derive(
             index: addressIndex,
             change: false,
-            hrp: api.hrp,
+            hrp: api.networkID.hrp,
             chainId: api.chainID.value
         )
         addressIndex += 1
@@ -753,7 +753,6 @@ final class PChainTests: XCTestCase {
         }
         let settings = avalanche.settings
         avalanche.settings = AvalancheSettings(queue: settings.queue,
-                                               networkInfoProvider: settings.networkInfoProvider,
                                                addressManagerProvider: settings.addressManagerProvider,
                                                utxoProvider: utxoProvider,
                                                encoderDecoderProvider: settings.encoderDecoderProvider)

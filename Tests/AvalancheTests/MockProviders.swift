@@ -17,22 +17,9 @@ enum ApiTestsError: Error {
     case error(description: String)
 }
 
-struct NetworkInfoProviderMock: AvalancheNetworkInfoProvider {
-    var infoMock: ((NetworkID) -> AvalancheNetworkInfo?)?
-    var setInfoMock: ((AvalancheNetworkInfo, NetworkID) -> Void)?
-    
-    func info(for net: NetworkID) -> AvalancheNetworkInfo? {
-        infoMock!(net)
-    }
-    
-    func setInfo(info: AvalancheNetworkInfo, for net: NetworkID) {
-        setInfoMock!(info, net)
-    }
-}
-
 class AvalancheCoreMock: AvalancheCore {
     var getAPIMock: ((Any.Type) throws -> Any)?
-    var createAPIMock: ((NetworkID, String) -> Any)?
+    var createAPIMock: ((NetworkID) -> Any)?
     
     var networkID: NetworkID
     var settings: AvalancheSettings
@@ -55,31 +42,18 @@ class AvalancheCoreMock: AvalancheCore {
         try getAPIMock!(A.self) as! A
     }
     
-    func createAPI<A: AvalancheApi>(networkID: NetworkID, hrp: String) -> A {
-        createAPIMock!(networkID, hrp) as! A
+    func createAPI<A: AvalancheApi>(networkID: NetworkID) -> A {
+        createAPIMock!(networkID) as! A
     }
     
     func defaultGetAPIMock(for networkID: NetworkID) -> (Any.Type) throws -> Any {
         { apiType in
-            let networkInfo = AvalancheDefaultNetworkInfoProvider.default.info(for: networkID)!
             if apiType == AvalancheXChainApi.self {
-                return AvalancheXChainApi(
-                    avalanche: self,
-                    networkID: networkID,
-                    hrp: networkInfo.hrp
-                )
+                return AvalancheXChainApi(avalanche: self, networkID: networkID)
             } else if apiType == AvalanchePChainApi.self {
-                return AvalanchePChainApi(
-                    avalanche: self,
-                    networkID: networkID,
-                    hrp: networkInfo.hrp
-                )
+                return AvalanchePChainApi(avalanche: self, networkID: networkID)
             } else if apiType == AvalancheCChainApi.self {
-                return AvalancheCChainApi(
-                    avalanche: self,
-                    networkID: networkID,
-                    hrp: networkInfo.hrp
-                )
+                return AvalancheCChainApi(avalanche: self, networkID: networkID)
             } else {
                 throw ApiTestsError.error(from: "getAPIMock")
             }
@@ -318,7 +292,6 @@ struct AvalancheVMApiMock: AvalancheVMApi {
     var signer: AvalancheSignatureProvider?
     var encoderDecoderProvider: AvalancheEncoderDecoderProvider
     var networkID: NetworkID
-    var hrp: String
     var chainID: ChainID
     
     public var keychain: AvalancheApiUTXOAddressManagerMock? {
@@ -327,14 +300,13 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         }
     }
     
-    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String) {
-        self.init(avalanche: avalanche, networkID: networkID, hrp: hrp, chainID: .alias("alias"))
+    init(avalanche: AvalancheCore, networkID: NetworkID) {
+        self.init(avalanche: avalanche, networkID: networkID, chainID: .alias("alias"))
     }
     
     init(
         avalanche: AvalancheCore,
         networkID: NetworkID = NetworkID.local,
-        hrp: String = "hrp",
         chainID: ChainID = .alias("alias")
     ) {
         self.avalanche = avalanche
@@ -344,7 +316,6 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         signer = avalanche.signatureProvider
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
         self.networkID = networkID
-        self.hrp = hrp
         self.chainID = chainID
     }
     

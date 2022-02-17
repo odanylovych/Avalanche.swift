@@ -36,7 +36,7 @@ final class AddressManagerTests: XCTestCase {
         testExtendedAvalancheAddress = try! testAvalancheAccount.derive(
             index: 0,
             change: false,
-            hrp: api.hrp,
+            hrp: api.networkID.hrp,
             chainId: api.chainID.value
         )
         testAvalancheAddress = testExtendedAvalancheAddress.address
@@ -113,7 +113,7 @@ final class AddressManagerTests: XCTestCase {
             let newAddress = try! self.testAvalancheAccount.derive(
                 index: 1,
                 change: false,
-                hrp: self.api.hrp,
+                hrp: self.api.networkID.hrp,
                 chainId: self.api.chainID.value
             ).address
             XCTAssertEqual(addresses, [newAddress])
@@ -151,7 +151,7 @@ final class AddressManagerTests: XCTestCase {
             try! testAvalancheAccount.derive(
                 index: index,
                 change: false,
-                hrp: api.hrp,
+                hrp: api.networkID.hrp,
                 chainId: api.chainID.value
             ).address
         }
@@ -183,7 +183,6 @@ final class AddressManagerTests: XCTestCase {
         }
         let settings = avalanche.settings
         avalanche.settings = AvalancheSettings(queue: settings.queue,
-                                               networkInfoProvider: settings.networkInfoProvider,
                                                addressManagerProvider: settings.addressManagerProvider,
                                                utxoProvider: utxoProvider,
                                                encoderDecoderProvider: settings.encoderDecoderProvider)
