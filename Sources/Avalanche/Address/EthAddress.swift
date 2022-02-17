@@ -11,7 +11,7 @@ import web3swift
 #endif
 
 public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, Hashable {
-    public typealias Addr = EthereumAddress
+    public typealias Addr = Address
     public typealias Base = EthereumAddress
     
     public let address: EthereumAddress

@@ -13,8 +13,13 @@ import RPC
 import Serializable
 #endif
 
+public enum CChainApiCredentials {
+    case password(username: String, password: String)
+    case account(EthAccount)
+}
+
 public class AvalancheCChainApi: AvalancheTransactionApi {
-    public typealias Keychain = AvalancheCChainApiUTXOAddressManager
+    public typealias Keychain = AvalancheCChainApiAddressManager
     
     public let networkID: NetworkID
     public let chainID: ChainID
@@ -34,9 +39,9 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     private let _avaxAssetID = CachedAsyncValue<AssetID, AvalancheApiError>()
     private let _ethChainID = CachedAsyncValue<BigUInt, AvalancheApiError>()
     
-    public var keychain: AvalancheCChainApiUTXOAddressManager? {
+    public var keychain: AvalancheCChainApiAddressManager? {
         addressManager.map {
-            AvalancheCChainApiUTXOAddressManager(manager: $0, api: self)
+            AvalancheCChainApiAddressManager(manager: $0, api: self)
         }
     }
     
@@ -353,8 +358,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         amount: UInt64,
         assetID: AssetID,
         baseFee: UInt64? = nil,
-        credentials: AvalancheVmApiCredentials,
-        ethAccount: EthAccount,
+        credentials: CChainApiCredentials,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
         switch credentials {
@@ -384,7 +388,6 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
                 assetID: assetID,
                 baseFee: baseFee,
                 account: account,
-                ethAccount: ethAccount,
                 cb
             )
         }
@@ -406,7 +409,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         to: EthereumAddress,
         sourceChain: BlockchainID,
         baseFee: UInt64? = nil,
-        credentials: AvalancheVmApiCredentials,
+        credentials: CChainApiCredentials,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
         switch credentials {
