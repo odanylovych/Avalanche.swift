@@ -27,10 +27,10 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
     private let vmService: Client
     
     let blockchainIDs: (ChainID, @escaping ApiCallback<BlockchainID>) -> ()
-    private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
-    private var _creationTxFee = CachedAsyncValue<UInt64, AvalancheApiError>()
-    private var _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>()
-    private var _avaxAssetID = CachedAsyncValue<AssetID, AvalancheApiError>()
+    private let _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
+    private let _creationTxFee = CachedAsyncValue<UInt64, AvalancheApiError>()
+    private let _blockchainID: CachedAsyncValue<BlockchainID, AvalancheApiError>
+    private let _avaxAssetID = CachedAsyncValue<AssetID, AvalancheApiError>()
     
     public var keychain: AvalancheXChainApiAddressManager? {
         addressManager.map {
@@ -86,15 +86,15 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
                 cb(res.map { $0.creationTxFee })
             }
         }
-        _blockchainID.getter = { cb in
-            switch chainID {
-            case .alias(let alias):
+        switch chainID {
+        case .alias(let alias):
+            _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>() { cb in
                 avalanche.info.getBlockchainID(alias: alias) { res in
                     cb(res)
                 }
-            case .blockchainID(let blockchainID):
-                cb(.success(blockchainID))
             }
+        case .blockchainID(let blockchainID):
+            _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>(blockchainID)
         }
         _avaxAssetID.getter = { [weak self] cb in
             guard let this = self else {

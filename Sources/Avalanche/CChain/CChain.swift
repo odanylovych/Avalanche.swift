@@ -29,10 +29,10 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     
     let blockchainIDs: (ChainID, @escaping ApiCallback<BlockchainID>) -> ()
     private let _web3 = CachedAsyncValue<web3, AvalancheApiError>()
-    private var _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
-    private var _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>()
-    private var _avaxAssetID = CachedAsyncValue<AssetID, AvalancheApiError>()
-    private var _ethChainID = CachedAsyncValue<BigUInt, AvalancheApiError>()
+    private let _txFee = CachedAsyncValue<UInt64, AvalancheApiError>()
+    private let _blockchainID: CachedAsyncValue<BlockchainID, AvalancheApiError>
+    private let _avaxAssetID = CachedAsyncValue<AssetID, AvalancheApiError>()
+    private let _ethChainID = CachedAsyncValue<BigUInt, AvalancheApiError>()
     
     public var keychain: AvalancheCChainApiUTXOAddressManager? {
         addressManager.map {
@@ -82,6 +82,16 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
                 cb(.success(blockchainID))
             }
         }
+        switch chainID {
+        case .alias(let alias):
+            _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>() { cb in
+                avalanche.info.getBlockchainID(alias: alias) { res in
+                    cb(res)
+                }
+            }
+        case .blockchainID(let blockchainID):
+            _blockchainID = CachedAsyncValue<BlockchainID, AvalancheApiError>(blockchainID)
+        }
         _web3.getter = { [weak self] cb in
             guard let this = self else {
                 cb(.failure(.nilAvalancheApi))
@@ -108,16 +118,6 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         _txFee.getter = { cb in
             avalanche.info.getTxFee { res in
                 cb(res.map { $0.txFee })
-            }
-        }
-        _blockchainID.getter = { cb in
-            switch chainID {
-            case .alias(let alias):
-                avalanche.info.getBlockchainID(alias: alias) { res in
-                    cb(res)
-                }
-            case .blockchainID(let blockchainID):
-                cb(.success(blockchainID))
             }
         }
         _avaxAssetID.getter = { cb in

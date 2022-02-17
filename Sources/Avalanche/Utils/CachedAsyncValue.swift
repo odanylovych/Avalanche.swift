@@ -16,10 +16,11 @@ public class CachedAsyncValue<V, E: Error> {
     private var value: Optional<V>
     private var callbacks: Array<(Result<V,E>) -> ()>
     
-    public init(getter: (((Result<V, E>) -> ()) -> ())? = nil) {
+    public init(_ value: V? = nil,
+                getter: ((@escaping (Result<V, E>) -> ()) -> ())? = nil) {
         self.getter = getter
         self.callbacks = []
-        self.value = nil
+        self.value = value
     }
     
     public func get(force: Bool = false,  _ cb: @escaping (Result<V,E>) -> ()) {
