@@ -97,7 +97,11 @@ public class AvalancheXChainApi: AvalancheTransactionApi {
             }
         }
         _avaxAssetID.getter = { [weak self] cb in
-            self?.getAssetDescription(assetID: AvalancheConstants.avaxAssetAlias) { res in
+            guard let this = self else {
+                cb(.failure(.nilAvalancheApi))
+                return
+            }
+            this.getAssetDescription(assetID: AvalancheConstants.avaxAssetAlias) { res in
                 cb(res.map { $0.0 })
             }
         }

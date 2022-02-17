@@ -37,7 +37,7 @@ public class CachedAsyncValue<V, E: Error> {
     
     private func _fetch() {
         guard let getter = self.getter else {
-            return
+            fatalError("CachedAsyncValueError: getter is not set")
         }
         getter() { res in
             AsyncValueSyncQueue.async {

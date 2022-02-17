@@ -24,6 +24,7 @@ public enum AvalancheApiError: Error {
     case methodIsNotSupported(method: String)
     case nilAddressManager
     case nilSignatureProvider
+    case nilAvalancheApi
     
     public init<P: Encodable>(request: RequestError<P, SerializableValue>) {
         switch request {

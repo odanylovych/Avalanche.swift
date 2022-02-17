@@ -84,6 +84,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         }
         _web3.getter = { [weak self] cb in
             guard let this = self else {
+                cb(.failure(.nilAvalancheApi))
                 return
             }
             this.getEthChainID { res in
@@ -125,7 +126,11 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
             }
         }
         _ethChainID.getter = { [weak self] cb in
-            self?.ethChainID { res in
+            guard let this = self else {
+                cb(.failure(.nilAvalancheApi))
+                return
+            }
+            this.ethChainID { res in
                 cb(res)
             }
         }

@@ -95,7 +95,11 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
             }
         }
         _avaxAssetID.getter = { [weak self] cb in
-            self?.getStakingAssetID { res in
+            guard let this = self else {
+                cb(.failure(.nilAvalancheApi))
+                return
+            }
+            this.getStakingAssetID { res in
                 cb(res)
             }
         }
