@@ -488,7 +488,7 @@ extension AvalancheXChainApi {
         account: Account,
         _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
     ) {
-        withTransactionData(for: account, from: from, change: change ?? to) { res in
+        withTransactionData(for: account, from: from, change: change) { res in
             switch res {
             case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
@@ -678,7 +678,7 @@ extension AvalancheXChainApi {
         account: Account,
         _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
     ) {
-        withTransactionData(for: account, from: from, change: change ?? to) { res in
+        withTransactionData(for: account, from: from, change: change) { res in
             switch res {
             case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
                 self.getTxFee { res in
