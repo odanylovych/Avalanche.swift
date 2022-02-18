@@ -8,7 +8,7 @@
 import Foundation
 
 public enum AvalancheUtxoProviderError: Error {
-    case noOutputs(transaction: UnsignedAvalancheTransaction)
+    case noOutput(index: UInt32, transactionID: String)
 }
 
 public protocol AvalancheUtxoProviderIterator {
@@ -89,21 +89,24 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
             api.getTransaction(id: id) { res in
                 switch res {
                 case .success(let transaction):
-                    guard let baseTransaction = transaction.unsignedTransaction as? BaseTransaction else {
-                        mapped(.failure(.custom(
-                            cause: AvalancheUtxoProviderError.noOutputs(transaction: transaction.unsignedTransaction)
-                        )))
-                        return
-                    }
-                    mapped(.success(indexes.map { index in
-                        let output = baseTransaction.outputs[Int(index)]
-                        return UTXO(
+                    let outputs = transaction.unsignedTransaction.allOutputs
+                    var utxos = [UTXO]()
+                    for index in indexes {
+                        guard outputs.count > index else {
+                            mapped(.failure(.custom(cause: AvalancheUtxoProviderError.noOutput(
+                                index: index, transactionID: id.cb58()
+                            ))))
+                            return
+                        }
+                        let output = outputs[Int(index)]
+                        utxos.append(UTXO(
                             transactionID: id,
                             utxoIndex: index,
                             assetID: output.assetID,
                             output: output.output
-                        )
-                    }))
+                        ))
+                    }
+                    mapped(.success(utxos))
                 case .failure(let error):
                     mapped(.failure(error))
                 }

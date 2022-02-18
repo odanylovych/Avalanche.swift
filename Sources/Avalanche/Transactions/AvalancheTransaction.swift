@@ -38,7 +38,11 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
         return try decoder.context.dynamicParser.decode(transaction: decoder) as! Self
     }
     
-    public func inputsData() -> [InputData] {
+    public var inputsData: [InputData] {
+        fatalError("Not supported")
+    }
+    
+    public var allOutputs: [TransferableOutput] {
         fatalError("Not supported")
     }
     
@@ -180,13 +184,17 @@ public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
         )
     }
     
-    override public func inputsData() -> [InputData] {
+    override public var inputsData: [InputData] {
         inputs.map { InputData(
             credentialType: $0.input.credentialType(),
             transactionID: $0.transactionID,
             utxoIndex: $0.utxoIndex,
             addressIndices: $0.input.addressIndices
         ) }
+    }
+    
+    override public var allOutputs: [TransferableOutput] {
+        outputs
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {

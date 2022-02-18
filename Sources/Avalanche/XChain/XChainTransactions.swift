@@ -155,7 +155,7 @@ public class ImportTransaction: BaseTransaction {
         )
     }
     
-    override public func inputsData() -> [InputData] {
+    override public var inputsData: [InputData] {
         (inputs + transferableInputs).map { InputData(
             credentialType: $0.input.credentialType(),
             transactionID: $0.transactionID,
@@ -238,6 +238,10 @@ public class ExportTransaction: BaseTransaction {
             destinationChain: try decoder.decode(name: "destinationChain"),
             transferableOutputs: try decoder.decode(name: "transferableOutputs")
         )
+    }
+    
+    override public var allOutputs: [TransferableOutput] {
+        super.allOutputs + transferableOutputs
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {

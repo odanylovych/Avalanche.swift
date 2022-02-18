@@ -47,8 +47,12 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         )
     }
     
-    override public func inputsData() -> [InputData] {
+    override public var inputsData: [InputData] {
         []
+    }
+    
+    override public var allOutputs: [TransferableOutput] {
+        exportedOutputs
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
@@ -111,13 +115,17 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         )
     }
     
-    override public func inputsData() -> [InputData] {
+    override public var inputsData: [InputData] {
         importedInputs.map { InputData(
             credentialType: $0.input.credentialType(),
             transactionID: $0.transactionID,
             utxoIndex: $0.utxoIndex,
             addressIndices: $0.input.addressIndices
         ) }
+    }
+    
+    override public var allOutputs: [TransferableOutput] {
+        []
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {

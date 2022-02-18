@@ -46,7 +46,7 @@ extension AvalancheTransactionApi {
             handleError(.nilSignatureProvider, cb)
             return
         }
-        let inputsData = transaction.inputsData()
+        let inputsData = transaction.inputsData
         utxoProvider.utxos(api: self, ids: inputsData.map { ($0.transactionID, $0.utxoIndex) }) { res in
             switch res {
             case .success(let utxos):
