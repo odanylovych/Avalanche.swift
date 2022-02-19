@@ -17,6 +17,7 @@ public enum AvalancheSignatureProviderError: Error {
     case signedTransactionInitFailed(error: Error)
     case transport(error: Error)
     case rejected
+    case addressCreationFailed(error: Error)
 }
 
 public enum AvalancheSignatureProviderAccountRequestType: Hashable, Equatable {
