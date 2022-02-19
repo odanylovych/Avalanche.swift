@@ -62,9 +62,11 @@ extension AvalancheTransactionApi {
                 }
                 let extendedAddresses: [Address: Address.Extended]
                 do {
-                    let addresses = credentialAddresses.flatMap { $0.1 }
+                    let addresses = Set(credentialAddresses.flatMap { $0.1 })
                     extendedAddresses = Dictionary(
-                        uniqueKeysWithValues: try keychain.extended(for: addresses).map { ($0.address, $0) }
+                        uniqueKeysWithValues: try keychain.extended(for: Array(addresses)).map {
+                            ($0.address, $0)
+                        }
                     )
                 } catch {
                     handleError(error, cb)
