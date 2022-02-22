@@ -9,16 +9,9 @@ import Foundation
 
 public protocol AvalancheApi {
     var networkID: NetworkID { get }
+    var chainID: ChainID { get }
     
-    init(avalanche: AvalancheCore, networkID: NetworkID)
-    
-    static var id: String { get }
-}
-
-extension AvalancheApi {
-    public static var id: String {
-        return String(describing: self)
-    }
+    init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID)
 }
 
 public protocol AvalancheVMApi: AvalancheApi {
@@ -45,7 +38,7 @@ public protocol AvalancheVMApi: AvalancheApi {
     )
 }
 
-public enum ChainID {
+public enum ChainID: Hashable {
     case alias(String)
     case blockchainID(BlockchainID)
     

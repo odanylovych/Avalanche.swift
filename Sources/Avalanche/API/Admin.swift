@@ -13,10 +13,12 @@ import RPC
 
 public class AvalancheAdminApi: AvalancheApi {
     public let networkID: NetworkID
+    public let chainID: ChainID
     private let service: Client
 
-    public required init(avalanche: AvalancheCore, networkID: NetworkID) {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) {
         self.networkID = networkID
+        self.chainID = chainID
         self.service = avalanche.connectionProvider.rpc(api: .admin)
     }
     
@@ -110,6 +112,6 @@ public class AvalancheAdminApi: AvalancheApi {
 
 extension AvalancheCore {
     public var admin: AvalancheAdminApi {
-        try! self.getAPI()
+        try! self.getAPI(chainID: .alias("admin"))
     }
 }

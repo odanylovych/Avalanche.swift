@@ -15,8 +15,8 @@ public protocol AvalancheCore: AnyObject {
     var signatureProvider: AvalancheSignatureProvider? { get set }
     var connectionProvider: AvalancheConnectionProvider { get set }
     
-    func getAPI<A: AvalancheApi>() throws -> A
-    func createAPI<A: AvalancheApi>(networkID: NetworkID) -> A
+    func getAPI<A: AvalancheApi>(chainID: ChainID) throws -> A
+    func createAPI<A: AvalancheApi>(networkID: NetworkID, chainID: ChainID) -> A
 }
 
 public struct AvalancheConstants {

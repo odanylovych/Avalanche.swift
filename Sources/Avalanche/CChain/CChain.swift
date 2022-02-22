@@ -53,10 +53,10 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         )
     }
     
-    public required convenience init(avalanche: AvalancheCore, networkID: NetworkID) {
+    public required convenience init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) {
         self.init(avalanche: avalanche,
                   networkID: networkID,
-                  chainID: .alias("C"),
+                  chainID: chainID,
                   vm: "evm")
     }
     
@@ -476,7 +476,11 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
 
 extension AvalancheCore {
     public var cChain: AvalancheCChainApi {
-        return try! self.getAPI()
+        return try! self.getAPI(chainID: .alias("C"))
+    }
+    
+    public func cChain(chainID: ChainID) -> AvalancheCChainApi {
+        return try! self.getAPI(chainID: chainID)
     }
     
     public func cChain(networkID: NetworkID, chainID: ChainID, vm: String) -> AvalancheCChainApi {

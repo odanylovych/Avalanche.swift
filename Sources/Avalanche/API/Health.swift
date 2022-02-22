@@ -27,10 +27,12 @@ public struct AvalancheLivenessResponse: Decodable {
 
 public class AvalancheHealthApi: AvalancheApi {
     public let networkID: NetworkID
+    public let chainID: ChainID
     private let service: Client
     
-    public required init(avalanche: AvalancheCore, networkID: NetworkID) {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) {
         self.networkID = networkID
+        self.chainID = chainID
         self.service = avalanche.connectionProvider.rpc(api: .health)
     }
     
@@ -48,6 +50,6 @@ public class AvalancheHealthApi: AvalancheApi {
 
 extension AvalancheCore {
     public var health: AvalancheHealthApi {
-        try! self.getAPI()
+        try! self.getAPI(chainID: .alias("health"))
     }
 }

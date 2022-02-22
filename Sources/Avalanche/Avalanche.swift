@@ -8,7 +8,7 @@
 import Foundation
 
 public class Avalanche: AvalancheCore {
-    private var _apis: [String: Any]
+    private var _apis: [ChainID: Any]
     private let _lock: NSRecursiveLock
     
     private var _networkID: NetworkID
@@ -68,22 +68,22 @@ public class Avalanche: AvalancheCore {
         self._connectionProvider = connectionProvider
     }
     
-    public func getAPI<API: AvalancheApi>() throws -> API {
+    public func getAPI<API: AvalancheApi>(chainID: ChainID) throws -> API {
         _lock.lock()
         defer { _lock.unlock() }
         
-        if let api = _apis[API.id] as? API {
+        if let api = _apis[chainID] as? API {
             return api
         }
-        let api: API = self.createAPI(networkID: networkID)
-        _apis[API.id] = api
+        let api: API = self.createAPI(networkID: networkID, chainID: chainID)
+        _apis[chainID] = api
         return api
     }
     
-    public func createAPI<API: AvalancheApi>(networkID: NetworkID) -> API {
+    public func createAPI<API: AvalancheApi>(networkID: NetworkID, chainID: ChainID) -> API {
         _lock.lock()
         defer { _lock.unlock() }
-        return API(avalanche: self, networkID: networkID)
+        return API(avalanche: self, networkID: networkID, chainID: chainID)
     }
 }
 

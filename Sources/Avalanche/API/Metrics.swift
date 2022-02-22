@@ -13,10 +13,12 @@ import RPC
 
 public class AvalancheMetricsApi: AvalancheApi {
     public let networkID: NetworkID
+    public let chainID: ChainID
     private let connection: SingleShotConnection
     
-    public required init(avalanche: AvalancheCore, networkID: NetworkID) {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) {
         self.networkID = networkID
+        self.chainID = chainID
         self.connection = avalanche.connectionProvider.singleShot(api: .metrics)
     }
     
@@ -47,6 +49,6 @@ private extension String {
 
 extension AvalancheCore {
     public var metrics: AvalancheMetricsApi {
-        try! self.getAPI()
+        try! self.getAPI(chainID: .alias("metrics"))
     }
 }
