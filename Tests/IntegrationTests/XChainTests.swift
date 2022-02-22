@@ -11,11 +11,15 @@ import Avalanche
 import AvalancheKeychain
 
 final class XChainTests: XCTestCase {
+    private typealias AsyncWaitCondition = (@escaping (Bool) -> ()) -> ()
+    
+    private var queue: DispatchQueue!
     private var avalanche: AvalancheCore!
     private var keychain: AvalancheBip44Keychain!
     
     override func setUp() {
         super.setUp()
+        queue = DispatchQueue(label: "XChainTests.Async.Queue", target: .global())
         avalanche = Avalanche(url: TestEnvironment.url, network: TestEnvironment.network)
         keychain = try! AvalancheBip44Keychain(seed: TestEnvironment.instance.seed)
         avalanche.signatureProvider = keychain
@@ -31,6 +35,32 @@ final class XChainTests: XCTestCase {
     
     private var cChain: AvalancheCChainApi {
         avalanche.cChain
+    }
+    
+    private static func utxosToAppear<A: AvalancheTransactionApi>(
+        on chain: A,
+        addresses: [Address],
+        source: BlockchainID
+    ) -> AsyncWaitCondition {
+        { cb in
+            let iterator = chain.utxoProvider.utxos(api: chain, addresses: addresses)
+            iterator.next(sourceChain: source) { res in
+                let utxos = try! res.get().utxos
+                cb(!utxos.isEmpty)
+            }
+        }
+    }
+    
+    private func asyncWait(for condition: @escaping AsyncWaitCondition, _ cb: @escaping () -> ()) {
+        condition() { result in
+            guard result else {
+                self.queue.asyncAfter(deadline: .now() + 10) {
+                    self.asyncWait(for: condition, cb)
+                }
+                return
+            }
+            cb()
+        }
     }
     
     func testSendAvax() throws {
@@ -61,7 +91,7 @@ final class XChainTests: XCTestCase {
     }
     
     func testExportToPChain() throws {
-        let exported = expectation(description: "exported")
+        let exported = expectation(description: "Exported to P-Chain")
         try keychain.addAvalancheAccount(index: 0)
         guard let manager = api.keychain,
               let pChainManager = pChain.keychain else {
@@ -82,15 +112,16 @@ final class XChainTests: XCTestCase {
                             let signed = try! res.get()
                             let transaction = signed.unsignedTransaction as? ExportTransaction
                             XCTAssertNotNil(transaction)
-                            // TODO: async wait for utxos to appear on pchain
                             self.api.getBlockchainID { res in
                                 let source = try! res.get()
-                                self.pChain.importAVAX(to: to,
-                                                       source: source,
-                                                       credentials: .account(account)) { res in
-                                    let (txID, _) = try! res.get()
-                                    print("Import Transaction: \(txID.cb58())")
-                                    exported.fulfill()
+                                self.asyncWait(for: Self.utxosToAppear(on: self.pChain, addresses: [to], source: source)) {
+                                    self.pChain.importAVAX(to: to,
+                                                           source: source,
+                                                           credentials: .account(account)) { res in
+                                        let (txID, _) = try! res.get()
+                                        print("Import Transaction: \(txID.cb58())")
+                                        exported.fulfill()
+                                    }
                                 }
                             }
                         }
@@ -102,7 +133,7 @@ final class XChainTests: XCTestCase {
     }
     
     func testExportToCChain() throws {
-        let exported = expectation(description: "exported")
+        let exported = expectation(description: "Exported to C-Chain")
         try keychain.addAvalancheAccount(index: 0)
         try keychain.addEthereumAccount(index: 0)
         guard let manager = api.keychain,
@@ -124,15 +155,16 @@ final class XChainTests: XCTestCase {
                             let signed = try! res.get()
                             let transaction = signed.unsignedTransaction as? ExportTransaction
                             XCTAssertNotNil(transaction)
-                            // TODO: async wait for utxos to appear on cchain
                             self.api.getBlockchainID { res in
-                                let sourceChain = try! res.get()
-                                self.cChain.import(to: ethAccount.address,
-                                                   sourceChain: sourceChain,
-                                                   credentials: .account(ethAccount)) { res in
-                                    let txID = try! res.get()
-                                    print("Import Transaction: \(txID.cb58())")
-                                    exported.fulfill()
+                                let source = try! res.get()
+                                self.asyncWait(for: Self.utxosToAppear(on: self.cChain, addresses: [to], source: source)) {
+                                    self.cChain.import(to: ethAccount.address,
+                                                       sourceChain: source,
+                                                       credentials: .account(ethAccount)) { res in
+                                        let txID = try! res.get()
+                                        print("Import Transaction: \(txID.cb58())")
+                                        exported.fulfill()
+                                    }
                                 }
                             }
                         }

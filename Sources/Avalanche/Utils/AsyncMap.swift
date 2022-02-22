@@ -26,6 +26,10 @@ public class AsyncMapper<Seq: Sequence, Out, Err: Error> {
     public func exec(_ result: @escaping (Result<[Out], Err>) -> Void) {
         guard outputs == nil else { return }
         let enumerated = Array(elements.enumerated())
+        guard !enumerated.isEmpty else {
+            result(.success([]))
+            return
+        }
         queue.sync {
             self.outputs = Array(repeating: nil, count: enumerated.count)
         }

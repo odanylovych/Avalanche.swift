@@ -20,7 +20,7 @@ public protocol AvalancheUtxoProviderIterator {
 }
 
 extension AvalancheUtxoProviderIterator {
-    func next(
+    public func next(
         limit: UInt32? = nil,
         sourceChain: BlockchainID? = nil,
         result: @escaping ApiCallback<(utxos: [UTXO],
