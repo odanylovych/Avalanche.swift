@@ -107,9 +107,10 @@ extension AvalancheCChainApi {
         }
     }
     
-    public func txImport(
+    public func txImport<A: AvalancheVMApi>(
         to: EthereumAddress,
         sourceChain: BlockchainID,
+        sourceApi: A,
         baseFee: UInt64? = nil,
         account: EthAccount,
         _ cb: @escaping ApiCallback<TransactionID>
@@ -191,7 +192,7 @@ extension AvalancheCChainApi {
                                             importedInputs: importedInputs,
                                             outputs: outputs
                                         )
-                                        self.signAndSend(transaction, cb)
+                                        self.signAndSend(transaction, source: sourceApi, cb)
                                     case .failure(let error):
                                         self.handleError(error, cb)
                                     }

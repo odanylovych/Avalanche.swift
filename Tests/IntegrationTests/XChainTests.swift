@@ -160,6 +160,7 @@ final class XChainTests: XCTestCase {
                                 self.asyncWait(for: Self.utxosToAppear(on: self.cChain, addresses: [to], source: source)) {
                                     self.cChain.import(to: ethAccount.address,
                                                        sourceChain: source,
+                                                       sourceApi: self.api,
                                                        credentials: .account(ethAccount)) { res in
                                         let txID = try! res.get()
                                         print("Import Transaction: \(txID.cb58())")

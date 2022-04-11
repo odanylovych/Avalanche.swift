@@ -38,6 +38,12 @@ extension AvalancheTransactionApi {
     
     public func signTransaction(_ transaction: UnsignedAvalancheTransaction,
                                 _ cb: @escaping ApiCallback<SignedAvalancheTransaction>) {
+        signTransaction(transaction, source: self, cb)
+    }
+    
+    public func signTransaction<A: AvalancheVMApi>(_ transaction: UnsignedAvalancheTransaction,
+                                                   source api: A,
+                                                   _ cb: @escaping ApiCallback<SignedAvalancheTransaction>) {
         guard let keychain = keychain else {
             handleError(.nilAddressManager, cb)
             return
@@ -47,7 +53,7 @@ extension AvalancheTransactionApi {
             return
         }
         let inputsData = transaction.inputsData
-        utxoProvider.utxos(api: self, ids: inputsData.map { ($0.transactionID, $0.utxoIndex) }) { res in
+        utxoProvider.utxos(api: api, ids: inputsData.map { ($0.transactionID, $0.utxoIndex) }) { res in
             switch res {
             case .success(let utxos):
                 let credentialAddresses = inputsData.map { inputData -> (Credential.Type, [Address]) in
@@ -57,7 +63,10 @@ extension AvalancheTransactionApi {
                     })!
                     return (
                         inputData.credentialType,
-                        inputData.addressIndices.map { utxo.output.addresses[Int($0)] }
+                        inputData.addressIndices.map {
+                            let address = utxo.output.addresses[Int($0)]
+                            return try! Address(raw: address.rawAddress, hrp: address.hrp, chainId: self.chainID.value)
+                        }
                     )
                 }
                 let extendedAddresses: [Address: Address.Extended]
@@ -111,7 +120,13 @@ extension AvalancheTransactionApi {
     
     public func signAndSend(_ transaction: UnsignedAvalancheTransaction,
                             _ cb: @escaping ApiCallback<TransactionID>) {
-        signTransaction(transaction) { res in
+        signAndSend(transaction, source: self, cb)
+    }
+    
+    public func signAndSend<A: AvalancheVMApi>(_ transaction: UnsignedAvalancheTransaction,
+                                               source api: A,
+                                               _ cb: @escaping ApiCallback<TransactionID>) {
+        signTransaction(transaction, source: api) { res in
             switch res {
             case .success(let signed): issueTransaction(signed, cb)
             case .failure(let error): handleError(error, cb)

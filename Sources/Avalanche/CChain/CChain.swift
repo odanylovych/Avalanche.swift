@@ -406,9 +406,10 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         public let txID: String
     }
     
-    public func `import`(
+    public func `import`<A: AvalancheVMApi>(
         to: EthereumAddress,
         sourceChain: BlockchainID,
+        sourceApi: A,
         baseFee: UInt64? = nil,
         credentials: CChainApiCredentials,
         _ cb: @escaping ApiCallback<TransactionID>
@@ -436,6 +437,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
             txImport(
                 to: to,
                 sourceChain: sourceChain,
+                sourceApi: sourceApi,
                 baseFee: baseFee,
                 account: account,
                 cb
