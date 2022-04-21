@@ -714,11 +714,11 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
         public let changeAddr: String
     }
     
-    public func importAVAX(
+    public func importAVAX<A: AvalancheTransactionApi>(
         from: [Address]? = nil,
         to: Address,
         change: Address? = nil,
-        source: BlockchainID,
+        source api: A,
         memo: Data = Data(),
         credentials: AvalancheVmApiCredentials,
         _ cb: @escaping ApiCallback<(txID: TransactionID, change: Address)>
@@ -729,7 +729,7 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
                 from: from?.map { $0.bech },
                 to: to.bech,
                 changeAddr: change?.bech,
-                sourceChain: source.cb58(),
+                sourceChain: api.chainID.value,
                 username: username,
                 password: password
             )
@@ -747,7 +747,7 @@ public class AvalanchePChainApi: AvalancheTransactionApi {
             txImportAVAX(
                 from: from,
                 to: to,
-                source: source,
+                source: api,
                 memo: memo,
                 account: account,
                 cb

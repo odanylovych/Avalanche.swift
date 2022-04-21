@@ -803,7 +803,7 @@ final class PChainTests: XCTestCase {
             from: [fromAddress],
             to: toAddress,
             change: testChangeAddress,
-            source: testSourceChain,
+            source: avalanche.xChain,
             memo: memo,
             credentials: .account(testAccount)
         ) { res in

@@ -790,7 +790,7 @@ final class XChainTests: XCTestCase {
         avalanche.signatureProvider = signatureProvider
         api.import(
             to: toAddress,
-            sourceChain: testSourceChain,
+            source: toChain,
             memo: memo,
             credentials: .account(testAccount)
         ) { res in

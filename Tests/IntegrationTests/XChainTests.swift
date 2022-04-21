@@ -116,7 +116,7 @@ final class XChainTests: XCTestCase {
                                 let source = try! res.get()
                                 self.asyncWait(for: Self.utxosToAppear(on: self.pChain, addresses: [to], source: source)) {
                                     self.pChain.importAVAX(to: to,
-                                                           source: source,
+                                                           source: self.api,
                                                            credentials: .account(account)) { res in
                                         let (txID, _) = try! res.get()
                                         print("Import Transaction: \(txID.cb58())")

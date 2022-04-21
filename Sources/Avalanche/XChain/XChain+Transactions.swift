@@ -559,105 +559,112 @@ extension AvalancheXChainApi {
         }
     }
     
-    public func txImport(
+    public func txImport<A: AvalancheTransactionApi>(
         to: Address,
-        sourceChain: BlockchainID,
+        source api: A,
         memo: Data = Data(),
         account: Account,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
-        withTransactionData(for: account, sourceChain: sourceChain) { res in
+        api.getBlockchainID { res in
             switch res {
-            case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
-                self.getTxFee { res in
+            case .success(let sourceChain):
+                self.withTransactionData(for: account, sourceChain: sourceChain) { res in
                     switch res {
-                    case .success(var fee):
-                        let feeAssetID = avaxAssetID
-                        var feePaid: UInt64 = 0
-                        var importInputs = [TransferableInput]()
-                        var outputs = [TransferableOutput]()
-                        for utxo in utxos.filter({ type(of: $0.output) == SECP256K1TransferOutput.self }) {
-                            let output = utxo.output as! SECP256K1TransferOutput
-                            var inFeeAmount = output.amount
-                            if fee > 0 && feePaid < fee && utxo.assetID == feeAssetID {
-                                feePaid += inFeeAmount
-                                if feePaid > fee {
-                                    inFeeAmount = feePaid - fee
-                                    feePaid = fee
-                                } else {
-                                    inFeeAmount = 0
-                                }
-                            }
-                            let input: TransferableInput
-                            do {
-                                input = TransferableInput(
-                                    transactionID: utxo.transactionID,
-                                    utxoIndex: utxo.utxoIndex,
-                                    assetID: utxo.assetID,
-                                    input: try SECP256K1TransferInput(
-                                        amount: output.amount,
-                                        addressIndices: output.getAddressIndices(for: output.addresses)
-                                    )
-                                )
-                            } catch {
-                                self.handleError(error, cb)
-                                return
-                            }
-                            importInputs.append(input)
-                            if inFeeAmount > 0 {
-                                do {
-                                    outputs.append(TransferableOutput(
-                                        assetID: utxo.assetID,
-                                        output: try type(of: output).init(
-                                            amount: inFeeAmount,
-                                            locktime: Date(timeIntervalSince1970: 0),
-                                            threshold: 1,
-                                            addresses: [to]
+                    case .success((let utxos, let fromAddresses, let changeAddress, let avaxAssetID, let blockchainID)):
+                        self.getTxFee { res in
+                            switch res {
+                            case .success(var fee):
+                                let feeAssetID = avaxAssetID
+                                var feePaid: UInt64 = 0
+                                var importInputs = [TransferableInput]()
+                                var outputs = [TransferableOutput]()
+                                for utxo in utxos.filter({ type(of: $0.output) == SECP256K1TransferOutput.self }) {
+                                    let output = utxo.output as! SECP256K1TransferOutput
+                                    var inFeeAmount = output.amount
+                                    if fee > 0 && feePaid < fee && utxo.assetID == feeAssetID {
+                                        feePaid += inFeeAmount
+                                        if feePaid > fee {
+                                            inFeeAmount = feePaid - fee
+                                            feePaid = fee
+                                        } else {
+                                            inFeeAmount = 0
+                                        }
+                                    }
+                                    let input: TransferableInput
+                                    do {
+                                        input = TransferableInput(
+                                            transactionID: utxo.transactionID,
+                                            utxoIndex: utxo.utxoIndex,
+                                            assetID: utxo.assetID,
+                                            input: try SECP256K1TransferInput(
+                                                amount: output.amount,
+                                                addressIndices: output.getAddressIndices(for: output.addresses)
+                                            )
                                         )
-                                    ))
+                                    } catch {
+                                        self.handleError(error, cb)
+                                        return
+                                    }
+                                    importInputs.append(input)
+                                    if inFeeAmount > 0 {
+                                        do {
+                                            outputs.append(TransferableOutput(
+                                                assetID: utxo.assetID,
+                                                output: try type(of: output).init(
+                                                    amount: inFeeAmount,
+                                                    locktime: Date(timeIntervalSince1970: 0),
+                                                    threshold: 1,
+                                                    addresses: [to]
+                                                )
+                                            ))
+                                        } catch {
+                                            self.handleError(error, cb)
+                                            return
+                                        }
+                                    }
+                                }
+                                fee = fee - feePaid
+                                var inputs = [TransferableInput]()
+                                if fee > 0 {
+                                    do {
+                                        (inputs, outputs) = try self.getInputsOutputs(
+                                            assetID: feeAssetID,
+                                            from: fromAddresses,
+                                            to: [to],
+                                            change: [changeAddress],
+                                            utxos: utxos,
+                                            fee: fee
+                                        )
+                                    } catch {
+                                        self.handleError(error, cb)
+                                        return
+                                    }
+                                }
+                                let transaction: ImportTransaction
+                                do {
+                                    transaction = try ImportTransaction(
+                                        networkID: self.networkID,
+                                        blockchainID: blockchainID,
+                                        outputs: outputs,
+                                        inputs: inputs,
+                                        memo: memo,
+                                        sourceChain: sourceChain,
+                                        transferableInputs: importInputs
+                                    )
                                 } catch {
                                     self.handleError(error, cb)
                                     return
                                 }
-                            }
-                        }
-                        fee = fee - feePaid
-                        var inputs = [TransferableInput]()
-                        if fee > 0 {
-                            do {
-                                (inputs, outputs) = try self.getInputsOutputs(
-                                    assetID: feeAssetID,
-                                    from: fromAddresses,
-                                    to: [to],
-                                    change: [changeAddress],
-                                    utxos: utxos,
-                                    fee: fee
-                                )
-                            } catch {
+                                guard transaction.checkGooseEgg(avax: avaxAssetID) else {
+                                    self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
+                                    return
+                                }
+                                self.signAndSend(transaction, source: api, cb)
+                            case .failure(let error):
                                 self.handleError(error, cb)
-                                return
                             }
                         }
-                        let transaction: ImportTransaction
-                        do {
-                            transaction = try ImportTransaction(
-                                networkID: self.networkID,
-                                blockchainID: blockchainID,
-                                outputs: outputs,
-                                inputs: inputs,
-                                memo: memo,
-                                sourceChain: sourceChain,
-                                transferableInputs: importInputs
-                            )
-                        } catch {
-                            self.handleError(error, cb)
-                            return
-                        }
-                        guard transaction.checkGooseEgg(avax: avaxAssetID) else {
-                            self.handleError(TransactionBuilderError.gooseEggCheckError, cb)
-                            return
-                        }
-                        self.signAndSend(transaction, cb)
                     case .failure(let error):
                         self.handleError(error, cb)
                     }
