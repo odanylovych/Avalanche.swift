@@ -107,10 +107,9 @@ extension AvalancheCChainApi {
         }
     }
     
-    public func txImport<A: AvalancheVMApi>(
+    public func txImport<A: AvalancheTransactionApi>(
         to: EthereumAddress,
-        sourceChain: BlockchainID,
-        sourceApi: A,
+        source api: A,
         baseFee: UInt64? = nil,
         account: EthAccount,
         _ cb: @escaping ApiCallback<TransactionID>
@@ -127,72 +126,79 @@ extension AvalancheCChainApi {
             return
         }
         let utxoIterator = self.utxoProvider.utxos(api: self, addresses: [address])
-        UTXOHelper.getAll(iterator: utxoIterator, sourceChain: sourceChain) { res in
+        api.getBlockchainID { res in
             switch res {
-            case .success(let utxos):
-                self.getBlockchainID { res in
+            case .success(let sourceChain):
+                UTXOHelper.getAll(iterator: utxoIterator, sourceChain: sourceChain) { res in
                     switch res {
-                    case .success(let blockchainID):
-                        self.getAvaxAssetID { res in
+                    case .success(let utxos):
+                        self.getBlockchainID { res in
                             switch res {
-                            case .success(let avaxAssetID):
-                                self.getTxFee { res in
+                            case .success(let blockchainID):
+                                self.getAvaxAssetID { res in
                                     switch res {
-                                    case .success(let txFee):
-                                        let feeAssetID = avaxAssetID
-                                        let fee = baseFee ?? txFee
-                                        var feePaid: UInt64 = 0
-                                        var importedInputs = [TransferableInput]()
-                                        var assetIDAmount = [AssetID: UInt64]()
-                                        for utxo in utxos.filter({ type(of: $0.output) == SECP256K1TransferOutput.self }) {
-                                            let output = utxo.output as! SECP256K1TransferOutput
-                                            var inFeeAmount = output.amount
-                                            if fee > 0 && feePaid < fee && utxo.assetID == feeAssetID {
-                                                feePaid += inFeeAmount
-                                                if feePaid > fee {
-                                                    inFeeAmount = feePaid - fee
-                                                    feePaid = fee
-                                                } else {
-                                                    inFeeAmount = 0
+                                    case .success(let avaxAssetID):
+                                        self.getTxFee { res in
+                                            switch res {
+                                            case .success(let txFee):
+                                                let feeAssetID = avaxAssetID
+                                                let fee = baseFee ?? txFee
+                                                var feePaid: UInt64 = 0
+                                                var importedInputs = [TransferableInput]()
+                                                var assetIDAmount = [AssetID: UInt64]()
+                                                for utxo in utxos.filter({ type(of: $0.output) == SECP256K1TransferOutput.self }) {
+                                                    let output = utxo.output as! SECP256K1TransferOutput
+                                                    var inFeeAmount = output.amount
+                                                    if fee > 0 && feePaid < fee && utxo.assetID == feeAssetID {
+                                                        feePaid += inFeeAmount
+                                                        if feePaid > fee {
+                                                            inFeeAmount = feePaid - fee
+                                                            feePaid = fee
+                                                        } else {
+                                                            inFeeAmount = 0
+                                                        }
+                                                    }
+                                                    let input: TransferableInput
+                                                    do {
+                                                        input = TransferableInput(
+                                                            transactionID: utxo.transactionID,
+                                                            utxoIndex: utxo.utxoIndex,
+                                                            assetID: utxo.assetID,
+                                                            input: try SECP256K1TransferInput(
+                                                                amount: output.amount,
+                                                                addressIndices: output.getAddressIndices(for: output.addresses)
+                                                            )
+                                                        )
+                                                    } catch {
+                                                        self.handleError(error, cb)
+                                                        return
+                                                    }
+                                                    importedInputs.append(input)
+                                                    if let amount = assetIDAmount[utxo.assetID] {
+                                                        inFeeAmount += amount
+                                                    }
+                                                    assetIDAmount[utxo.assetID] = inFeeAmount
                                                 }
-                                            }
-                                            let input: TransferableInput
-                                            do {
-                                                input = TransferableInput(
-                                                    transactionID: utxo.transactionID,
-                                                    utxoIndex: utxo.utxoIndex,
-                                                    assetID: utxo.assetID,
-                                                    input: try SECP256K1TransferInput(
-                                                        amount: output.amount,
-                                                        addressIndices: output.getAddressIndices(for: output.addresses)
-                                                    )
+                                                var outputs = [EVMOutput]()
+                                                for (assetID, amount) in assetIDAmount {
+                                                    outputs.append(EVMOutput(
+                                                        address: to,
+                                                        amount: amount,
+                                                        assetID: assetID
+                                                    ))
+                                                }
+                                                let transaction = CChainImportTransaction(
+                                                    networkID: self.networkID,
+                                                    blockchainID: blockchainID,
+                                                    sourceChain: sourceChain,
+                                                    importedInputs: importedInputs,
+                                                    outputs: outputs
                                                 )
-                                            } catch {
+                                                self.signAndSend(transaction, source: api, cb)
+                                            case .failure(let error):
                                                 self.handleError(error, cb)
-                                                return
                                             }
-                                            importedInputs.append(input)
-                                            if let amount = assetIDAmount[utxo.assetID] {
-                                                inFeeAmount += amount
-                                            }
-                                            assetIDAmount[utxo.assetID] = inFeeAmount
                                         }
-                                        var outputs = [EVMOutput]()
-                                        for (assetID, amount) in assetIDAmount {
-                                            outputs.append(EVMOutput(
-                                                address: to,
-                                                amount: amount,
-                                                assetID: assetID
-                                            ))
-                                        }
-                                        let transaction = CChainImportTransaction(
-                                            networkID: self.networkID,
-                                            blockchainID: blockchainID,
-                                            sourceChain: sourceChain,
-                                            importedInputs: importedInputs,
-                                            outputs: outputs
-                                        )
-                                        self.signAndSend(transaction, source: sourceApi, cb)
                                     case .failure(let error):
                                         self.handleError(error, cb)
                                     }
