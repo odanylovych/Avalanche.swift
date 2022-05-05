@@ -16,12 +16,15 @@ public enum AvalancheApiError: Error {
     case networkBodyIsEmpty
     case networkReply(method: String, params: Any,
                       error: ResponseError<SerializableValue>)
-    case custom(description: String, cause: Error?)
+    case custom(description: String? = nil, cause: Error?)
     case malformed(field: String, description: String)
     case cb58DecodingFailed(field: String)
+    case unsupportedEncoding(encoding: String)
     case addressNotFound(address: String)
     case methodIsNotSupported(method: String)
     case nilAddressManager
+    case nilSignatureProvider
+    case nilAvalancheApi
     
     public init<P: Encodable>(request: RequestError<P, SerializableValue>) {
         switch request {
@@ -46,7 +49,7 @@ public enum ApiDataEncoding: String, Encodable, Decodable {
     case hex = "hex"
 }
 
-public struct UTXOIndex: Codable {
+public struct UTXOIndex: Codable, Equatable {
     public let address: String
     public let utxo: String
 }

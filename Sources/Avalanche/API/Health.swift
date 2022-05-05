@@ -11,10 +11,6 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalancheHealthApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/health"
-}
-
 public struct AvalancheLivenessResponse: Decodable {
     public struct Check: Decodable {
         public let message: Dictionary<String, SerializableValue>?
@@ -30,26 +26,14 @@ public struct AvalancheLivenessResponse: Decodable {
 }
 
 public class AvalancheHealthApi: AvalancheApi {
-    public typealias Info = AvalancheHealthApiInfo
-    
+    public let networkID: NetworkID
+    public let chainID: ChainID
     private let service: Client
     
-    public let networkID: NetworkID
-    public let hrp: String
-    public let info: Info
-    
-    public required init(avalanche: AvalancheCore,
-                         networkID: NetworkID,
-                         hrp: String,
-                         info: AvalancheHealthApiInfo) {
-        self.info = info
-        self.hrp = hrp
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) {
         self.networkID = networkID
-        
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-        
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.chainID = chainID
+        self.service = avalanche.connectionProvider.rpc(api: .health)
     }
     
     public func getLiveness(cb: @escaping ApiCallback<AvalancheLivenessResponse>) {
@@ -66,6 +50,6 @@ public class AvalancheHealthApi: AvalancheApi {
 
 extension AvalancheCore {
     public var health: AvalancheHealthApi {
-        try! self.getAPI()
+        try! self.getAPI(chainID: .alias("health"))
     }
 }

@@ -52,7 +52,8 @@ public struct Base58Algos {
     }
     
     public func from(cb58: String, alphabet: [UInt8] = Self.b58Alphabet) -> Data? {
-        guard let b58data = from(b58: cb58, alphabet: alphabet) else {
+        guard let b58data = from(b58: cb58, alphabet: alphabet),
+              b58data.count > Self.checksumLength else {
             return nil
         }
         let prefix = b58data.prefix(b58data.count - Self.checksumLength)

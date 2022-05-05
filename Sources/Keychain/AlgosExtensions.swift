@@ -7,7 +7,7 @@
 
 import Foundation
 import UncommonCrypto
-import CSecp256k1
+import secp256k1
 import BigInt
 #if !COCOAPODS
 import Avalanche

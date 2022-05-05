@@ -6,13 +6,16 @@
 //
 
 import Foundation
+#if !COCOAPODS
+import web3swift
+#endif
 
 public struct EVMOutput: Equatable {
-    public let address: EthAddress
+    public let address: EthereumAddress
     public let amount: UInt64
     public let assetID: AssetID
     
-    public init(address: EthAddress, amount: UInt64, assetID: AssetID) {
+    public init(address: EthereumAddress, amount: UInt64, assetID: AssetID) {
         self.address = address
         self.amount = amount
         self.assetID = assetID

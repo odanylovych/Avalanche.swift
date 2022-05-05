@@ -1,0 +1,54 @@
+//
+//  XChainAddressManager.swift
+//  
+//
+//  Created by Ostap Danylovych on 18.10.2021.
+//
+
+import Foundation
+
+public struct AvalancheXChainApiAddressManager: AvalancheApiUTXOAddressManager {
+    public typealias Acct = Account
+    
+    public let manager: AvalancheAddressManager
+    public let api: AvalancheXChainApi
+    
+    public init(manager: AvalancheAddressManager, api: AvalancheXChainApi) {
+        self.manager = manager
+        self.api = api
+    }
+    
+    public func accounts(result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void) {
+        manager.accounts(type: .avalancheOnly) {
+            result($0.map { $0.avalanche })
+        }
+    }
+    
+    public func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended] {
+        try manager.extended(avm: addresses)
+    }
+    
+    public func new(for account: Acct, change: Bool, count: Int) throws -> [Acct.Addr] {
+        try manager.new(avm: api, for: account, change: change, count: count)
+    }
+    
+    public func get(cached account: Acct) throws -> [Acct.Addr] {
+        try manager.get(avm: api, cached: account)
+    }
+    
+    public func get(for account: Acct, source chain: BlockchainID? = nil, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void) {
+        manager.get(avm: api, for: account, source: chain, cb)
+    }
+    
+    public func fetch(for accounts: [Acct], source chain: BlockchainID? = nil, _ cb: @escaping (Result<Void, Error>) -> Void) {
+        manager.fetch(avm: api, for: accounts, source: chain, cb)
+    }
+    
+    public func fetch(source chain: BlockchainID? = nil, _ cb: @escaping (Result<Void, Error>) -> Void) {
+        manager.fetch(avm: api, source: chain, cb)
+    }
+    
+    public func fetchedAccounts() -> [Acct] {
+        manager.fetchedAccounts().avalanche
+    }
+}

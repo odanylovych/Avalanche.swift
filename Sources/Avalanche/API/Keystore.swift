@@ -11,32 +11,15 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalancheKeystoreApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/keystore"
-}
-
 public class AvalancheKeystoreApi: AvalancheApi {
-    public typealias Info = AvalancheKeystoreApiInfo
-    
     public let networkID: NetworkID
-    public let hrp: String
-    public let info: Info
-
+    public let chainID: ChainID
     private let service: Client
 
-    public required init(avalanche: AvalancheCore,
-                         networkID: NetworkID,
-                         hrp: String,
-                         info: AvalancheKeystoreApiInfo)
-    {
-        self.info = info
-        self.hrp = hrp
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) {
         self.networkID = networkID
-        
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-            
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.chainID = chainID
+        self.service = avalanche.connectionProvider.rpc(api: .keystore)
     }
     
     private struct CredentialsParams: Encodable {
@@ -140,6 +123,6 @@ public class AvalancheKeystoreApi: AvalancheApi {
 
 extension AvalancheCore {
     public var keystore: AvalancheKeystoreApi {
-        try! self.getAPI()
+        try! self.getAPI(chainID: .alias("keystore"))
     }
 }

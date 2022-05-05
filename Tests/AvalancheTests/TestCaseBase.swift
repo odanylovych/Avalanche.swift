@@ -41,6 +41,6 @@ class AvalancheTestCase: XCTestCase {
         
         try XCTSkipUnless(Self.testEnabled, "Test disabled in config")
         
-        self.ava = Avalanche(url: URL(string: "https://api.avax-test.network")!, networkID: .test)
+        self.ava = Avalanche(url: URL(string: "https://api.avax-test.network")!, network: .test)
     }
 }

@@ -8,75 +8,55 @@
 import Foundation
 
 public protocol AvalancheApi {
-    associatedtype Info: AvalancheApiInfo
-    
     var networkID: NetworkID { get }
-    var hrp: String { get }
-    var info: Info { get }
+    var chainID: ChainID { get }
     
-    init(avalanche: AvalancheCore, networkID: NetworkID, hrp: String, info: Info)
-    
-    static var id: String { get }
+    init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID)
 }
 
-extension AvalancheApi {
-    public static var id: String {
-        return String(describing: self)
-    }
-}
-
-public protocol AvalancheApiInfo {
-    var apiPath: String { get }
-}
-
-public protocol AvalancheVMApi: AvalancheApi where Info: AvalancheVMApiInfo {
+public protocol AvalancheVMApi: AvalancheApi {
     associatedtype Keychain: AvalancheApiAddressManager
     
+    var chainID: ChainID { get }
     var keychain: Keychain? { get }
     
     func getTransaction(id: TransactionID,
                         result: @escaping ApiCallback<SignedAvalancheTransaction>)
     
     func getUTXOs(
-        addresses: [Keychain.Acct.Addr],
+        addresses: [Address],
         limit: UInt32?,
         startIndex: UTXOIndex?,
-        sourceChain: String?,
-        result: @escaping ApiCallback<(fetched: UInt32,
-                                       utxos: [UTXO],
-                                       endIndex: UTXOIndex)>)
-    
+        sourceChain: BlockchainID?,
+        encoding: AvalancheEncoding?,
+        _ cb: @escaping ApiCallback<(
+            fetched: UInt32,
+            utxos: [UTXO],
+            endIndex: UTXOIndex,
+            encoding: AvalancheEncoding
+        )>
+    )
 }
 
-public protocol AvalancheVMApiInfo: AvalancheApiInfo {
-    var blockchainID: BlockchainID { get }
-    var alias: String? { get }
-    var vm: String { get }
+public enum ChainID: Hashable {
+    case alias(String)
+    case blockchainID(BlockchainID)
     
-    var chainId: String { get }
-}
-
-extension AvalancheVMApiInfo {
-    public var chainId: String {
-        alias ?? blockchainID.cb58()
-    }
-}
-
-public class AvalancheBaseVMApiInfo: AvalancheVMApiInfo {
-    public let blockchainID: BlockchainID
-    public let alias: String?
-    public let vm: String
-    
-    public init(blockchainID: BlockchainID,
-                alias: String?, vm: String)
-    {
-        self.blockchainID = blockchainID
-        self.alias = alias
-        self.vm = vm
+    public init(_ value: String) {
+        guard let blockchainID = BlockchainID(cb58: value) else {
+            self = .alias(value)
+            return
+        }
+        self = .blockchainID(blockchainID)
     }
     
-    public var apiPath: String {
-        return "/ext/bc/\(chainId)"
+    public var value: String {
+        switch self {
+        case .alias(let alias):
+            return alias
+        case .blockchainID(let blockchainID):
+            return blockchainID.cb58()
+        }
     }
 }
 

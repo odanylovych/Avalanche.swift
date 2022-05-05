@@ -12,14 +12,15 @@ private let AsyncValueSyncQueue = DispatchQueue(
 )
 
 public class CachedAsyncValue<V, E: Error> {
-    private let getter: ((Result<V, E>) -> ()) -> ()
+    public var getter: ((@escaping (Result<V, E>) -> ()) -> ())?
     private var value: Optional<V>
     private var callbacks: Array<(Result<V,E>) -> ()>
     
-    public init(getter: @escaping ((Result<V, E>) -> ()) -> ()) {
+    public init(_ value: V? = nil,
+                getter: ((@escaping (Result<V, E>) -> ()) -> ())? = nil) {
         self.getter = getter
         self.callbacks = []
-        self.value = nil
+        self.value = value
     }
     
     public func get(force: Bool = false,  _ cb: @escaping (Result<V,E>) -> ()) {
@@ -36,7 +37,10 @@ public class CachedAsyncValue<V, E: Error> {
     }
     
     private func _fetch() {
-        self.getter() { res in
+        guard let getter = self.getter else {
+            fatalError("CachedAsyncValueError: getter is not set")
+        }
+        getter() { res in
             AsyncValueSyncQueue.async {
                 switch res {
                 case .success(let val):

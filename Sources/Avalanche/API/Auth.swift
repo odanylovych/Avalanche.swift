@@ -11,32 +11,15 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalancheAuthApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/auth"
-}
-
 public class AvalancheAuthApi: AvalancheApi {
-    public typealias Info = AvalancheAuthApiInfo
-
     public let networkID: NetworkID
-    public let hrp: String
-    public let info: Info
-    
+    public let chainID: ChainID
     private let service: Client
 
-    public required init(avalanche: AvalancheCore,
-                         networkID: NetworkID,
-                         hrp: String,
-                         info: AvalancheAuthApiInfo)
-    {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) {
         self.networkID = networkID
-        self.info = info
-        self.hrp = hrp
-        
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-            
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.chainID = chainID
+        self.service = avalanche.connectionProvider.rpc(api: .auth)
     }
     
     public func newToken(password: String,
@@ -106,6 +89,6 @@ public class AvalancheAuthApi: AvalancheApi {
 
 extension AvalancheCore {
     public var auth: AvalancheAuthApi {
-        try! self.getAPI()
+        try! self.getAPI(chainID: .alias("auth"))
     }
 }

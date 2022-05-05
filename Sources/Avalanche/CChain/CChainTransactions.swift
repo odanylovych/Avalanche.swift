@@ -27,7 +27,7 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         self.blockchainID = blockchainID
         self.destinationChain = destinationChain
         self.inputs = inputs
-        self.exportedOutputs = exportedOutputs
+        self.exportedOutputs = exportedOutputs.sorted()
         super.init()
     }
     
@@ -47,8 +47,17 @@ public class CChainExportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         )
     }
     
+    override public var inputsData: [InputData] {
+        []
+    }
+    
+    override public var allOutputs: [TransferableOutput] {
+        exportedOutputs
+    }
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID, name: "typeID")
+        try encoder.encode(Self.codecID, name: "codecID")
+            .encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")
             .encode(blockchainID, name: "blockchainID")
             .encode(destinationChain, name: "destinationChain")
@@ -85,7 +94,7 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         self.networkID = networkID
         self.blockchainID = blockchainID
         self.sourceChain = sourceChain
-        self.importedInputs = importedInputs
+        self.importedInputs = importedInputs.sorted()
         self.outputs = outputs
         super.init()
     }
@@ -106,8 +115,22 @@ public class CChainImportTransaction: UnsignedAvalancheTransaction, AvalancheDec
         )
     }
     
+    override public var inputsData: [InputData] {
+        importedInputs.map { InputData(
+            credentialType: $0.input.credentialType(),
+            transactionID: $0.transactionID,
+            utxoIndex: $0.utxoIndex,
+            addressIndices: $0.input.addressIndices
+        ) }
+    }
+    
+    override public var allOutputs: [TransferableOutput] {
+        []
+    }
+    
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID, name: "typeID")
+        try encoder.encode(Self.codecID, name: "codecID")
+            .encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")
             .encode(blockchainID, name: "blockchainID")
             .encode(sourceChain, name: "sourceChain")

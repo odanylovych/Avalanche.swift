@@ -6,107 +6,149 @@
 //
 
 import Foundation
+#if !COCOAPODS
+import web3swift
+#endif
+
+public protocol AddressManagerProvider {
+    func manager(ava: AvalancheCore) -> AvalancheAddressManager?
+}
+
+public struct DefaultAddressManagerProvider: AddressManagerProvider {
+    public init() {}
+    
+    public func manager(ava: AvalancheCore) -> AvalancheAddressManager? {
+        guard let signer = ava.signatureProvider else {
+            return nil
+        }
+        return AvalancheDefaultAddressManager(queue: ava.settings.queue,
+                                              signer: signer,
+                                              utxoProvider: ava.settings.utxoProvider)
+    }
+}
 
 public enum AvalancheAddressManagerError: Error {
     case addressNotFound(address: String)
+    case notInCache(account: Account)
 }
 
 public protocol AvalancheAddressManager: AnyObject {
-    func start(avalanche: AvalancheCore)
+    // Returns list of accounts
+    func accounts(type: AvalancheSignatureProviderAccountRequestType,
+                  _ cb: @escaping (AvalancheSignatureProviderResult<AvalancheSignatureProviderAccounts>) -> Void)
     
-    func accounts(
-        type: AvalancheSignatureProviderAccountRequestType,
-        forceUpdate: Bool,
-        _ cb: @escaping (AvalancheSignatureProviderResult<AvalancheSignatureProviderAccounts>) -> Void
-    )
+    // Creates and caches new addresses for the Account
+    func new<A: AvalancheVMApi>(avm api: A,
+                                for account: Account,
+                                change: Bool,
+                                count: Int) throws -> [Address]
     
-    func addresses<A: AvalancheVMApi>(avm api: A,
-                                      account: Account,
-                                      change: Bool) -> [Address]
+    // Get cached addresses for the Account. Throws if unknown account (not fetched)
+    func get<A: AvalancheVMApi>(avm api: A, cached account: Account) throws -> [Address]
     
-    func newAddresses<A: AvalancheVMApi>(avm api: A,
-                                         account: Account,
-                                         change: Bool,
-                                         count: Int) -> [Address]
+    // Fetches list of addresses for account from the network.
+    func get<A: AvalancheVMApi>(avm api: A,
+                                for account: Account,
+                                source chain: BlockchainID?,
+                                _ cb: @escaping (Result<[Address], Error>) -> Void)
     
+    // Updates cached addresses for Accounts from the network
+    func fetch<A: AvalancheVMApi>(avm api: A,
+                                  for accounts: [Account],
+                                  source chain: BlockchainID?,
+                                  _ cb: @escaping (Result<Void, Error>) -> Void)
+    
+    // Obtains accounts from Signer and fetches all of them
+    func fetch<A: AvalancheVMApi>(avm api: A,
+                                  source chain: BlockchainID?,
+                                  _ cb: @escaping (Result<Void, Error>) -> Void)
+    
+    // Returns list of accounts
+    func fetchedAccounts() -> AvalancheSignatureProviderAccounts
+    
+    // Returns extended addresses for provided addresses
     func extended(avm addresses: [Address]) throws -> [ExtendedAddress]
-    func extended(eth addresses: [EthAddress]) throws -> [EthAccount]
+    func extended(eth addresses: [EthereumAddress]) throws -> [EthAccount]
+}
+
+extension AvalancheAddressManager {
+    public func get<A: AvalancheVMApi>(avm api: A,
+                                       for account: Account,
+                                       source chain: BlockchainID? = nil,
+                                       _ cb: @escaping (Result<[Address], Error>) -> Void) {
+        get(avm: api, for: account, source: chain, cb)
+    }
     
-    func fetchAddresses<A: AvalancheVMApi>(avm api: A,
-                                           account: Account,
-                                           change: Bool,
-                                           result: ApiCallback<Void>?)
+    public func fetch<A: AvalancheVMApi>(avm api: A,
+                                         for accounts: [Account],
+                                         source chain: BlockchainID? = nil,
+                                         _ cb: @escaping (Result<Void, Error>) -> Void) {
+        fetch(avm: api, for: accounts, source: chain, cb)
+    }
+    
+    public func fetch<A: AvalancheVMApi>(avm api: A,
+                                         source chain: BlockchainID? = nil,
+                                         _ cb: @escaping (Result<Void, Error>) -> Void) {
+        fetch(avm: api, source: chain, cb)
+    }
 }
 
 public protocol AvalancheApiAddressManager {
     associatedtype Acct: AccountProtocol
-  
+    
     func accounts(result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void)
-    func accounts(forceUpdate: Bool,
-                  result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void)
     func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended]
 }
 
 public protocol AvalancheApiUTXOAddressManager: AvalancheApiAddressManager {
-    func addresses(for account: Acct, change: Bool) -> [Acct.Addr]
+    func new(for account: Acct, change: Bool, count: Int) throws -> [Acct.Addr]
+    func newAddress(for account: Acct) throws -> Acct.Addr
+    func newChange(for account: Acct) throws -> Acct.Addr
+    func randomChange(for account: Acct) throws -> Acct.Addr
     
-    func newAddress(for account: Acct) -> Acct.Addr
+    func get(cached account: Acct) throws -> [Acct.Addr]
+    func get(for account: Acct, source chain: BlockchainID?, _ cb: @escaping (Result<[Acct.Addr], Error>) -> Void)
     
-    func newChange(for account: Acct) -> Acct.Addr
-    func randomChange(for account: Acct) -> Acct.Addr
+    func fetch(for accounts: [Acct], source chain: BlockchainID?, _ cb: @escaping (Result<Void, Error>) -> Void)
+    func fetch(source chain: BlockchainID?, _ cb: @escaping (Result<Void, Error>) -> Void)
     
-    func newAddresses(for account: Acct, change: Bool, count: Int) -> [Acct.Addr]
-    
-    func fetchAddresses(for account: Acct,
-                        result: ApiCallback<[Acct.Addr]>?)
-    func fetchAddresses(for account: Acct, change: Bool,
-                        result: ApiCallback<[Acct.Addr]>?)
+    func fetchedAccounts() -> [Acct]
 }
 
 public extension AvalancheApiUTXOAddressManager {
-    func newAddress(for account: Acct) -> Acct.Addr {
-        newAddresses(for: account, change: false, count: 1)[0]
+    func newAddress(for account: Acct) throws -> Acct.Addr {
+        try new(for: account, change: false, count: 1).first!
     }
     
-    func newChange(for account: Acct) -> Acct.Addr {
-        newAddresses(for: account, change: true, count: 1)[0]
+    func newChange(for account: Acct) throws -> Acct.Addr {
+        try new(for: account, change: true, count: 1).first!
     }
     
-    func randomChange(for account: Acct) -> Acct.Addr {
-        let addresses = self.addresses(for: account, change: true)
+    func randomChange(for account: Acct) throws -> Acct.Addr {
+        let addresses = try self.extended(for: try self.get(cached: account)).filter {
+            $0.isChange
+        }.map { $0.address }
         if addresses.count == 0 {
-            return newChange(for: account)
+            return try newChange(for: account)
         }
         return addresses.randomElement()!
-    }
-    
-    func fetchAddresses(for account: Acct,
-                        result: ApiCallback<[Acct.Addr]>?)
-    {
-        fetchAddresses(for: account, change: false) {
-            switch $0 {
-            case .failure(let err): result?(.failure(err))
-            case .success(let addresses):
-                fetchAddresses(for: account, change: true) {
-                    result?($0.map{ addresses + $0 })
-                }
-            }
-        }
     }
 }
 
 public class AvalancheDefaultAddressManager: AvalancheAddressManager {
-    public private (set) weak var avalanche: AvalancheCore!
-
-    public let signer: AvalancheSignatureProvider
+    private static let fetchChunkSize = 20
     
-    private var queue: DispatchQueue { avalanche.settings.queue }
+    private let queue: DispatchQueue
+    private let syncQueue: DispatchQueue
+    private let signer: AvalancheSignatureProvider
+    private let utxoProvider: AvalancheUtxoProvider
     private var accountsCache: AvalancheSignatureProviderAccounts?
-    private var syncQueue: DispatchQueue
     private var addresses: Dictionary<Account, Dictionary<Address, Bip32Path>>
     
-    public init(signer: AvalancheSignatureProvider) {
+    public init(queue: DispatchQueue, signer: AvalancheSignatureProvider, utxoProvider: AvalancheUtxoProvider) {
+        self.queue = queue
         self.signer = signer
+        self.utxoProvider = utxoProvider
         self.accountsCache = nil
         self.syncQueue = DispatchQueue(
             label: "address.manager.internal.sync.queue",
@@ -116,81 +158,179 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
         self.addresses = [:]
     }
     
-    public func start(avalanche: AvalancheCore) {
-        self.avalanche = avalanche
-    }
-    
-    public func accounts(
-        type: AvalancheSignatureProviderAccountRequestType,
-        forceUpdate: Bool = false,
-        _ cb: @escaping (AvalancheSignatureProviderResult<AvalancheSignatureProviderAccounts>) -> Void
-    ) {
-        let returnAccounts = { (accounts: AvalancheSignatureProviderAccounts) in
-            self.queue.async {
-                switch type {
-                case .avalancheOnly:
-                    cb(.success((avalanche: accounts.avalanche, ethereum: [])))
-                case .ethereumOnly:
-                    cb(.success((avalanche: [], ethereum: accounts.ethereum)))
-                case .both:
-                    cb(.success(accounts))
-                }
-            }
-        }
-        let cached = self.syncQueue.sync { self.accountsCache }
-        guard let accounts = cached, !forceUpdate else {
-            signer.accounts(type: .both) { res in
-                switch res {
-                case .success(let accounts):
-                    self.syncQueue.sync {
-                        self.accountsCache = accounts
+    public func accounts(type: AvalancheSignatureProviderAccountRequestType,
+                         _ cb: @escaping (AvalancheSignatureProviderResult<AvalancheSignatureProviderAccounts>) -> Void) {
+        signer.accounts(type: .both) { res in
+            switch res {
+            case .success(let accounts):
+                self.queue.async {
+                    switch type {
+                    case .avalancheOnly:
+                        cb(.success((avalanche: accounts.avalanche, ethereum: [])))
+                    case .ethereumOnly:
+                        cb(.success((avalanche: [], ethereum: accounts.ethereum)))
+                    case .both:
+                        cb(.success(accounts))
                     }
-                    returnAccounts(accounts)
-                case .failure(let err):
-                    self.queue.async { cb(.failure(err)) }
                 }
+            case .failure(let err):
+                self.queue.async { cb(.failure(err)) }
             }
-            return
-        }
-        returnAccounts(accounts)
-    }
-    
-    public func addresses<A: AvalancheVMApi>(avm api: A,
-                                             account: Account,
-                                             change: Bool) -> [Address]
-     {
-        self.syncQueue.sync {
-            guard let addresses = self.addresses[account] else {
-                return []
-            }
-            return addresses
-                .filter {
-                    $0.key.chainId == api.info.chainId
-                        && $0.key.hrp == api.hrp
-                        && $0.value.isChange == change
-                }
-                .map { $0.key }
         }
     }
     
-    public func newAddresses<A: AvalancheVMApi>(avm api: A,
-                                                account: Account,
-                                                change: Bool,
-                                                count: Int) -> [Address] {
+    public func new<A: AvalancheVMApi>(avm api: A,
+                                       for account: Account,
+                                       change: Bool,
+                                       count: Int) throws -> [Address] {
         let from = lastAddressIndex(
-            avm: account, chainId: api.info.chainId, hrp: api.hrp, change: change
+            avm: account, chainId: api.chainID.value, hrp: api.networkID.hrp, change: change
         ) + 1
         let newAddresses = generateMoreAddresses(
-            avm: account, chainId: api.info.chainId, hrp: api.hrp, change: change, from: from, count: count
+            avm: account, chainId: api.chainID.value, hrp: api.networkID.hrp, change: change, from: from, count: count
         )
-        self.syncQueue.sync {
-            var addresses = self.addresses[account] ?? [:]
+        try self.syncQueue.sync {
+            guard var addresses = self.addresses[account] else {
+                throw AvalancheAddressManagerError.notInCache(account: account)
+            }
             for address in newAddresses {
                 addresses[address.address] = address.path
             }
             self.addresses[account] = addresses
         }
         return newAddresses.map { $0.address }
+    }
+    
+    public func get<A: AvalancheVMApi>(avm api: A, cached account: Account) throws -> [Address] {
+        try self.syncQueue.sync {
+            guard let addresses = self.addresses[account] else {
+                throw AvalancheAddressManagerError.notInCache(account: account)
+            }
+            return addresses
+                .filter {
+                    $0.key.chainId == api.chainID.value
+                        && $0.key.hrp == api.networkID.hrp
+                }
+                .map { $0.key }
+        }
+    }
+    
+    public func get<A: AvalancheVMApi>(avm api: A,
+                                       for account: Account,
+                                       source chain: BlockchainID? = nil,
+                                       _ cb: @escaping (Result<[Address], Error>) -> Void) {
+        fetch(avm: api, for: [account], source: chain) { res in
+            cb(res.flatMap {
+                Result { try self.get(avm: api, cached: account) }
+            })
+        }
+    }
+    
+    private func fetchNext<A: AvalancheVMApi>(avm api: A,
+                                              for account: Account,
+                                              source chain: BlockchainID? = nil,
+                                              index: Int,
+                                              all: [(ExtendedAddress, Bool)],
+                                              change: Bool,
+                                              _ cb: @escaping (Result<[ExtendedAddress], Error>) -> Void) {
+        let addresses: [ExtendedAddress]
+        do {
+            addresses = try (0..<Self.fetchChunkSize).map { offset in
+                try account.derive(
+                    index: UInt32(index + offset),
+                    change: change,
+                    hrp: api.networkID.hrp,
+                    chainId: api.chainID.value
+                )
+            }
+        } catch {
+            cb(.failure(error))
+            return
+        }
+        let iterator = utxoProvider.utxos(api: api, addresses: addresses.map { $0.address })
+        UTXOHelper.getAll(iterator: iterator, sourceChain: chain) { res in
+            switch res {
+            case .success(let utxos):
+                let addressesInUtxos = Set(utxos.flatMap { $0.output.addresses })
+                let addresses = addresses.map { ($0, addressesInUtxos.contains($0.address)) }
+                let all = all + addresses
+                guard let lastInAll = all.lastIndex(where: { $0.1 }) else {
+                    cb(.success([]))
+                    return
+                }
+                let dropEmpty = { all.dropLast(all.count - lastInAll - 1) }
+                if all.count - lastInAll > Self.fetchChunkSize {
+                    cb(.success(dropEmpty().map { $0.0 }))
+                } else {
+                    let lastInNewAddresses = addresses.lastIndex(where: { $0.1 })!
+                    self.fetchNext(
+                        avm: api,
+                        for: account,
+                        source: chain,
+                        index: index + lastInNewAddresses + 1,
+                        all: Array(dropEmpty()),
+                        change: change,
+                        cb
+                    )
+                }
+            case .failure(let error):
+                cb(.failure(error))
+            }
+        }
+    }
+    
+    public func fetch<A: AvalancheVMApi>(avm api: A,
+                                         for accounts: [Account],
+                                         source chain: BlockchainID? = nil,
+                                         _ cb: @escaping (Result<Void, Error>) -> Void) {
+        [true, false].asyncMap { change, mapped in
+            accounts.asyncMap { account, mapped in
+                self.fetchNext(
+                    avm: api,
+                    for: account,
+                    source: chain,
+                    index: self.lastAddressIndex(
+                        avm: account,
+                        chainId: api.chainID.value,
+                        hrp: api.networkID.hrp,
+                        change: change
+                    ) + 1,
+                    all: [],
+                    change: change
+                ) { res in
+                    mapped(res.map { addresses in
+                        self.syncQueue.sync {
+                            var cacheAddresses = self.addresses[account] ?? [:]
+                            addresses.forEach { extended in
+                                cacheAddresses[extended.address] = extended.path
+                            }
+                            self.addresses[account] = cacheAddresses
+                        }
+                    })
+                }
+            }.exec(mapped)
+        }.exec { cb($0.map { _ in }) }
+    }
+    
+    public func fetch<A: AvalancheVMApi>(avm api: A,
+                                         source chain: BlockchainID? = nil,
+                                         _ cb: @escaping (Result<Void, Error>) -> Void) {
+        accounts(type: .both) { res in
+            switch res {
+            case .failure(let err): cb(.failure(err))
+            case .success(let accounts):
+                self.syncQueue.sync {
+                    self.accountsCache = accounts
+                }
+                self.fetch(avm: api, for: accounts.avalanche, source: chain, cb)
+            }
+        }
+    }
+    
+    public func fetchedAccounts() -> AvalancheSignatureProviderAccounts {
+        syncQueue.sync {
+            accountsCache ?? (avalanche: [], ethereum: [])
+        }
     }
     
     public func extended(avm addresses: [Address]) throws -> [ExtendedAddress] {
@@ -209,7 +349,7 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
         }
     }
     
-    public func extended(eth addresses: [EthAddress]) throws -> [EthAccount] {
+    public func extended(eth addresses: [EthereumAddress]) throws -> [EthAccount] {
         return try self.syncQueue.sync {
             let accounts = self.accountsCache?.ethereum ?? []
             return try addresses.map { addr in
@@ -218,24 +358,9 @@ public class AvalancheDefaultAddressManager: AvalancheAddressManager {
                     return account
                 }
                 throw AvalancheAddressManagerError.addressNotFound(
-                    address: addr.hex()
+                    address: addr.address
                 )
             }
-        }
-    }
-    
-    public func fetchAddresses<A: AvalancheVMApi>(
-        avm api: A, account: Account,
-        change: Bool, result: ApiCallback<Void>?)
-    {
-        let from = lastAddressIndex(
-            avm: account, chainId: api.info.chainId, hrp: api.hrp, change: change
-        ) + 1
-        
-        // TODO: IMPLEMENT. Should fetch addresses till 20 empty addresses.
-        let iterator = avalanche.utxoProvider.utxos(api: api, addresses: [], forceUpdate: true)
-        iterator.next(limit: 100) { _ in
-            
         }
     }
     

@@ -33,7 +33,6 @@ public protocol AddressProtocol: Hashable where Extended.Base == Self {
     associatedtype Extended: ExtendedAddressProtocol
     
     func verify(message: Data, signature: Signature) -> Bool
-    func extended(path: Bip32Path) throws -> Extended
 }
 
 public protocol ExtendedAddressProtocol: Hashable where Base.Extended == Self {

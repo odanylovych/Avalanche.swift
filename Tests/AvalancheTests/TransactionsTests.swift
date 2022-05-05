@@ -8,6 +8,7 @@
 import Foundation
 import XCTest
 @testable import Avalanche
+import web3swift
 
 final class TransactionsTests: AvalancheTestCase {
     private static let hrp = "avax"
@@ -197,18 +198,18 @@ final class TransactionsTests: AvalancheTestCase {
         )
     }
     
-    private func exampleEVMInput() throws -> EVMInput {
-        try EVMInput(
-            address: EthAddress(hex: "0x8db97c7cece249c2b98bdc0226cc4c2a57bf52fc"),
+    private func exampleEVMInput() -> EVMInput {
+        EVMInput(
+            address: EthereumAddress("0x8db97c7cece249c2b98bdc0226cc4c2a57bf52fc")!,
             amount: 2000000,
             assetID: AssetID(hex: "0xdbcf890f77f49b96857648b72b77f9f82937f28a68704af05da0dc12ba53f2db")!,
             nonce: 0
         )
     }
     
-    private func exampleEVMOutput() throws -> EVMOutput {
-        try EVMOutput(
-            address: EthAddress(hex: "0x0eb5ccb85c29009b6060decb353a38ea3b52cd20"),
+    private func exampleEVMOutput() -> EVMOutput {
+        EVMOutput(
+            address: EthereumAddress("0x0eb5ccb85c29009b6060decb353a38ea3b52cd20")!,
             amount: 500000000000,
             assetID: AssetID(hex: "0xdbcf890f77f49b96857648b72b77f9f82937f28a68704af05da0dc12ba53f2db")!
         )
@@ -219,9 +220,9 @@ final class TransactionsTests: AvalancheTestCase {
         bytes: [UInt8],
         context: AvalancheDecoderContext = xChainDecoderContext
     ) throws {
-        let encoded = Array(try AEncoder().encode(value).output)
+        let encoded = Array(try DefaultAvalancheEncoder().encode(value).output)
         XCTAssertEqual(encoded, bytes)
-        let decoded = try ADecoder(context: context, data: Data(bytes)).decode(T.self)
+        let decoded = try DefaultAvalancheDecoder(context: context, data: Data(bytes)).decode(T.self)
         XCTAssertEqual(decoded, value)
     }
     
@@ -231,9 +232,9 @@ final class TransactionsTests: AvalancheTestCase {
         size: Int,
         context: AvalancheDecoderContext = xChainDecoderContext
     ) throws {
-        let encoded = Array(try AEncoder().encode(value, size: size).output)
+        let encoded = Array(try DefaultAvalancheEncoder().encode(value, size: size).output)
         XCTAssertEqual(encoded, bytes)
-        let decoded = try ADecoder(context: context, data: Data(bytes)).decode(T.self, size: size)
+        let decoded = try DefaultAvalancheDecoder(context: context, data: Data(bytes)).decode(T.self, size: size)
         XCTAssertEqual(decoded, value)
     }
     

@@ -135,7 +135,7 @@ public struct ExtendedAddress: ExtendedAddressProtocol {
     public let path: Bip32Path
     
     public init(address: Address, path: Bip32Path) throws {
-        guard path.isValidAvalancheAddress else {
+        guard path.isValidAvalancheAddress || path.isValidEthereumAccount else {
             throw AddressError.badBip32Path(path: path)
         }
         self.address = address

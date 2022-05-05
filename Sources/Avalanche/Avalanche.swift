@@ -8,31 +8,19 @@
 import Foundation
 
 public class Avalanche: AvalancheCore {
-    private var _apis: [String: Any]
+    private var _apis: [ChainID: Any]
     private let _lock: NSRecursiveLock
-    private let _url: URL
     
     private var _networkID: NetworkID
-    private var _networkInfoProvider: AvalancheNetworkInfoProvider
     private var _settings: AvalancheSettings
-    private var _addressManager: AvalancheAddressManager?
-    private var _utxoProvider: AvalancheUtxoProvider
+    private var _signatureProvider: AvalancheSignatureProvider?
+    private var _connectionProvider: AvalancheConnectionProvider
     
     public var networkID: NetworkID {
         get { _networkID }
         set {
             _lock.lock()
             _networkID = newValue
-            _apis = [:]
-            _lock.unlock()
-        }
-    }
-    
-    public var networkInfoProvider: AvalancheNetworkInfoProvider {
-        get { _networkInfoProvider }
-        set {
-            _lock.lock()
-            _networkInfoProvider = newValue
             _apis = [:]
             _lock.unlock()
         }
@@ -48,102 +36,60 @@ public class Avalanche: AvalancheCore {
         }
     }
     
-    public var addressManager: AvalancheAddressManager? {
-        get { _addressManager }
+    public var signatureProvider: AvalancheSignatureProvider? {
+        get { _signatureProvider }
         set {
             _lock.lock()
-            _addressManager = newValue
-            _apis = [:]
-            _lock.unlock()
-            _addressManager?.start(avalanche: self)
-        }
-    }
-    
-    public var utxoProvider: AvalancheUtxoProvider {
-        get { _utxoProvider }
-        set {
-            _lock.lock()
-            _utxoProvider = newValue
+            _signatureProvider = newValue
             _apis = [:]
             _lock.unlock()
         }
     }
     
-    public init(url: URL, networkID: NetworkID,
-                networkInfo: AvalancheNetworkInfoProvider = AvalancheDefaultNetworkInfoProvider.default,
-                settings: AvalancheSettings = .default,
-                utxoProvider: AvalancheUtxoProvider = AvalancheDefaultUtxoProvider(),
-                addressManager: AvalancheAddressManager? = nil) {
-        self._url = url
+    public var connectionProvider: AvalancheConnectionProvider {
+        get { _connectionProvider }
+        set {
+            _lock.lock()
+            _connectionProvider = newValue
+            _apis = [:]
+            _lock.unlock()
+        }
+    }
+    
+    public init(networkID: NetworkID,
+                settings: AvalancheSettings = AvalancheSettings(),
+                signatureProvider: AvalancheSignatureProvider? = nil,
+                connectionProvider: AvalancheConnectionProvider) {
         self._apis = [:]
         self._lock = NSRecursiveLock()
         self._networkID = networkID
-        self._addressManager = addressManager
-        self._networkInfoProvider = networkInfo
         self._settings = settings
-        self._utxoProvider = utxoProvider
-        addressManager?.start(avalanche: self)
+        self._signatureProvider = signatureProvider
+        self._connectionProvider = connectionProvider
     }
     
-    public func getAPI<API: AvalancheApi>() throws -> API {
+    public func getAPI<API: AvalancheApi>(chainID: ChainID) throws -> API {
         _lock.lock()
         defer { _lock.unlock() }
         
-        if let api = _apis[API.id] as? API {
+        if let api = _apis[chainID] as? API {
             return api
         }
-        guard let netInfo = _networkInfoProvider.info(for: networkID) else {
-            throw AvalancheApiSearchError.networkInfoNotFound(net: networkID)
-        }
-        guard let info = netInfo.apiInfo.info(for: API.self) else {
-            throw AvalancheApiSearchError.apiInfoNotFound(net: networkID, apiId: API.id)
-        }
-        let api: API = self.createAPI(networkID: networkID, hrp: netInfo.hrp, info: info)
-        _apis[API.id] = api
+        let api: API = self.createAPI(networkID: networkID, chainID: chainID)
+        _apis[chainID] = api
         return api
     }
     
-    public func createAPI<API: AvalancheApi>(networkID: NetworkID, hrp: String, info: API.Info) -> API {
+    public func createAPI<API: AvalancheApi>(networkID: NetworkID, chainID: ChainID) -> API {
         _lock.lock()
         defer { _lock.unlock() }
-        return API(avalanche: self, networkID: networkID, hrp: hrp, info: info)
-    }
-    
-    public func url(path: String) -> URL {
-        URL(string: path, relativeTo: _url)!
+        return API(avalanche: self, networkID: networkID, chainID: chainID)
     }
 }
 
 extension Avalanche {
-    public convenience init(url: URL, networkID: NetworkID,
-                            networkInfo: AvalancheNetworkInfoProvider = AvalancheDefaultNetworkInfoProvider.default,
-                            settings: AvalancheSettings = .default,
-                            signer: AvalancheSignatureProvider) {
-        self.init(
-            url: url, networkID: networkID,
-            networkInfo: networkInfo, settings: settings,
-            addressManager: AvalancheDefaultAddressManager(signer: signer)
-        )
-    }
-    
-    public convenience init(url: URL, networkID: NetworkID,
-                            hrp: String, apiInfo: AvalancheApiInfoProvider,
-                            settings: AvalancheSettings,
-                            signer: AvalancheSignatureProvider) {
-        self.init(
-            url: url, networkID: networkID, hrp: hrp,
-            apiInfo: apiInfo, settings: settings,
-            addressManager: AvalancheDefaultAddressManager(signer: signer)
-        )
-    }
-    
-    public convenience init(url: URL, networkID: NetworkID,
-                            hrp: String, apiInfo: AvalancheApiInfoProvider,
-                            settings: AvalancheSettings,
-                            addressManager: AvalancheAddressManager? = nil) {
-        let provider = AvalancheDefaultNetworkInfoProvider()
-        let netInfo = AvalancheDefaultNetworkInfo(hrp: hrp, apiInfo: apiInfo)
-        provider.setInfo(info: netInfo, for: networkID)
-        self.init(url: url, networkID: networkID, networkInfo: provider, settings: settings, addressManager: addressManager)
+    public convenience init(url: URL, network: NetworkID) {
+        self.init(networkID: network,
+                  connectionProvider: WebRPCAvalancheConnectionProvider(url: url))
     }
 }

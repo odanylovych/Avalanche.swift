@@ -11,13 +11,43 @@ public class Output: AvalancheEncodable, AvalancheDynamicDecodableTypeID, Equata
     public class var typeID: TypeID { fatalError("Not supported") }
     
     public let addresses: [Address]
+    public let locktime: Date
+    public let threshold: UInt32
     
-    public init(addresses: [Address]) {
+    public init(addresses: [Address], locktime: Date, threshold: UInt32) throws {
+        guard threshold <= addresses.count else {
+            throw MalformedTransactionError.outOfRange(
+                threshold,
+                expected: 0...addresses.count,
+                name: "Threshold",
+                description: "Must be less than or equal to the length of Addresses"
+            )
+        }
         self.addresses = addresses
+        self.locktime = locktime
+        self.threshold = threshold
     }
     
     required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         fatalError("Not supported")
+    }
+    
+    required public init(
+        amount: UInt64,
+        locktime: Date,
+        threshold: UInt32,
+        addresses: [Address]
+    ) throws {
+        fatalError("Not supported")
+    }
+    
+    public func getAddressIndices(for addresses: [Address]) -> [UInt32] {
+        Date() > locktime ? Array(
+            self.addresses.enumerated()
+                .filter { addresses.contains($0.element) }
+                .map { UInt32($0.offset) }
+                .prefix(Int(threshold))
+        ) : []
     }
     
     public static func from(decoder: AvalancheDecoder) throws -> Self {
@@ -41,25 +71,13 @@ public class SECP256K1TransferOutput: Output, AvalancheDecodable {
     override public class var typeID: TypeID { CommonTypeID.secp256K1TransferOutput }
     
     public let amount: UInt64
-    public let locktime: Date
-    public let threshold: UInt32
     
-    public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
+    required public init(amount: UInt64, locktime: Date, threshold: UInt32, addresses: [Address]) throws {
         guard amount > 0 else {
             throw MalformedTransactionError.wrongValue(amount, name: "Amount", message: "Must be positive")
         }
-        guard threshold <= addresses.count else {
-            throw MalformedTransactionError.outOfRange(
-                threshold,
-                expected: 0...addresses.count,
-                name: "Threshold",
-                description: "Must be less than or equal to the length of Addresses"
-            )
-        }
         self.amount = amount
-        self.locktime = locktime
-        self.threshold = threshold
-        super.init(addresses: addresses)
+        try super.init(addresses: addresses, locktime: locktime, threshold: threshold)
     }
     
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {

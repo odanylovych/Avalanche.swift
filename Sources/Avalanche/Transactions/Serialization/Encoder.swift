@@ -25,7 +25,7 @@ public protocol AvalancheEncoder {
     func write(_ data: Data)
 }
 
-class AEncoder: AvalancheEncoder {
+class DefaultAvalancheEncoder: AvalancheEncoder {
     private(set) var output: Data
     private var encoderPath: AvalancheCoderPath
     

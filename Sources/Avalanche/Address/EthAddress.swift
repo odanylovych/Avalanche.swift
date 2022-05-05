@@ -6,83 +6,70 @@
 //
 
 import Foundation
+#if !COCOAPODS
+import web3swift
+#endif
 
 public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, Hashable {
-    public typealias Addr = EthAddress
-    public typealias Base = EthAddress
+    public typealias Addr = Address
+    public typealias Base = EthereumAddress
     
-    public let address: EthAddress
+    public let address: EthereumAddress
     public let path: Bip32Path
+    public let pubKey: Data
     
     public var index: UInt32 { accountIndex }
     public var isChange: Bool { false }
     public var accountIndex: UInt32 { path.accountIndex! }
     
     public init(pubKey: Data, path: Bip32Path) throws {
-        let addr: EthAddress
-        do {
-            addr = try EthAddress(pubKey: pubKey)
-        } catch AddressError.badPublicKey(key: let pk) {
-            throw AccountError.badPublicKey(key: pk)
-        }
-        try self.init(address: addr, path: path)
-    }
-    
-    public init(address: EthAddress, path: Bip32Path) throws {
         guard path.isValidEthereumAccount else {
             throw AccountError.badBip32Path(path: path)
         }
+        let address: EthereumAddress
+        do {
+            address = try EthereumAddress(pubKey: pubKey)
+        } catch AddressError.badPublicKey(key: let pk) {
+            throw AccountError.badPublicKey(key: pk)
+        }
         self.address = address
         self.path = path
+        self.pubKey = pubKey
+    }
+    
+    public func avalancheAddress(hrp: String, chainId: String) throws -> Address {
+        try Address(pubKey: pubKey, hrp: hrp, chainId: chainId)
     }
 }
 
-public struct EthAddress: AddressProtocol, Equatable, Hashable {
+extension EthereumAddress {
+    public init(pubKey: Data) throws {
+        guard let raw = Algos.Ethereum.address(from: pubKey),
+              let address = Self(raw) else {
+            throw AddressError.badPublicKey(key: pubKey)
+        }
+        self = address
+    }
+}
+
+extension EthereumAddress: AddressProtocol {
     public typealias Extended = EthAccount
     
-    public static let rawAddressSize = 20
-    
-    public let rawAddress: Data
-    
-    public init(pubKey: Data) throws {
-        guard let raw = Algos.Ethereum.address(from: pubKey) else {
-            throw AccountError.badPublicKey(key: pubKey)
-        }
-        self.rawAddress = raw
-    }
-    
-    public init(hex: String, eip55: Bool = false) throws {
-        guard let addr = Algos.Ethereum.address(from: hex, eip55: eip55) else {
-            throw AddressError.badAddressString(address: hex)
-        }
-        self.rawAddress = addr
-    }
-    
-    public func hex(eip55: Bool = false) -> String {
-        return Algos.Ethereum.hexAddress(rawAddress: rawAddress, eip55: eip55)
-    }
-    
     public func verify(message: Data, signature: Signature) -> Bool {
-        return Algos.Ethereum.verify(address: rawAddress,
-                                     message: message,
-                                     signature: signature.raw) ?? false
-    }
-    
-    public func extended(path: Bip32Path) throws -> Extended {
-        do {
-            return try EthAccount(address: self, path: path)
-        } catch AccountError.badBip32Path(path: let p) {
-            throw AddressError.badBip32Path(path: p)
-        }
+        Algos.Ethereum.verify(address: addressData,
+                              message: message,
+                              signature: signature.raw) ?? false
     }
 }
 
-extension EthAddress: AvalancheCodable {
-    public init(from decoder: AvalancheDecoder) throws {
-        self.rawAddress = try decoder.decode(size: Self.rawAddressSize)
-    }
+extension EthereumAddress: AvalancheCodable {
+    public static let rawAddressSize = 20
     
+    public init(from decoder: AvalancheDecoder) throws {
+        self.init(try decoder.decode(size: Self.rawAddressSize))!
+    }
+
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(rawAddress, size: Self.rawAddressSize)
+        try encoder.encode(addressData, size: Self.rawAddressSize)
     }
 }

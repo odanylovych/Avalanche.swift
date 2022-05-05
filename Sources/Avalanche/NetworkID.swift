@@ -9,9 +9,21 @@ import Foundation
 
 public struct NetworkID: Equatable, Hashable {
     public let value: UInt32
+    public let hrp: String
     
-    public init(_ value: UInt32) {
+    private static let hrps: [UInt32: String] = [
+        0: "custom",
+        1: "avax",
+        2: "cascade",
+        3: "denali",
+        4: "everest",
+        5: "fuji",
+        12345: "local",
+    ]
+    
+    public init(_ value: UInt32, _ hrp: String? = nil) {
         self.value = value
+        self.hrp = hrp ?? Self.hrps[value] ?? "custom"
     }
     
     public static let manhattan = Self(0)

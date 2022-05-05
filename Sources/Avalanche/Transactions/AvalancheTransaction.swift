@@ -11,7 +11,15 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
     public typealias Addr = Address
     public typealias Signed = SignedAvalancheTransaction
     
+    public static let codecID: CodecID = .latest
     public class var typeID: TypeID { fatalError("Not supported") }
+    
+    public struct InputData {
+        public let credentialType: Credential.Type
+        public let transactionID: TransactionID
+        public let utxoIndex: UInt32
+        public let addressIndices: [UInt32]
+    }
     
     public init() {}
     
@@ -20,14 +28,21 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
     }
     
     public static func from(decoder: AvalancheDecoder) throws -> Self {
+        let codecID: CodecID = try decoder.decode(name: "codecID")
+        guard codecID == Self.codecID else {
+            throw AvalancheDecoderError.dataCorrupted(
+                codecID,
+                AvalancheDecoderError.Context(path: decoder.path)
+            )
+        }
         return try decoder.context.dynamicParser.decode(transaction: decoder) as! Self
     }
     
-    public func utxoAddressIndices() -> [(Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])] {
+    public var inputsData: [InputData] {
         fatalError("Not supported")
     }
     
-    public func toSigned(signatures: Dictionary<Address, Signature>) throws -> SignedAvalancheTransaction {
+    public var allOutputs: [TransferableOutput] {
         fatalError("Not supported")
     }
     
@@ -44,9 +59,7 @@ public class UnsignedAvalancheTransaction: UnsignedTransaction, AvalancheEncodab
     }
 }
 
-public struct SignedAvalancheTransaction: Equatable {
-    public static let codecID: CodecID = .latest
-
+public struct SignedAvalancheTransaction: SignedTransaction, Equatable {
     public let unsignedTransaction: UnsignedAvalancheTransaction
     public let credentials: [Credential]
 
@@ -56,21 +69,8 @@ public struct SignedAvalancheTransaction: Equatable {
     }
 }
 
-extension SignedAvalancheTransaction: SignedTransaction {
-    public func serialized() throws -> Data {
-        try AEncoder().encode(self).output
-    }
-}
-
 extension SignedAvalancheTransaction: AvalancheCodable {
     public init(from decoder: AvalancheDecoder) throws {
-        let codecID: CodecID = try decoder.decode(name: "codecID")
-        guard codecID == Self.codecID else {
-            throw AvalancheDecoderError.dataCorrupted(
-                codecID,
-                AvalancheDecoderError.Context(path: decoder.path)
-            )
-        }
         self.init(
             unsignedTransaction: try decoder.dynamic(name: "unsignedTransaction"),
             credentials: try decoder.dynamic(name: "credentials")
@@ -78,8 +78,7 @@ extension SignedAvalancheTransaction: AvalancheCodable {
     }
     
     public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.codecID, name: "codecID")
-            .encode(unsignedTransaction, name: "unsignedTransaction")
+        try encoder.encode(unsignedTransaction, name: "unsignedTransaction")
             .encode(credentials, name: "credentials")
     }
 }
@@ -89,24 +88,21 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     public typealias Signed = SignedAvalancheTransaction
     
     public let transaction: UnsignedAvalancheTransaction
-    public let pathes: Dictionary<Addr, Bip32Path>
-    public let utxoAddresses: [(Credential.Type, [Addr])]
+    public let credential: [(Credential.Type, [Addr])]
+    public let extended: [Addr: Addr.Extended]
     
-    public init(transaction: UnsignedAvalancheTransaction, utxos: [UTXO], pathes: Dictionary<Addr, Bip32Path>) throws {
+    public init(transaction: UnsignedAvalancheTransaction,
+                credential: [(Credential.Type, [Addr])],
+                extended: [Addr: Addr.Extended]) {
         self.transaction = transaction
-        self.pathes = pathes
-        utxoAddresses = try transaction.utxoAddressIndices().map { credentialType, transactionID, utxoIndex, addressIndices in
-            guard let utxo = utxos.first(where: { $0.transactionID == transactionID && $0.utxoIndex == utxoIndex }) else {
-                throw ExtendedAvalancheTransactionError.noSuchUtxo(transactionID, utxoIndex: utxoIndex, in: utxos)
-            }
-            return (credentialType, addressIndices.map { utxo.output.addresses[Int($0)] })
-        }
+        self.credential = credential
+        self.extended = extended
     }
     
     public func toSigned(signatures: Dictionary<Addr, Signature>) throws -> SignedAvalancheTransaction {
         return SignedAvalancheTransaction(
             unsignedTransaction: transaction,
-            credentials: try utxoAddresses.map { credentialType, addresses in
+            credentials: try credential.map { credentialType, addresses in
                 credentialType.init(signatures: try addresses.map { address in
                     guard let signature = signatures[address] else {
                         throw ExtendedAvalancheTransactionError.noSuchSignature(address, in: signatures)
@@ -118,15 +114,15 @@ public struct ExtendedAvalancheTransaction: ExtendedUnsignedTransaction {
     }
     
     public func serialized() throws -> Data {
-        try AEncoder().encode(transaction).output
+        try DefaultAvalancheEncoder().encode(transaction).output
     }
     
     public func signingAddresses() throws -> [Addr.Extended] {
-        try Set(utxoAddresses.flatMap { $0.1 }).map { address in
-            guard let path = pathes[address] else {
-                throw ExtendedAvalancheTransactionError.noSuchPath(address, in: pathes)
+        try Set(credential.flatMap { $0.1 }).map { address in
+            guard let extended = extended[address] else {
+                throw ExtendedAvalancheTransactionError.noSuchPath(address, in: extended)
             }
-            return try address.extended(path: path)
+            return extended
         }
     }
 }
@@ -166,8 +162,8 @@ public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
         }
         self.networkID = networkID
         self.blockchainID = blockchainID
-        self.outputs = outputs
-        self.inputs = inputs
+        self.outputs = outputs.sorted()
+        self.inputs = inputs.sorted()
         self.memo = memo
         super.init()
     }
@@ -188,14 +184,22 @@ public class BaseTransaction: UnsignedAvalancheTransaction, AvalancheDecodable {
         )
     }
     
-    override public func utxoAddressIndices() -> [
-        (Credential.Type, TransactionID, utxoIndex: UInt32, addressIndices: [UInt32])
-    ] {
-        inputs.map { ($0.input.credentialType(), $0.transactionID, $0.utxoIndex, $0.input.addressIndices) }
+    override public var inputsData: [InputData] {
+        inputs.map { InputData(
+            credentialType: $0.input.credentialType(),
+            transactionID: $0.transactionID,
+            utxoIndex: $0.utxoIndex,
+            addressIndices: $0.input.addressIndices
+        ) }
+    }
+    
+    override public var allOutputs: [TransferableOutput] {
+        outputs
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {
-        try encoder.encode(Self.typeID, name: "typeID")
+        try encoder.encode(Self.codecID, name: "codecID")
+            .encode(Self.typeID, name: "typeID")
             .encode(networkID, name: "networkID")
             .encode(blockchainID, name: "blockchainID")
             .encode(outputs, name: "outputs")

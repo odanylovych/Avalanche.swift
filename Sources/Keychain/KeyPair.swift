@@ -8,6 +8,7 @@
 import Foundation
 #if !COCOAPODS
 import Avalanche
+import web3swift
 #endif
 
 public struct KeyPair {
@@ -75,27 +76,39 @@ public extension KeyPair {
         try! Address(pubKey: publicKey, hrp: hrp, chainId: chainId)
     }
     
-    var ethAddress: EthAddress {
-        try! EthAddress(pubKey: publicKey)
+    var ethAddress: EthereumAddress {
+        try! EthereumAddress(pubKey: publicKey)
     }
     
-    func signAvalanche(serialized tx: Data) -> Data? {
-        Algos.Avalanche.sign(data: tx, with: _sk)
+    func signAvalanche(serialized tx: Data) -> Signature? {
+        guard let data = Algos.Avalanche.sign(data: tx, with: _sk) else {
+            return nil
+        }
+        return Signature(data: data)
     }
     
-    func signAvalanche(message data: Data) -> Data? {
+    func signAvalanche(message data: Data) -> Signature? {
         let prefixed = Data("\u{1A}Avalanche Signed Message:\n".utf8) +
             UInt32(data.count).bigEndianBytes + data
-        return Algos.Avalanche.sign(data: prefixed, with: _sk)
+        guard let data = Algos.Avalanche.sign(data: prefixed, with: _sk) else {
+            return nil
+        }
+        return Signature(data: data)
     }
     
-    func signEthereum(message data: Data) -> Data? {
+    func signEthereum(message data: Data) -> Signature? {
         let prefixed = Data("\u{19}Ethereum Signed Message:\n".utf8) + Data(String(data.count, radix: 10).utf8) + data
-        return Algos.Ethereum.sign(data: prefixed, with: _sk)
+        guard let data = Algos.Ethereum.sign(data: prefixed, with: _sk) else {
+            return nil
+        }
+        return Signature(data: data)
     }
     
-    func signEthereum(serialized tx: Data) -> Data? {
-        Algos.Ethereum.sign(data: tx, with: _sk)
+    func signEthereum(serialized tx: Data) -> Signature? {
+        guard let data = Algos.Ethereum.sign(data: tx, with: _sk) else {
+            return nil
+        }
+        return Signature(data: data)
     }
     
     var privateString: String {

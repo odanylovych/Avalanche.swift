@@ -14,11 +14,18 @@ import FoundationNetworking
 #endif
 
 public struct AvalancheSettings {
-    let queue: DispatchQueue
-    let session: URLSession
-    let headers: Dictionary<String, String>
-    let encoder: ContentEncoder
-    let decoder: ContentDecoder
+    public let queue: DispatchQueue
+    public let addressManagerProvider: AddressManagerProvider
+    public let utxoProvider: AvalancheUtxoProvider
+    public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
     
-    public static let `default` = AvalancheSettings(queue: .main, session: .shared, headers: [:], encoder: JSONEncoder.rpc, decoder: JSONDecoder.rpc)
+    public init(queue: DispatchQueue = .main,
+                addressManagerProvider: AddressManagerProvider = DefaultAddressManagerProvider(),
+                utxoProvider: AvalancheUtxoProvider = AvalancheDefaultUtxoProvider(),
+                encoderDecoderProvider: AvalancheEncoderDecoderProvider = DefaultAvalancheEncoderDecoderProvider()) {
+        self.queue = queue
+        self.addressManagerProvider = addressManagerProvider
+        self.utxoProvider = utxoProvider
+        self.encoderDecoderProvider = encoderDecoderProvider
+    }
 }

@@ -155,6 +155,15 @@ public class ImportTransaction: BaseTransaction {
         )
     }
     
+    override public var inputsData: [InputData] {
+        (inputs + transferableInputs).map { InputData(
+            credentialType: $0.input.credentialType(),
+            transactionID: $0.transactionID,
+            utxoIndex: $0.utxoIndex,
+            addressIndices: $0.input.addressIndices
+        ) }
+    }
+    
     convenience required public init(dynamic decoder: AvalancheDecoder, typeID: UInt32) throws {
         guard typeID == Self.typeID.rawValue else {
             throw AvalancheDecoderError.dataCorrupted(
@@ -229,6 +238,10 @@ public class ExportTransaction: BaseTransaction {
             destinationChain: try decoder.decode(name: "destinationChain"),
             transferableOutputs: try decoder.decode(name: "transferableOutputs")
         )
+    }
+    
+    override public var allOutputs: [TransferableOutput] {
+        super.allOutputs + transferableOutputs
     }
     
     override public func encode(in encoder: AvalancheEncoder) throws {

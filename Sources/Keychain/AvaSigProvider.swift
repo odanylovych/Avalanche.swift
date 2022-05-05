@@ -37,7 +37,7 @@ private extension AvalancheBip44Keychain {
         var keypairs: [(T.Addr.Extended, KeyPair)] = []
         keypairs.reserveCapacity(addresses.count)
         for address in addresses {
-            switch deriveKeyPair(for: address.path, isEthereum: isEthereum) {
+            switch deriveKeyPair(for: address.path) {
             case .failure(let err):
                 cb(.failure(err))
                 return
@@ -55,7 +55,7 @@ private extension AvalancheBip44Keychain {
                 cb(.failure(.signingFailed(address: addr.path, reason: "")))
                 return
             }
-            signatures[addr.address] = Signature(data: sig)
+            signatures[addr.address] = sig
         }
         do {
             let signed = try tx.toSigned(signatures: signatures)
@@ -65,10 +65,8 @@ private extension AvalancheBip44Keychain {
         }
     }
     
-    private func deriveKeyPair(
-        for path: Bip32Path, isEthereum: Bool
-    ) -> AvalancheSignatureProviderResult<KeyPair> {
-        if isEthereum {
+    private func deriveKeyPair(for path: Bip32Path) -> AvalancheSignatureProviderResult<KeyPair> {
+        if path.isValidEthereumAccount {
             guard let kp = _ethCache[path.accountIndex!] else {
                 return .failure(.accountNotFound(account: path.account!))
             }
@@ -111,7 +109,7 @@ extension AvalancheBip44Keychain: AvalancheSignatureProvider {
     ) where T : ExtendedUnsignedTransaction {
         DispatchQueue.global().async {
             self.signTx(tx: transaction,
-                        isEthereum: transaction is EthereumTransactionExt,
+                        isEthereum: transaction is ExtendedEthereumTransaction,
                         cb)
         }
     }
@@ -122,16 +120,14 @@ extension AvalancheBip44Keychain: AvalancheSignatureProvider {
         _ cb: @escaping (AvalancheSignatureProviderResult<Signature>) -> Void) {
         DispatchQueue.global().async {
             let isEthereum = address is EthAccount
-            switch self.deriveKeyPair(for: address.path,
-                                      isEthereum: isEthereum
-            ) {
+            switch self.deriveKeyPair(for: address.path) {
             case .failure(let err):
                 cb(.failure(err))
             case .success(let kp):
                 let sig = isEthereum
                     ? kp.signEthereum(message: message)
                     : kp.signAvalanche(message: message)
-                guard let sigData = sig, let signature = Signature(data: sigData) else {
+                guard let signature = sig else {
                     cb(.failure(.signingFailed(address: address.path, reason: "")))
                     return
                 }

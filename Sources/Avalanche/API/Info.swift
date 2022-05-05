@@ -11,43 +11,26 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalancheInfoApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/info"
-}
-
 public class AvalancheInfoApi: AvalancheApi {
-    public typealias Info = AvalancheInfoApiInfo
-    
     public let networkID: NetworkID
-    public let hrp: String
-    public let info: Info
-    
+    public let chainID: ChainID
     private let service: Client
     
-    public required init(avalanche: AvalancheCore,
-                         networkID: NetworkID,
-                         hrp: String,
-                         info: AvalancheInfoApiInfo)
-    {
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) {
         self.networkID = networkID
-        self.hrp = hrp
-        self.info = info
-        
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-        
-        self.service = JsonRpc(.http(url: url, session: settings.session, headers: settings.headers), queue: settings.queue, encoder: settings.encoder, decoder: settings.decoder)
+        self.chainID = chainID
+        self.service = avalanche.connectionProvider.rpc(api: .info)
     }
     
-    /// methods
+    struct GetBlockchainIDParams: Encodable {
+        let alias: String
+    }
+    struct GetBlockchainIDResponse: Decodable {
+        let blockchainID: String
+    }
+    
     public func getBlockchainID(alias: String,
                                 cb: @escaping ApiCallback<BlockchainID>) {
-        struct GetBlockchainIDParams: Encodable {
-            let alias: String
-        }
-        struct GetBlockchainIDResponse: Decodable {
-            let blockchainID: String
-        }
         service.call(
             method: "info.getBlockchainID",
             params: GetBlockchainIDParams(alias: alias),
@@ -229,6 +212,6 @@ public class AvalancheInfoApi: AvalancheApi {
 
 extension AvalancheCore {
     public var info: AvalancheInfoApi {
-        try! self.getAPI()
+        try! self.getAPI(chainID: .alias("info"))
     }
 }

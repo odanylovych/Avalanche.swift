@@ -11,34 +11,15 @@ import Serializable
 import RPC
 #endif
 
-public struct AvalancheMetricsApiInfo: AvalancheApiInfo {
-    public let apiPath: String = "/ext/metrics"
-}
-
 public class AvalancheMetricsApi: AvalancheApi {
-    public typealias Info = AvalancheMetricsApiInfo
-    
     public let networkID: NetworkID
-    public let hrp: String
-    public let info: Info
-    
+    public let chainID: ChainID
     private let connection: SingleShotConnection
-    private let decoder: ContentDecoder
     
-    public required init(avalanche: AvalancheCore,
-                         networkID: NetworkID,
-                         hrp: String,
-                         info: AvalancheMetricsApiInfo)
-    {
-        self.info = info
-        self.hrp = hrp
+    public required init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) {
         self.networkID = networkID
-        
-        let settings = avalanche.settings
-        let url = avalanche.url(path: info.apiPath)
-        
-        self.connection = HttpConnection(url: url, queue: settings.queue, headers: [:], session: settings.session)
-        self.decoder = settings.decoder
+        self.chainID = chainID
+        self.connection = avalanche.connectionProvider.singleShot(api: .metrics)
     }
     
     public func getMetrics(cb: @escaping ApiCallback<String>) {
@@ -68,6 +49,6 @@ private extension String {
 
 extension AvalancheCore {
     public var metrics: AvalancheMetricsApi {
-        try! self.getAPI()
+        try! self.getAPI(chainID: .alias("metrics"))
     }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 import BigInt
-import CSecp256k1
+import secp256k1
 import UncommonCrypto
 
 public struct Secp256k1Algos {
