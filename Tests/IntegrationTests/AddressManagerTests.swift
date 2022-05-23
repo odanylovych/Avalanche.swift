@@ -57,6 +57,6 @@ final class AddressManagerTests: XCTestCase {
             XCTAssertEqual(Set(addresses), Set(testAddresses))
             fetchSuccessful.fulfill()
         }
-        wait(for: [fetchSuccessful], timeout: 10)
+        wait(for: [fetchSuccessful], timeout: 100)
     }
 }
