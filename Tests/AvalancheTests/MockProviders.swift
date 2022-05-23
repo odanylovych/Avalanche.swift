@@ -26,6 +26,11 @@ class AvalancheCoreMock: AvalancheCore {
     var signatureProvider: AvalancheSignatureProvider?
     var connectionProvider: AvalancheConnectionProvider
     
+    private var xChain: AvalancheXChainApi!
+    private var pChain: AvalanchePChainApi!
+    private var cChain: AvalancheCChainApi!
+    private var info: AvalancheInfoApi!
+    
     init(
         networkID: NetworkID = NetworkID.local,
         settings: AvalancheSettings = AvalancheSettings(),
@@ -49,13 +54,25 @@ class AvalancheCoreMock: AvalancheCore {
     func defaultGetAPIMock(for networkID: NetworkID) -> (Any.Type, ChainID) throws -> Any {
         { apiType, chainID in
             if apiType == AvalancheXChainApi.self {
-                return AvalancheXChainApi(avalanche: self, networkID: networkID, chainID: chainID)
+                if self.xChain == nil {
+                    self.xChain = AvalancheXChainApi(avalanche: self, networkID: networkID, chainID: chainID)
+                }
+                return self.xChain!
             } else if apiType == AvalanchePChainApi.self {
-                return AvalanchePChainApi(avalanche: self, networkID: networkID, chainID: chainID)
+                if self.pChain == nil {
+                    self.pChain = AvalanchePChainApi(avalanche: self, networkID: networkID, chainID: chainID)
+                }
+                return self.pChain!
             } else if apiType == AvalancheCChainApi.self {
-                return AvalancheCChainApi(avalanche: self, networkID: networkID, chainID: chainID)
+                if self.cChain == nil {
+                    self.cChain = AvalancheCChainApi(avalanche: self, networkID: networkID, chainID: chainID)
+                }
+                return self.cChain!
             } else if apiType == AvalancheInfoApi.self {
-                return AvalancheInfoApi(avalanche: self, networkID: networkID, chainID: chainID)
+                if self.info == nil {
+                    self.info = AvalancheInfoApi(avalanche: self, networkID: networkID, chainID: chainID)
+                }
+                return self.info!
             } else {
                 throw ApiTestsError.error(from: "getAPIMock")
             }
