@@ -11,11 +11,20 @@ import Avalanche
 
 final class AddressManagerTests: XCTestCase {
     private var avalanche: AvalancheCore!
+    private var account: Account!
     private var _manager: AvalancheAddressManager?
     
     override func setUp() {
         super.setUp()
-        avalanche = Avalanche(url: TestEnvironment.url, network: TestEnvironment.network)
+        account = try! Account(pubKey: TestEnvironment.instance.publicKey,
+                                   chainCode: TestEnvironment.instance.chainCode,
+                                   path: try! Bip32Path.prefixAvalanche.appending(0, hard: true))
+        let signatureProvider = SignatureProviderMock()
+        signatureProvider.accountsMock = { type, cb in
+            precondition(type == .both)
+            cb(.success((avalanche: [self.account], ethereum: [])))
+        }
+        avalanche = Avalanche(url: TestEnvironment.url, networkID: TestEnvironment.network, signatureProvider: signatureProvider)
     }
     
     private var api: AvalancheXChainApi {
@@ -31,9 +40,6 @@ final class AddressManagerTests: XCTestCase {
     
     func testFetch() throws {
         let fetchSuccessful = expectation(description: "Fetch successful")
-        let account = try! Account(pubKey: TestEnvironment.instance.publicKey,
-                                   chainCode: TestEnvironment.instance.chainCode,
-                                   path: try! Bip32Path.prefixAvalanche.appending(0, hard: true))
         let testAddresses = (0..<45).map {
             try! account.derive(index: $0,
                                 change: false,
@@ -45,15 +51,9 @@ final class AddressManagerTests: XCTestCase {
                                 hrp: api.networkID.hrp,
                                 chainId: api.chainID.value).address
         }
-        let signatureProvider = SignatureProviderMock()
-        signatureProvider.accountsMock = { type, cb in
-            precondition(type == .both)
-            cb(.success((avalanche: [account], ethereum: [])))
-        }
-        avalanche.signatureProvider = signatureProvider
         manager.fetch(avm: api) { res in
             try! res.get()
-            let addresses = try! self.manager.get(avm: self.api, cached: account)
+            let addresses = try! self.manager.get(avm: self.api, cached: self.account)
             XCTAssertEqual(Set(addresses), Set(testAddresses))
             fetchSuccessful.fulfill()
         }

@@ -8,88 +8,57 @@
 import Foundation
 
 public class Avalanche: AvalancheCore {
-    private var _apis: [ChainID: Any]
-    private let _lock: NSRecursiveLock
+    private var _apis: [String: AvalancheApi]
+    private let _syncQueue: DispatchQueue
     
-    private var _networkID: NetworkID
-    private var _settings: AvalancheSettings
-    private var _signatureProvider: AvalancheSignatureProvider?
-    private var _connectionProvider: AvalancheConnectionProvider
-    
-    public var networkID: NetworkID {
-        get { _networkID }
-        set {
-            _lock.lock()
-            _networkID = newValue
-            _apis = [:]
-            _lock.unlock()
-        }
-    }
-    
-    public var settings: AvalancheSettings {
-        get { _settings }
-        set {
-            _lock.lock()
-            _settings = newValue
-            _apis = [:]
-            _lock.unlock()
-        }
-    }
-    
-    public var signatureProvider: AvalancheSignatureProvider? {
-        get { _signatureProvider }
-        set {
-            _lock.lock()
-            _signatureProvider = newValue
-            _apis = [:]
-            _lock.unlock()
-        }
-    }
-    
-    public var connectionProvider: AvalancheConnectionProvider {
-        get { _connectionProvider }
-        set {
-            _lock.lock()
-            _connectionProvider = newValue
-            _apis = [:]
-            _lock.unlock()
-        }
-    }
+    public let networkID: NetworkID
+    public let settings: AvalancheSettings
+    public let signatureProvider: AvalancheSignatureProvider?
+    public let connectionProvider: AvalancheConnectionProvider
     
     public init(networkID: NetworkID,
                 settings: AvalancheSettings = AvalancheSettings(),
-                signatureProvider: AvalancheSignatureProvider? = nil,
-                connectionProvider: AvalancheConnectionProvider) {
+                connectionProvider: AvalancheConnectionProvider,
+                signatureProvider: AvalancheSignatureProvider? = nil) {
         self._apis = [:]
-        self._lock = NSRecursiveLock()
-        self._networkID = networkID
-        self._settings = settings
-        self._signatureProvider = signatureProvider
-        self._connectionProvider = connectionProvider
+        self._syncQueue = DispatchQueue(label: "Avalanche Sync Queue", target: .global(qos: .userInteractive))
+        self.networkID = networkID
+        self.settings = settings
+        self.signatureProvider = signatureProvider
+        self.connectionProvider = connectionProvider
+    }
+    
+    public func _createAPI<API: AvalancheApi>(networkID: NetworkID, chainID: ChainID) throws -> API {
+        return try API(avalanche: self, networkID: networkID, chainID: chainID)
     }
     
     public func getAPI<API: AvalancheApi>(chainID: ChainID) throws -> API {
-        _lock.lock()
-        defer { _lock.unlock() }
-        
-        if let api = _apis[chainID] as? API {
+        let apiId = chainID.value + "-" + API.id
+        return try _syncQueue.sync {
+            if let api = _apis[apiId] as? API {
+                return api
+            }
+            let api: API = try self._createAPI(networkID: networkID, chainID: chainID)
+            _apis[apiId] = api
             return api
         }
-        let api: API = self.createAPI(networkID: networkID, chainID: chainID)
-        _apis[chainID] = api
-        return api
     }
     
-    public func createAPI<API: AvalancheApi>(networkID: NetworkID, chainID: ChainID) -> API {
-        _lock.lock()
-        defer { _lock.unlock() }
-        return API(avalanche: self, networkID: networkID, chainID: chainID)
+    public func createAPI<API: AvalancheApi>(networkID: NetworkID, chainID: ChainID) throws -> API {
+        return try _syncQueue.sync {
+            return try self._createAPI(networkID: networkID, chainID: chainID)
+        }
     }
 }
 
 extension Avalanche {
-    public convenience init(url: URL, network: NetworkID) {
-        self.init(networkID: network,
-                  connectionProvider: WebRPCAvalancheConnectionProvider(url: url))
+    public convenience init(url: URL,
+                            networkID: NetworkID,
+                            settings: AvalancheSettings = AvalancheSettings(),
+                            signatureProvider: AvalancheSignatureProvider? = nil) {
+        self.init(networkID: networkID,
+                  settings: settings,
+                  connectionProvider: WebRPCAvalancheConnectionProvider(url: url),
+                  signatureProvider: signatureProvider)
     }
 }

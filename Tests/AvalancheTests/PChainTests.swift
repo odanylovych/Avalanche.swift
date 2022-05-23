@@ -14,7 +14,7 @@ final class PChainTests: XCTestCase {
     private let creationTxFee: UInt64 = 10_000_000
     private let txFee: UInt64 = 1_000_000
     
-    private var avalanche: AvalancheCore!
+    //private var avalanche: AvalancheCore!
     private var testAccount: Account!
     private var idIndex: UInt8!
     private var avaxAssetID: AssetID!
@@ -27,10 +27,7 @@ final class PChainTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        let settings = AvalancheSettings(addressManagerProvider: addressManagerProvider, utxoProvider: utxoProvider)
-        let avalanche = AvalancheCoreMock(settings: settings, connectionProvider: connectionProvider)
-        avalanche.getAPIMock = avalanche.defaultGetAPIMock(for: .test)
-        self.avalanche = avalanche
+        
         testAccount = try! Account(
             pubKey: Data(hex: "0x02ccbf163222a621523a477389b2b6318b9c43b424bdf4b74340e9b45443cc0506")!,
             chainCode: Data(count: 32),
@@ -59,8 +56,15 @@ final class PChainTests: XCTestCase {
         ]
     }
     
-    private var api: AvalanchePChainApi {
-        avalanche.pChain
+    private func avalanche(signatureProvider: AvalancheSignatureProvider) -> AvalancheCore {
+        let settings = AvalancheSettings(addressManagerProvider: addressManagerProvider, utxoProvider: utxoProvider)
+        let avalanche = AvalancheCoreMock(settings: settings, signatureProvider: signatureProvider, connectionProvider: connectionProvider)
+        avalanche.getAPIMock = avalanche.defaultGetAPIMock(for: .test)
+        return avalanche
+    }
+    
+    private func api(signatureProvider: AvalancheSignatureProvider = SignatureProviderMock()) -> AvalanchePChainApi {
+        avalanche(signatureProvider: signatureProvider).pChain
     }
     
     private var utxoProvider: AvalancheUtxoProvider {
@@ -149,7 +153,7 @@ final class PChainTests: XCTestCase {
     }
     
     private func newAddress() -> ExtendedAddress {
-        newAddress(api: api)
+        newAddress(api: api())
     }
     
     func testAddDelegator() throws {
@@ -243,10 +247,10 @@ final class PChainTests: XCTestCase {
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
             let transaction = extended.transaction as! AddDelegatorTransaction
-            self.api.getBlockchainID { res in
+            self.api().getBlockchainID { res in
                 let blockchainID = try! res.get()
                 let testTransaction = try! AddDelegatorTransaction(
-                    networkID: self.api.networkID,
+                    networkID: self.api().networkID,
                     blockchainID: blockchainID,
                     outputs: outputs,
                     inputs: inputs,
