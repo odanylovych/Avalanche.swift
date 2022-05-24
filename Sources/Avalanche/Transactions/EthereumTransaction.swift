@@ -31,7 +31,9 @@ public struct ExtendedEthereumTransaction: ExtendedUnsignedTransaction {
     }
     
     public func serialized() throws -> Data {
-        guard let data = transaction.encode(forSignature: true, chainID: chainID) else {
+        var transaction = self.transaction
+        transaction.chainID = self.chainID
+        guard let data = transaction.encode(for: .signature) else {
             throw EthereumTransactionError.encodeError
         }
         return data
@@ -52,11 +54,17 @@ public struct ExtendedEthereumTransaction: ExtendedUnsignedTransaction {
         } else if v >= 31 && v <= 34 {
             d = BigUInt(4)
         }
-        var transaction = transaction
-        transaction.v = BigUInt(v) + d + chainID + chainID
-        transaction.r = BigUInt(r)
-        transaction.s = BigUInt(s)
-        return transaction
+        let signedTransaction = EthereumTransaction(type: transaction.type,
+                                                    to: transaction.to,
+                                                    nonce: transaction.nonce,
+                                                    chainID: self.chainID,
+                                                    value: transaction.value,
+                                                    data: transaction.data,
+                                                    v: BigUInt(v) + d + chainID + chainID,
+                                                    r: BigUInt(r),
+                                                    s: BigUInt(s),
+                                                    parameters: transaction.parameters)
+        return signedTransaction
     }
     
     public func signingAddresses() throws -> [Addr.Extended] {

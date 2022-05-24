@@ -20,9 +20,8 @@ final class XChainTests: XCTestCase {
     override func setUp() {
         super.setUp()
         queue = DispatchQueue(label: "XChainTests.Async.Queue", target: .global())
-        avalanche = Avalanche(url: TestEnvironment.url, network: TestEnvironment.network)
         keychain = try! AvalancheBip44Keychain(seed: TestEnvironment.instance.seed)
-        avalanche.signatureProvider = keychain
+        avalanche = Avalanche(url: TestEnvironment.url, networkID: TestEnvironment.network, signatureProvider: keychain)
     }
     
     private var api: AvalancheXChainApi {

@@ -21,6 +21,7 @@ final class AddressManagerTests: XCTestCase {
     private var testEthereumAddress: EthereumAddress!
     private var testAccounts: AvalancheSignatureProviderAccounts!
     private var testUtxo: UTXO!
+    private let utxoProvider = UtxoProviderMock()
     
     override func setUp() {
         super.setUp()
@@ -63,6 +64,12 @@ final class AddressManagerTests: XCTestCase {
                 addresses: [testAvalancheAddress]
             )
         )
+        utxoProvider.utxosAddressesMock = { api, addresses in
+            let utxos = addresses.contains(self.testAvalancheAddress) ? [self.testUtxo!] : []
+            return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
+                result(.success((utxos, nil)))
+            })
+        }
     }
     
     private var signer: AvalancheSignatureProvider {
@@ -75,17 +82,6 @@ final class AddressManagerTests: XCTestCase {
             cb(.success(self.testAccounts))
         }
         return signer
-    }
-    
-    private var utxoProvider: AvalancheUtxoProvider {
-        let utxoProvider = UtxoProviderMock()
-        utxoProvider.utxosAddressesMock = { api, addresses in
-            let utxos = addresses.contains(self.testAvalancheAddress) ? [self.testUtxo!] : []
-            return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
-                result(.success((utxos, nil)))
-            })
-        }
-        return utxoProvider
     }
     
     private var addressManagerProvider: AddressManagerProvider {
@@ -174,18 +170,12 @@ final class AddressManagerTests: XCTestCase {
             addressUtxo(testAddresses[20]),
             addressUtxo(testAddresses[49])
         ])
-        let utxoProvider = UtxoProviderMock()
         utxoProvider.utxosAddressesMock = { api, addresses in
             let utxos = addresses.compactMap { addressUtxoMap[$0] }
             return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
                 result(.success((utxos, nil)))
             })
         }
-        let settings = avalanche.settings
-        avalanche.settings = AvalancheSettings(queue: settings.queue,
-                                               addressManagerProvider: settings.addressManagerProvider,
-                                               utxoProvider: utxoProvider,
-                                               encoderDecoderProvider: settings.encoderDecoderProvider)
         let success = expectation(description: "success")
         let addressManager = addressManagerProvider.manager(ava: avalanche)!
         addressManager.fetch(avm: api, for: [self.testAvalancheAccount]) { res in

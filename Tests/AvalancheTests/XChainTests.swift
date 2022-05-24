@@ -24,11 +24,17 @@ final class XChainTests: XCTestCase {
     private var utxoForInput: UTXO!
     private var testUtxos: [UTXO]!
     private var testTransactionID: TransactionID!
+    private var blockchainID: BlockchainID!
+    private var pBlockchainID: BlockchainID!
+    private let utxoProvider = UtxoProviderMock()
+    private let signatureProvider = SignatureProviderMock()
     
     override func setUp() {
         super.setUp()
         let settings = AvalancheSettings(addressManagerProvider: addressManagerProvider, utxoProvider: utxoProvider)
-        let avalanche = AvalancheCoreMock(settings: settings, connectionProvider: connectionProvider)
+        let avalanche = AvalancheCoreMock(settings: settings,
+                                          signatureProvider: signatureProvider,
+                                          connectionProvider: connectionProvider)
         avalanche.getAPIMock = avalanche.defaultGetAPIMock(for: .test)
         self.avalanche = avalanche
         testAccount = try! Account(
@@ -38,6 +44,8 @@ final class XChainTests: XCTestCase {
         )
         idIndex = 0
         addressIndex = 0
+        blockchainID = newBlockchainID()
+        pBlockchainID = newBlockchainID()
         avaxAssetID = newAssetID()
         testFromAddress = newAddress()
         testChangeAddress = newAddress().address
@@ -77,21 +85,22 @@ final class XChainTests: XCTestCase {
                 )
             )
         ]
-    }
-    
-    private var api: AvalancheXChainApi {
-        avalanche.xChain
-    }
-    
-    private var utxoProvider: AvalancheUtxoProvider {
-        let utxoProvider = UtxoProviderMock()
         utxoProvider.utxosAddressesMock = { api, addresses in
             precondition(addresses == [self.testFromAddress.address])
             return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
                 result(.success((self.testUtxos, nil)))
             })
         }
-        return utxoProvider
+        utxoProvider.utxosIdsMock = { api, ids, result in
+            precondition(ids.count == 1)
+            precondition(ids[0].txID == self.utxoForInput.transactionID)
+            precondition(ids[0].index == self.utxoForInput.utxoIndex)
+            return result(.success(self.testUtxos))
+        }
+    }
+    
+    private var api: AvalancheXChainApi {
+        avalanche.xChain
     }
     
     private var addressManagerProvider: AddressManagerProvider {
@@ -139,13 +148,22 @@ final class XChainTests: XCTestCase {
                 return ClientMock(callMock: { method, params, response in
                     switch method {
                     case "info.getTxFee":
-                        response(.success(AvalancheInfoApi.TxFee(
-                            creationTxFee: self.creationTxFee,
-                            txFee: self.txFee
+                        response(.success(AvalancheInfoApi.GetTxFeeResponse(
+                            creationTxFee: String(self.creationTxFee),
+                            txFee: String(self.txFee)
                         )))
                     case "info.getBlockchainID":
+                        let params = (params as! AvalancheInfoApi.GetBlockchainIDParams)
+                        var blockchainID: BlockchainID
+                        switch params.alias {
+                        case "X": blockchainID = self.blockchainID
+                        case "P": blockchainID = self.pBlockchainID
+                        default:
+                            response(.failure(ApiTestsError.error(description: "unsupported alias: \(params.alias)")))
+                            return
+                        }
                         response(.success(AvalancheInfoApi.GetBlockchainIDResponse(
-                            blockchainID: self.newBlockchainID().cb58()
+                            blockchainID: blockchainID.cb58()
                         )))
                     default:
                         response(.failure(ApiTestsError.error(description: "no mock for api method \(method)")))
@@ -234,7 +252,6 @@ final class XChainTests: XCTestCase {
         let fromAddress = testFromAddress.address
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
-        let signatureProvider = SignatureProviderMock()
         let fee = creationTxFee
         let (inputs, outputs) = try inputsOutputs(
             fromAddresses: [fromAddress],
@@ -284,7 +301,6 @@ final class XChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.createFixedCapAsset(
             name: name,
             symbol: symbol,
@@ -310,7 +326,6 @@ final class XChainTests: XCTestCase {
         let memo = "memo".data(using: .utf8)!
         let fromAddress = testFromAddress.address
         let assetID = newAssetID()
-        let signatureProvider = SignatureProviderMock()
         let fee = txFee
         let (inputs, outputs) = try inputsOutputs(
             fromAddresses: [fromAddress],
@@ -364,7 +379,6 @@ final class XChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.mint(
             amount: amount,
             assetID: assetID,
@@ -381,7 +395,7 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testCreateVariableCapAsset() throws {
         let success = expectation(description: "success")
         let name = "name"
@@ -393,7 +407,6 @@ final class XChainTests: XCTestCase {
         let fromAddress = testFromAddress.address
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
-        let signatureProvider = SignatureProviderMock()
         let fee = creationTxFee
         let (inputs, outputs) = try inputsOutputs(
             fromAddresses: [fromAddress],
@@ -436,7 +449,6 @@ final class XChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.createVariableCapAsset(
             name: name,
             symbol: symbol,
@@ -454,7 +466,7 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testCreateNFTAsset() throws {
         let success = expectation(description: "success")
         let name = "name"
@@ -465,7 +477,6 @@ final class XChainTests: XCTestCase {
         let fromAddress = testFromAddress.address
         let memo = "memo".data(using: .utf8)!
         let testAssetID = AssetID(data: self.testTransactionID.raw)!
-        let signatureProvider = SignatureProviderMock()
         let fee = creationTxFee
         let (inputs, outputs) = try inputsOutputs(
             fromAddresses: [fromAddress],
@@ -509,7 +520,6 @@ final class XChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.createNFTAsset(
             name: name,
             symbol: symbol,
@@ -526,7 +536,7 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testMintNFT() throws {
         let success = expectation(description: "success")
         let payload = "0x010203"
@@ -534,7 +544,6 @@ final class XChainTests: XCTestCase {
         let memo = "memo".data(using: .utf8)!
         let fromAddress = testFromAddress.address
         let assetID = newAssetID()
-        let signatureProvider = SignatureProviderMock()
         let fee = txFee
         let (inputs, outputs) = try inputsOutputs(
             fromAddresses: [fromAddress],
@@ -588,7 +597,6 @@ final class XChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.mintNFT(
             assetID: assetID,
             payload: payload,
@@ -605,7 +613,7 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testExport() throws {
         let success = expectation(description: "success")
         let amount: UInt64 = 50_000_000
@@ -614,7 +622,6 @@ final class XChainTests: XCTestCase {
         let memo = "memo".data(using: .utf8)!
         let fromAddress = testFromAddress.address
         let assetID = newAssetID()
-        let signatureProvider = SignatureProviderMock()
         let fee = txFee
         var (inputs, outputs) = try inputsOutputs(
             fromAddresses: [fromAddress],
@@ -662,6 +669,14 @@ final class XChainTests: XCTestCase {
                 )
             )
         ]
+        utxoProvider.utxosIdsMock = { api, ids, result in
+            precondition(ids.count == 2)
+            precondition(ids[0].txID == self.utxoForInput.transactionID)
+            precondition(ids[0].index == self.utxoForInput.utxoIndex)
+            precondition(ids[1].txID == utxo.transactionID)
+            precondition(ids[1].index == utxo.utxoIndex)
+            return result(.success(self.testUtxos))
+        }
         signatureProvider.signTransactionMock = { tx, cb in
             let extended = tx as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
@@ -697,7 +712,6 @@ final class XChainTests: XCTestCase {
                 }
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.export(
             to: toAddress,
             amount: amount,
@@ -714,15 +728,13 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testImport() throws {
         let success = expectation(description: "success")
-        let testSourceChain = BlockchainID(data: Data(repeating: 1, count: BlockchainID.size))!
         let toChain = avalanche.pChain
         let toAddress = newAddress(api: toChain).address
         let memo = "memo".data(using: .utf8)!
         let fromAddress = testFromAddress.address
-        let signatureProvider = SignatureProviderMock()
         let fee = txFee
         let inputs = [TransferableInput]()
         let utxo = utxoForInput!
@@ -750,19 +762,13 @@ final class XChainTests: XCTestCase {
                 )
             )
         ]
-        let utxoProvider = UtxoProviderMock()
         utxoProvider.utxosAddressesMock = { api, addresses in
             precondition(addresses == [self.testFromAddress.address])
             return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
-                precondition(sourceChain == testSourceChain)
+                precondition(sourceChain == self.pBlockchainID)
                 result(.success((self.testUtxos, nil)))
             })
         }
-        let settings = avalanche.settings
-        avalanche.settings = AvalancheSettings(queue: settings.queue,
-                                               addressManagerProvider: settings.addressManagerProvider,
-                                               utxoProvider: utxoProvider,
-                                               encoderDecoderProvider: settings.encoderDecoderProvider)
         signatureProvider.signTransactionMock = { tx, cb in
             let extended = tx as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
@@ -777,7 +783,7 @@ final class XChainTests: XCTestCase {
                     outputs: outputs,
                     inputs: inputs,
                     memo: memo,
-                    sourceChain: testSourceChain,
+                    sourceChain: self.pBlockchainID,
                     transferableInputs: importInputs
                 )
                 XCTAssertEqual(transaction, testTransaction)
@@ -787,7 +793,6 @@ final class XChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.import(
             to: toAddress,
             source: toChain,
@@ -800,7 +805,7 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testSend() throws {
         let success = expectation(description: "success")
         let amount: UInt64 = 50_000_000
@@ -808,7 +813,6 @@ final class XChainTests: XCTestCase {
         let memo = "memo"
         let fromAddress = testFromAddress.address
         let assetID = newAssetID()
-        let signatureProvider = SignatureProviderMock()
         let fee = txFee
         var (inputs, outputs) = try inputsOutputs(
             fromAddresses: [fromAddress],
@@ -855,6 +859,14 @@ final class XChainTests: XCTestCase {
                 )
             )
         ])
+        utxoProvider.utxosIdsMock = { api, ids, result in
+            precondition(ids.count == 2)
+            precondition(ids[0].txID == self.utxoForInput.transactionID)
+            precondition(ids[0].index == self.utxoForInput.utxoIndex)
+            precondition(ids[1].txID == utxo.transactionID)
+            precondition(ids[1].index == utxo.utxoIndex)
+            return result(.success(self.testUtxos))
+        }
         signatureProvider.signTransactionMock = { tx, cb in
             let extended = tx as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
@@ -883,7 +895,6 @@ final class XChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.send(
             amount: amount,
             assetID: assetID,
@@ -900,7 +911,7 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testSendMultiple() throws {
         let success = expectation(description: "success")
         let amount1: UInt64 = 50_000_000
@@ -911,7 +922,6 @@ final class XChainTests: XCTestCase {
         let fromAddress = testFromAddress.address
         let assetID1 = newAssetID()
         let assetID2 = newAssetID()
-        let signatureProvider = SignatureProviderMock()
         let fee = txFee
         let utxo1 = UTXO(
             transactionID: newTransactionID(),
@@ -979,6 +989,18 @@ final class XChainTests: XCTestCase {
         let (inputs1, outputs1) = try getInputsOutputs(utxo1, amount1, toAddress1)
         let (inputs2, outputs2) = try getInputsOutputs(utxo2, amount2, toAddress2)
         let (inputs, outputs) = (inputs1 + inputs2, outputs1 + outputs2)
+        utxoProvider.utxosIdsMock = { api, ids, result in
+            precondition(ids.count == 4)
+            precondition(ids[0].txID == self.utxoForInput.transactionID)
+            precondition(ids[0].index == self.utxoForInput.utxoIndex)
+            precondition(ids[1].txID == self.utxoForInput.transactionID)
+            precondition(ids[1].index == self.utxoForInput.utxoIndex)
+            precondition(ids[2].txID == utxo1.transactionID)
+            precondition(ids[2].index == utxo1.utxoIndex)
+            precondition(ids[3].txID == utxo2.transactionID)
+            precondition(ids[3].index == utxo2.utxoIndex)
+            return result(.success(self.testUtxos))
+        }
         signatureProvider.signTransactionMock = { tx, cb in
             let extended = tx as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
@@ -1007,7 +1029,6 @@ final class XChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.sendMultiple(
             outputs: [
                 (assetID: assetID1, amount: amount1, to: toAddress1),
@@ -1025,7 +1046,7 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testSendNFT() throws {
         let success = expectation(description: "success")
         let groupID: UInt32 = 123
@@ -1033,7 +1054,6 @@ final class XChainTests: XCTestCase {
         let memo = "memo".data(using: .utf8)!
         let fromAddress = testFromAddress.address
         let assetID = newAssetID()
-        let signatureProvider = SignatureProviderMock()
         let fee = txFee
         let (inputs, outputs) = try inputsOutputs(
             fromAddresses: [fromAddress],
@@ -1098,7 +1118,6 @@ final class XChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.sendNFT(
             assetID: assetID,
             groupID: groupID,
@@ -1114,5 +1133,4 @@ final class XChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
 }

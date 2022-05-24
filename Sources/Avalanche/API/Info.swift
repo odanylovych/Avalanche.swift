@@ -181,12 +181,12 @@ public class AvalancheInfoApi: AvalancheApi {
         let txFee: UInt64
     }
     
+    struct GetTxFeeResponse: Decodable {
+        let creationTxFee: String
+        let txFee: String
+    }
+    
     public func getTxFee(cb: @escaping ApiCallback<TxFee>) {
-        struct GetTxFeeResponse: Decodable {
-            let creationTxFee: String
-            let txFee: String
-        }
-        
         service.call(
             method: "info.getTxFee",
             params: Nil.nil,

@@ -11,7 +11,13 @@ public protocol AvalancheApi {
     var networkID: NetworkID { get }
     var chainID: ChainID { get }
     
-    init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID)
+    static var id: String { get }
+    
+    init(avalanche: AvalancheCore, networkID: NetworkID, chainID: ChainID) throws
+}
+
+extension AvalancheApi {
+    public static var id: String { return String(describing: self) }
 }
 
 public protocol AvalancheVMApi: AvalancheApi {

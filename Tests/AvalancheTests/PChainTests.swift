@@ -24,11 +24,17 @@ final class PChainTests: XCTestCase {
     private var utxoForInput: UTXO!
     private var testUtxos: [UTXO]!
     private var testTransactionID: TransactionID!
+    private var blockchainID: BlockchainID!
+    private var xBlockchainID: BlockchainID!
+    private let utxoProvider = UtxoProviderMock()
+    private let signatureProvider = SignatureProviderMock()
     
     override func setUp() {
         super.setUp()
         let settings = AvalancheSettings(addressManagerProvider: addressManagerProvider, utxoProvider: utxoProvider)
-        let avalanche = AvalancheCoreMock(settings: settings, connectionProvider: connectionProvider)
+        let avalanche = AvalancheCoreMock(settings: settings,
+                                          signatureProvider: signatureProvider,
+                                          connectionProvider: connectionProvider)
         avalanche.getAPIMock = avalanche.defaultGetAPIMock(for: .test)
         self.avalanche = avalanche
         testAccount = try! Account(
@@ -38,6 +44,8 @@ final class PChainTests: XCTestCase {
         )
         idIndex = 0
         addressIndex = 0
+        blockchainID = newID(type: BlockchainID.self)
+        xBlockchainID = newID(type: BlockchainID.self)
         avaxAssetID = newID(type: AssetID.self)
         testFromAddress = newAddress()
         testChangeAddress = newAddress().address
@@ -57,21 +65,22 @@ final class PChainTests: XCTestCase {
         testUtxos = [
             utxoForInput
         ]
-    }
-    
-    private var api: AvalanchePChainApi {
-        avalanche.pChain
-    }
-    
-    private var utxoProvider: AvalancheUtxoProvider {
-        let utxoProvider = UtxoProviderMock()
         utxoProvider.utxosAddressesMock = { api, addresses in
             precondition(addresses == [self.testFromAddress.address])
             return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
                 result(.success((self.testUtxos, nil)))
             })
         }
-        return utxoProvider
+        utxoProvider.utxosIdsMock = { api, ids, result in
+            precondition(ids.count == 1)
+            precondition(ids[0].txID == self.utxoForInput.transactionID)
+            precondition(ids[0].index == self.utxoForInput.utxoIndex)
+            return result(.success(self.testUtxos))
+        }
+    }
+    
+    private var api: AvalanchePChainApi {
+        avalanche.pChain
     }
     
     private var addressManagerProvider: AddressManagerProvider {
@@ -112,13 +121,22 @@ final class PChainTests: XCTestCase {
                 return ClientMock(callMock: { method, params, response in
                     switch method {
                     case "info.getTxFee":
-                        response(.success(AvalancheInfoApi.TxFee(
-                            creationTxFee: self.creationTxFee,
-                            txFee: self.txFee
+                        response(.success(AvalancheInfoApi.GetTxFeeResponse(
+                            creationTxFee: String(self.creationTxFee),
+                            txFee: String(self.txFee)
                         )))
                     case "info.getBlockchainID":
+                        let params = (params as! AvalancheInfoApi.GetBlockchainIDParams)
+                        var blockchainID: BlockchainID
+                        switch params.alias {
+                        case "X": blockchainID = self.xBlockchainID
+                        case "P": blockchainID = self.blockchainID
+                        default:
+                            response(.failure(ApiTestsError.error(description: "unsupported alias: \(params.alias)")))
+                            return
+                        }
                         response(.success(AvalancheInfoApi.GetBlockchainIDResponse(
-                            blockchainID: self.newID(type: BlockchainID.self).cb58()
+                            blockchainID: blockchainID.cb58()
                         )))
                     default:
                         response(.failure(ApiTestsError.error(description: "no mock for api method \(method)")))
@@ -151,7 +169,7 @@ final class PChainTests: XCTestCase {
     private func newAddress() -> ExtendedAddress {
         newAddress(api: api)
     }
-    
+
     func testAddDelegator() throws {
         let success = expectation(description: "success")
         let nodeID = newID(type: NodeID.self)
@@ -236,7 +254,12 @@ final class PChainTests: XCTestCase {
                 )
             )
         ]
-        let signatureProvider = SignatureProviderMock()
+        utxoProvider.utxosIdsMock = { api, ids, result in
+            precondition(ids.count == 1)
+            precondition(ids[0].txID == utxo.transactionID)
+            precondition(ids[0].index == utxo.utxoIndex)
+            return result(.success(self.testUtxos))
+        }
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
@@ -271,7 +294,6 @@ final class PChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.addDelegator(
             nodeID: nodeID,
             startTime: startTime,
@@ -291,7 +313,7 @@ final class PChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testAddValidator() throws {
         let success = expectation(description: "success")
         let nodeID = newID(type: NodeID.self)
@@ -377,7 +399,12 @@ final class PChainTests: XCTestCase {
                 )
             )
         ]
-        let signatureProvider = SignatureProviderMock()
+        utxoProvider.utxosIdsMock = { api, ids, result in
+            precondition(ids.count == 1)
+            precondition(ids[0].txID == utxo.transactionID)
+            precondition(ids[0].index == utxo.utxoIndex)
+            return result(.success(self.testUtxos))
+        }
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
@@ -413,7 +440,6 @@ final class PChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.addValidator(
             nodeID: nodeID,
             startTime: startTime,
@@ -434,7 +460,7 @@ final class PChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func skipped_testAddSubnetValidator() throws {
         let success = expectation(description: "success")
         let nodeID = newID(type: NodeID.self)
@@ -516,7 +542,12 @@ final class PChainTests: XCTestCase {
                 )
             )
         ]
-        let signatureProvider = SignatureProviderMock()
+        utxoProvider.utxosIdsMock = { api, ids, result in
+            precondition(ids.count == 1)
+            precondition(ids[0].txID == utxo.transactionID)
+            precondition(ids[0].index == utxo.utxoIndex)
+            return result(.success(self.testUtxos))
+        }
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
@@ -547,7 +578,6 @@ final class PChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.addSubnetValidator(
             nodeID: nodeID,
             subnetID: subnetID,
@@ -566,7 +596,7 @@ final class PChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testCreateSubnet() throws {
         let success = expectation(description: "success")
         let fromAddress = testFromAddress.address
@@ -597,7 +627,6 @@ final class PChainTests: XCTestCase {
                 )
             )
         ]
-        let signatureProvider = SignatureProviderMock()
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
@@ -625,7 +654,6 @@ final class PChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.createSubnet(
             controlKeys: controlKeys,
             threshold: threshold,
@@ -641,7 +669,7 @@ final class PChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testExportAVAX() throws {
         let success = expectation(description: "success")
         let toChain = avalanche.xChain
@@ -684,18 +712,17 @@ final class PChainTests: XCTestCase {
                 )
             )
         ]
-        let signatureProvider = SignatureProviderMock()
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
-            let transaction = extended.transaction as! ExportTransaction
+            let transaction = extended.transaction as! PChainExportTransaction
             self.api.getBlockchainID { res in
                 let blockchainID = try! res.get()
                 self.api.blockchainIDs(toChain.chainID) { res in
                     let destinationChain = try! res.get()
-                    let testTransaction = try! ExportTransaction(
+                    let testTransaction = try! PChainExportTransaction(
                         networkID: self.api.networkID,
                         blockchainID: blockchainID,
                         outputs: outputs,
@@ -712,7 +739,6 @@ final class PChainTests: XCTestCase {
                 }
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.exportAVAX(
             to: toAddress,
             amount: amount,
@@ -728,13 +754,12 @@ final class PChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
+
     func testImportAVAX() throws {
         let success = expectation(description: "success")
         let fromAddress = testFromAddress.address
         let toAddress = newAddress().address
         let memo = "memo".data(using: .utf8)!
-        let testSourceChain = newID(type: BlockchainID.self)
         let output = utxoForInput.output as! SECP256K1TransferOutput
         let inputs = [TransferableInput]()
         let fee = txFee
@@ -764,31 +789,25 @@ final class PChainTests: XCTestCase {
         utxoProvider.utxosAddressesMock = { api, addresses in
             precondition(addresses == [self.testFromAddress.address])
             return UtxoProviderMock.IteratorMock(nextMock: { limit, sourceChain, result in
-                precondition(sourceChain == testSourceChain)
+                precondition(sourceChain == self.xBlockchainID)
                 result(.success((self.testUtxos, nil)))
             })
         }
-        let settings = avalanche.settings
-        avalanche.settings = AvalancheSettings(queue: settings.queue,
-                                               addressManagerProvider: settings.addressManagerProvider,
-                                               utxoProvider: utxoProvider,
-                                               encoderDecoderProvider: settings.encoderDecoderProvider)
-        let signatureProvider = SignatureProviderMock()
         signatureProvider.signTransactionMock = { transaction, cb in
             let extended = transaction as! ExtendedAvalancheTransaction
             XCTAssertEqual(extended.extended, [fromAddress: self.testFromAddress])
             XCTAssert(extended.credential.first!.0 == SECP256K1Credential.self)
             XCTAssertEqual(extended.credential.first!.1, [fromAddress])
-            let transaction = extended.transaction as! ImportTransaction
+            let transaction = extended.transaction as! PChainImportTransaction
             self.api.getBlockchainID { res in
                 let blockchainID = try! res.get()
-                let testTransaction = try! ImportTransaction(
+                let testTransaction = try! PChainImportTransaction(
                     networkID: self.api.networkID,
                     blockchainID: blockchainID,
                     outputs: outputs,
                     inputs: inputs,
                     memo: memo,
-                    sourceChain: testSourceChain,
+                    sourceChain: self.xBlockchainID,
                     transferableInputs: importInputs
                 )
                 XCTAssertEqual(transaction, testTransaction)
@@ -798,7 +817,6 @@ final class PChainTests: XCTestCase {
                 )))
             }
         }
-        avalanche.signatureProvider = signatureProvider
         api.importAVAX(
             from: [fromAddress],
             to: toAddress,
@@ -814,5 +832,4 @@ final class PChainTests: XCTestCase {
         }
         wait(for: [success], timeout: 10)
     }
-    
 }
