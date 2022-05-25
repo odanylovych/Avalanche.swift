@@ -6,9 +6,7 @@
 //
 
 import Foundation
-#if !COCOAPODS
 import Bech32
-#endif
 
 public enum Bech32Error: Error {
     case chainIdEmpty(address: String)
@@ -23,8 +21,8 @@ public struct BechAlgos {
     private let segWit: SegwitAddrCoder
     
     internal init() {
-        self.bech32 = Bech32()
-        self.segWit = SegwitAddrCoder()
+        self.bech32 = Bech32.standard
+        self.segWit = SegwitAddrCoder.standard
     }
     
     public func parse(address: String) -> Result<(Data, String, String), Bech32Error> { //data, hrp, chainid
@@ -53,7 +51,7 @@ public struct BechAlgos {
     public func address(from data: Data, hrp: String, chainId: String) -> Result<String, Bech32Error> {
         Result {
             let bytes = try segWit.convertBits(from: 8, to: 5, pad: true, idata: data)
-            let b32 = bech32.encode(hrp, values: bytes)
+            let b32 = bech32.encode(hrp, data: bytes)
             return "\(chainId)-\(b32)"
         }.mapError { e in
             .segwitEncode(data: data, hrp: hrp, chainId: chainId, cause: e)

@@ -1,4 +1,4 @@
-// swift-tools-version:5.1
+// swift-tools-version:5.4
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -15,9 +15,6 @@ let package = Package(
             name: "AvalancheKeychain",
             targets: ["AvalancheKeychain"]),
         .library(
-            name: "Bech32",
-            targets: ["Bech32"]),
-        .library(
             name: "RPC",
             targets: ["RPC"]),
     ],
@@ -26,6 +23,7 @@ let package = Package(
         // .package(url: /* package url */, from: "1.0.0"),
         .package(url: "https://github.com/tesseract-one/WebSocket.swift.git", from: "0.1.0"),
         .package(url: "https://github.com/tesseract-one/UncommonCrypto.swift.git", from: "0.1.0"),
+        .package(url: "https://github.com/tesseract-one/Bech32.swift.git", from: "1.1.0"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.0"),
         .package(url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0"),
         .package(url: "https://github.com/odanylovych/web3swift.git", .branch("signature-provider"))
@@ -36,18 +34,17 @@ let package = Package(
         .target(
             name: "Avalanche",
             dependencies: [
-                "RPC", "Serializable", "BigInt", "web3swift",
-                "UncommonCrypto", "Bech32"]),
+                "RPC",  "BigInt", "web3swift",
+                .product(name: "Bech32", package: "Bech32.swift"),
+                .product(name: "Serializable", package: "Serializable.swift"),
+                .product(name: "UncommonCrypto", package: "UncommonCrypto.swift")]),
         .target(
             name: "AvalancheKeychain",
             dependencies: ["Avalanche"],
             path: "Sources/Keychain"),
         .target(
-            name: "Bech32",
-            dependencies: []),
-        .target(
             name: "RPC",
-            dependencies: ["WebSocket"]),
+            dependencies: [.product(name: "WebSocket", package: "WebSocket.swift")]),
         .testTarget(
             name: "AvalancheTests",
             dependencies: ["Avalanche", "RPC"]),
@@ -55,11 +52,8 @@ let package = Package(
             name: "KeychainTests",
             dependencies: ["AvalancheKeychain"]),
         .testTarget(
-            name: "Bech32Tests",
-            dependencies: ["Bech32"]),
-        .testTarget(
             name: "RPCTests",
-            dependencies: ["RPC", "Serializable"]),
+            dependencies: ["RPC", .product(name: "Serializable", package: "Serializable.swift")]),
         .testTarget(
             name: "IntegrationTests",
             dependencies: ["AvalancheKeychain"]),

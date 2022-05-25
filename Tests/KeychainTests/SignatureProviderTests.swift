@@ -8,7 +8,9 @@
 import Foundation
 import XCTest
 import Avalanche
-import AvalancheKeychain
+#if !COCOAPODS
+@testable import AvalancheKeychain
+#endif
 
 final class SignatureProviderTests: XCTestCase {
     private var signer: AvalancheBip44Keychain!

@@ -8,7 +8,9 @@
 import Foundation
 import XCTest
 import Avalanche
-import AvalancheKeychain
+#if !COCOAPODS
+@testable import AvalancheKeychain
+#endif
 
 final class XChainTests: XCTestCase {
     private typealias AsyncWaitCondition = (@escaping (Bool) -> ()) -> ()

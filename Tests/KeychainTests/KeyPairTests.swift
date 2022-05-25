@@ -7,11 +7,8 @@
 
 import XCTest
 @testable import Avalanche
-
 #if !COCOAPODS
 @testable import AvalancheKeychain
-#else
-@testable import Avalanche
 #endif
 
 final class KeyPairTests: XCTestCase {

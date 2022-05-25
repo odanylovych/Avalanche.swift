@@ -19,7 +19,7 @@ The library allows one to issue commands to the Avalanche node APIs.
   s.tvos.deployment_target = '10.0'
   s.watchos.deployment_target = '6.0'
   
-  s.swift_versions = ['5', '5.1', '5.2', '5.3']
+  s.swift_versions = ['5.4', '5.5', '5.6']
 
   s.module_name = 'Avalanche'
   
@@ -27,11 +27,11 @@ The library allows one to issue commands to the Avalanche node APIs.
     ss.source_files = 'Sources/Avalanche/**/*.swift'
 
     ss.dependency 'Avalanche/RPC'
-    ss.dependency 'Avalanche/Bech32'
     ss.dependency 'UncommonCrypto' '~> 0.1.0'
-    ss.dependency 'СSecp256k1', '~> 0.1.0'
-    ss.dependency 'BigInt', '~> 5.2'
+    ss.dependency 'Bech32.swift', '~> 1.1.0'
     ss.dependency 'Serializable.swift', '~> 0.2'
+    ss.dependency 'BigInt', '~> 5.3'
+    ss.dependency 'web3swift', '~> 2.6.3'
     
     ss.test_spec 'AvalancheTests' do |test_spec|
       test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
@@ -47,15 +47,6 @@ The library allows one to issue commands to the Avalanche node APIs.
     ss.test_spec 'KeychainTests' do |test_spec|
       test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
       test_spec.source_files = 'Tests/KeychainTests/**/*.swift'
-    end
-  end
-
-  s.subspec 'Bech32' do |ss|
-    ss.source_files = 'Sources/Bech32/**/*.swift'
-    
-    ss.test_spec 'Bech32Tests' do |test_spec|
-      test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
-      test_spec.source_files = 'Tests/Bech32Tests/**/*.swift'
     end
   end
   
