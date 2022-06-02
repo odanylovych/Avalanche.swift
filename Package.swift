@@ -7,53 +7,38 @@ let package = Package(
     name: "Avalanche",
     platforms: [.macOS(.v10_12), .iOS(.v11)],
     products: [
-        // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
             name: "Avalanche",
             targets: ["Avalanche"]),
         .library(
             name: "AvalancheKeychain",
-            targets: ["AvalancheKeychain"]),
-        .library(
-            name: "RPC",
-            targets: ["RPC"]),
+            targets: ["AvalancheKeychain"])
     ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
-        .package(url: "https://github.com/tesseract-one/WebSocket.swift.git", from: "0.1.0"),
-        .package(url: "https://github.com/tesseract-one/UncommonCrypto.swift.git", from: "0.1.0"),
-        .package(url: "https://github.com/tesseract-one/Bech32.swift.git", from: "1.1.0"),
+        .package(name: "JsonRPC", url: "https://github.com/tesseract-one/JsonRPC.swift.git", .branch("main")),
+        .package(name: "UncommonCrypto", url: "https://github.com/tesseract-one/UncommonCrypto.swift.git", from: "0.1.0"),
+        .package(name: "Bech32", url: "https://github.com/tesseract-one/Bech32.swift.git", from: "1.1.0"),
         .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.0"),
-        .package(url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0"),
+        .package(name: "Serializable", url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0"),
         .package(url: "https://github.com/odanylovych/web3swift.git", .branch("signature-provider"))
     ],
     targets: [
-        // Targets are the basic building blocks of a package. A target can define a module or a test suite.
-        // Targets can depend on other targets in this package, and on products in packages which this package depends on.
         .target(
             name: "Avalanche",
             dependencies: [
-                "RPC",  "BigInt", "web3swift",
-                .product(name: "Bech32", package: "Bech32.swift"),
-                .product(name: "Serializable", package: "Serializable.swift"),
-                .product(name: "UncommonCrypto", package: "UncommonCrypto.swift")]),
+                "JsonRPC",  "BigInt", "web3swift",
+                "Bech32", "Serializable", "UncommonCrypto"
+            ]),
         .target(
             name: "AvalancheKeychain",
             dependencies: ["Avalanche"],
             path: "Sources/Keychain"),
-        .target(
-            name: "RPC",
-            dependencies: [.product(name: "WebSocket", package: "WebSocket.swift")]),
         .testTarget(
             name: "AvalancheTests",
-            dependencies: ["Avalanche", "RPC"]),
+            dependencies: ["Avalanche"]),
         .testTarget(
             name: "KeychainTests",
             dependencies: ["AvalancheKeychain"]),
-        .testTarget(
-            name: "RPCTests",
-            dependencies: ["RPC", .product(name: "Serializable", package: "Serializable.swift")]),
         .testTarget(
             name: "IntegrationTests",
             dependencies: ["AvalancheKeychain"]),

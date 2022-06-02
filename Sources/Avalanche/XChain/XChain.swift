@@ -6,11 +6,9 @@
 //
 
 import Foundation
-#if !COCOAPODS
 import BigInt
-import RPC
+import JsonRPC
 import Serializable
-#endif
 
 public class AvalancheXChainApi: AvalancheTransactionApi {
     public typealias Keychain = AvalancheXChainApiAddressManager

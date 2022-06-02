@@ -6,10 +6,8 @@
 //
 
 import Foundation
-#if !COCOAPODS
-import RPC
+import JsonRPC
 import web3swift
-#endif
 
 public typealias Subscribable = Client & Delegator
 

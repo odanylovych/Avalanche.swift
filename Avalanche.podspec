@@ -19,14 +19,14 @@ The library allows one to issue commands to the Avalanche node APIs.
   s.tvos.deployment_target = '10.0'
   s.watchos.deployment_target = '6.0'
   
-  s.swift_versions = ['5.4', '5.5', '5.6']
+  s.swift_version = '5.4'
 
   s.module_name = 'Avalanche'
   
   s.subspec 'Avalanche' do |ss|
     ss.source_files = 'Sources/Avalanche/**/*.swift'
 
-    ss.dependency 'Avalanche/RPC'
+    ss.dependency 'JsonRPC.swift', '~> 0.0.1'
     ss.dependency 'UncommonCrypto' '~> 0.1.0'
     ss.dependency 'Bech32.swift', '~> 1.1.0'
     ss.dependency 'Serializable.swift', '~> 0.2'
@@ -47,18 +47,6 @@ The library allows one to issue commands to the Avalanche node APIs.
     ss.test_spec 'KeychainTests' do |test_spec|
       test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
       test_spec.source_files = 'Tests/KeychainTests/**/*.swift'
-    end
-  end
-  
-  s.subspec 'RPC' do |ss|
-    ss.source_files = 'Sources/RPC/**/*.swift'
-
-    ss.dependency 'TesseractWebSocket', '~> 0.1.0'
-    
-    ss.test_spec 'RPCTests' do |test_spec|
-      test_spec.platforms = {:ios => '10.0', :osx => '10.12', :tvos => '10.0'}
-      test_spec.dependency 'Serializable.swift', '~> 0.2'
-      test_spec.source_files = 'Tests/RPCTests/**/*.swift'
     end
   end
   

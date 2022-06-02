@@ -6,11 +6,9 @@
 //
 
 import Foundation
-#if !COCOAPODS
 import Avalanche
-import RPC
+import JsonRPC
 import web3swift
-#endif
 
 enum ApiTestsError: Error {
     case error(from: String)

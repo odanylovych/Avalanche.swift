@@ -6,12 +6,10 @@
 //
 
 import Foundation
-#if !COCOAPODS
 import BigInt
 import web3swift
-import RPC
+import JsonRPC
 import Serializable
-#endif
 
 public enum CChainApiCredentials {
     case password(username: String, password: String)

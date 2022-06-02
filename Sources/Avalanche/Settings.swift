@@ -6,12 +6,7 @@
 //
 
 import Foundation
-#if !COCOAPODS
-import RPC
-#endif
-#if os(Linux)
-import FoundationNetworking
-#endif
+import JsonRPC
 
 public struct AvalancheSettings {
     public let queue: DispatchQueue

@@ -7,9 +7,7 @@
 
 import Foundation
 import Serializable
-#if !COCOAPODS
-import RPC
-#endif
+import JsonRPC
 
 public class AvalancheMetricsApi: AvalancheApi {
     public let networkID: NetworkID

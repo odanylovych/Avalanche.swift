@@ -8,7 +8,7 @@
 import Foundation
 import XCTest
 @testable import Avalanche
-import RPC
+import JsonRPC
 
 final class PChainTests: XCTestCase {
     private let creationTxFee: UInt64 = 10_000_000

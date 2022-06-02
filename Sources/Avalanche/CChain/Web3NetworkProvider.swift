@@ -6,12 +6,10 @@
 //
 
 import Foundation
-#if !COCOAPODS
 import web3swift
 import PromiseKit
-import RPC
+import JsonRPC
 import Serializable
-#endif
 
 public class Web3NetworkProvider: Web3Provider {
     public var network: Networks?

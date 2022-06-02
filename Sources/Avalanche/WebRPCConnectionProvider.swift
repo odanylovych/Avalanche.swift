@@ -6,10 +6,8 @@
 //
 
 import Foundation
-#if !COCOAPODS
-import RPC
+import JsonRPC
 import web3swift
-#endif
 
 extension ApiConnectionType {
     public var path: String {
