@@ -26,7 +26,7 @@ The library allows one to issue commands to the Avalanche node APIs.
   s.subspec 'Avalanche' do |ss|
     ss.source_files = 'Sources/Avalanche/**/*.swift'
 
-    ss.dependency 'JsonRPC.swift', '~> 0.0.1'
+    ss.dependency 'JsonRPC.swift', '~> 0.1.0'
     ss.dependency 'UncommonCrypto' '~> 0.1.0'
     ss.dependency 'Bech32.swift', '~> 1.1.0'
     ss.dependency 'Serializable.swift', '~> 0.2'
