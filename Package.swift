@@ -18,9 +18,9 @@ let package = Package(
         .package(name: "JsonRPC", url: "https://github.com/tesseract-one/JsonRPC.swift.git", from: "0.1.0"),
         .package(name: "UncommonCrypto", url: "https://github.com/tesseract-one/UncommonCrypto.swift.git", from: "0.1.0"),
         .package(name: "Bech32", url: "https://github.com/tesseract-one/Bech32.swift.git", from: "1.1.0"),
-        .package(url: "https://github.com/attaswift/BigInt.git", from: "5.2.0"),
+        .package(name: "BigInt", url: "https://github.com/attaswift/BigInt.git", from: "5.2.0"),
         .package(name: "Serializable", url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0"),
-        .package(url: "https://github.com/odanylovych/web3swift.git", .branch("signature-provider"))
+        .package(name: "web3swift", url: "https://github.com/odanylovych/web3swift.git", .branch("signature-provider"))
     ],
     targets: [
         .target(
