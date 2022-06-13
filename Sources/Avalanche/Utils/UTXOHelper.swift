@@ -209,7 +209,7 @@ public struct UTXOHelper {
         var outputs = [TransferableOutput]()
         var change = [TransferableOutput]()
         var outputMap = [AssetID: (lockedStakeable: [StakeableLockedOutput], unlocked: [Output])]()
-        let getAmount = { output in
+        let getAmount = { (output: Output) in
             type(of: output) == SECP256K1TransferOutput.self
             ? (output as! SECP256K1TransferOutput).amount
             : ((output as! StakeableLockedOutput).transferableOutput.output as! SECP256K1TransferOutput).amount
