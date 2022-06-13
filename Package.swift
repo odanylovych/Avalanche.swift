@@ -20,14 +20,15 @@ let package = Package(
         .package(name: "Bech32", url: "https://github.com/tesseract-one/Bech32.swift.git", from: "1.1.0"),
         .package(name: "BigInt", url: "https://github.com/attaswift/BigInt.git", from: "5.2.0"),
         .package(name: "Serializable", url: "https://github.com/tesseract-one/Serializable.swift.git", from: "0.2.0"),
-        .package(name: "web3swift", url: "https://github.com/odanylovych/web3swift.git", .branch("signature-provider"))
+        .package(name: "Web3swift", url: "https://github.com/odanylovych/web3swift.git", .branch("signature-provider"))
     ],
     targets: [
         .target(
             name: "Avalanche",
             dependencies: [
-                "JsonRPC",  "BigInt", "web3swift",
-                "Bech32", "Serializable", "UncommonCrypto"
+                "JsonRPC",  "BigInt",
+                "Bech32", "Serializable", "UncommonCrypto",
+                .product(name: "web3swift", package: "Web3swift")
             ]),
         .target(
             name: "AvalancheKeychain",
