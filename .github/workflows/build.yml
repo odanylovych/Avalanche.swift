@@ -2,18 +2,26 @@ name: Build & Tests
 on: [push, pull_request]
 jobs:
   macos:
-    runs-on: macOS-latest
+    runs-on: macOS-12
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_12.5.app
+        run: sudo xcode-select -s /Applications/Xcode_13.1.app
       - name: Build and Test SPM
         run: swift test
+        env:
+          AVALANCHE_TEST_SEED: ${{ secrets.AVALANCHE_TEST_SEED }}
+          AVALANCHE_TEST_PUBLIC_KEY: ${{ secrets.AVALANCHE_TEST_PUBLIC_KEY }}
+          AVALANCHE_TEST_CHAIN_CODE: ${{ secrets.AVALANCHE_TEST_CHAIN_CODE }}
       - name: Update Cocoa Pods repo
         run: pod repo update
       - name: Build and Test CocoaPods
         run: pod lib lint --allow-warnings --fail-fast
+        env:
+          AVALANCHE_TEST_SEED: ${{ secrets.AVALANCHE_TEST_SEED }}
+          AVALANCHE_TEST_PUBLIC_KEY: ${{ secrets.AVALANCHE_TEST_PUBLIC_KEY }}
+          AVALANCHE_TEST_CHAIN_CODE: ${{ secrets.AVALANCHE_TEST_CHAIN_CODE }}
 #  linux:
 #    runs-on: ubuntu-latest
 #    container:
@@ -24,3 +32,7 @@ jobs:
 #        uses: actions/checkout@v2
 #      - name: Build and Test
 #        run: swift test
+#        env:
+#          AVALANCHE_TEST_SEED: ${{ secrets.AVALANCHE_TEST_SEED }}
+#          AVALANCHE_TEST_PUBLIC_KEY: ${{ secrets.AVALANCHE_TEST_PUBLIC_KEY }}
+#          AVALANCHE_TEST_CHAIN_CODE: ${{ secrets.AVALANCHE_TEST_CHAIN_CODE }}

@@ -4,14 +4,17 @@ on:
     types: [created]
 jobs:
   publish:
-    runs-on: macOS-latest
+    runs-on: macOS-12
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Select Xcode
-        run: sudo xcode-select -s /Applications/Xcode_12.5.app
+        run: sudo xcode-select -s /Applications/Xcode_13.1.app
       - name: Publish Pod
         run: pod trunk push --allow-warnings
         env:
           COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+          AVALANCHE_TEST_SEED: ${{ secrets.AVALANCHE_TEST_SEED }}
+          AVALANCHE_TEST_PUBLIC_KEY: ${{ secrets.AVALANCHE_TEST_PUBLIC_KEY }}
+          AVALANCHE_TEST_CHAIN_CODE: ${{ secrets.AVALANCHE_TEST_CHAIN_CODE }}
         

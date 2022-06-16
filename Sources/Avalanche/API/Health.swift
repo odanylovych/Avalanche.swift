@@ -37,7 +37,7 @@ public class AvalancheHealthApi: AvalancheApi {
     public func getLiveness(cb: @escaping ApiCallback<AvalancheLivenessResponse>) {
         service.call(
             method: "health.getLiveness",
-            params: Nil.nil,
+            params: Params(),
             AvalancheLivenessResponse.self,
             SerializableValue.self
         ) {

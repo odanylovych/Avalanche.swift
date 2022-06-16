@@ -52,7 +52,7 @@ public class AvalancheInfoApi: AvalancheApi {
         }
         service.call(
             method: "info.getNetworkID",
-            params: Nil.nil,
+            params: Params(),
             GetNetworkIDResponse.self,
             SerializableValue.self
         ) { response in
@@ -77,7 +77,7 @@ public class AvalancheInfoApi: AvalancheApi {
         }
         service.call(
             method: "info.getNetworkName",
-            params: Nil.nil,
+            params: Params(),
             GetNetworkNameResponse.self,
             SerializableValue.self
         ) { response in
@@ -91,7 +91,7 @@ public class AvalancheInfoApi: AvalancheApi {
         }
         service.call(
             method: "info.getNodeID",
-            params: Nil.nil,
+            params: Params(),
             GetNodeIDResponse.self,
             SerializableValue.self
         ) { response in
@@ -108,7 +108,7 @@ public class AvalancheInfoApi: AvalancheApi {
         }
         service.call(
             method: "info.getNodeIP",
-            params: Nil.nil,
+            params: Params(),
             GetNodeIPResponse.self,
             SerializableValue.self
         ) { response in
@@ -122,7 +122,7 @@ public class AvalancheInfoApi: AvalancheApi {
         }
         service.call(
             method: "info.getNodeVersion",
-            params: Nil.nil,
+            params: Params(),
             GetNodeVersionResponse.self,
             SerializableValue.self
         ) { response in
@@ -166,7 +166,7 @@ public class AvalancheInfoApi: AvalancheApi {
         }
         service.call(
             method: "info.peers",
-            params: Nil.nil,
+            params: Params(),
             PeersResponse.self,
             SerializableValue.self
         ) { response in
@@ -187,7 +187,7 @@ public class AvalancheInfoApi: AvalancheApi {
     public func getTxFee(cb: @escaping ApiCallback<TxFee>) {
         service.call(
             method: "info.getTxFee",
-            params: Nil.nil,
+            params: Params(),
             GetTxFeeResponse.self,
             SerializableValue.self
         ) { response in

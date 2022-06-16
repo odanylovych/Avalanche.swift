@@ -110,7 +110,7 @@ public class AvalancheKeystoreApi: AvalancheApi {
         }
         service.call(
             method: "keystore.listUsers",
-            params: Nil.nil,
+            params: Params(),
             Response.self,
             SerializableValue.self
         ) { response in

@@ -61,7 +61,7 @@ public class AvalancheAdminApi: AvalancheApi {
     public func lockProfile(cb: @escaping ApiCallback<Void>) {
         service.call(
             method: "admin.lockProfile",
-            params: Nil.nil,
+            params: Params(),
             SuccessResponse.self,
             SerializableValue.self
         ) { response in
@@ -72,7 +72,7 @@ public class AvalancheAdminApi: AvalancheApi {
     public func memoryProfile(cb: @escaping ApiCallback<Void>) {
         service.call(
             method: "admin.memoryProfile",
-            params: Nil.nil,
+            params: Params(),
             SuccessResponse.self,
             SerializableValue.self
         ) { response in
@@ -85,7 +85,7 @@ public class AvalancheAdminApi: AvalancheApi {
     public func startCPUProfiler(cb: @escaping ApiCallback<Void>) {
         service.call(
             method: "admin.startCPUProfiler",
-            params: Nil.nil,
+            params: Params(),
             SuccessResponse.self,
             SerializableValue.self
         ) { response in
@@ -97,7 +97,7 @@ public class AvalancheAdminApi: AvalancheApi {
     public func stopCPUProfiler(cb: @escaping ApiCallback<Void>) {
         service.call(
             method: "admin.stopCPUProfiler",
-            params: Nil.nil,
+            params: Params(),
             SuccessResponse.self,
             SerializableValue.self
         ) { response in

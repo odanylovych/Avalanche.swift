@@ -187,7 +187,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     public func ethChainID(_ cb: @escaping ApiCallback<BigUInt>) {
         vmService.call(
             method: "eth_chainId",
-            params: Nil.nil,
+            params: Params(),
             String.self,
             SerializableValue.self
         ) { res in

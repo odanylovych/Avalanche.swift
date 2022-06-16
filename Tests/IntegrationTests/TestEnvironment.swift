@@ -17,9 +17,9 @@ struct TestEnvironment {
     
     static var instance: Self {
         let env = ProcessInfo.processInfo.environment
-        let seed = env["CARDANO_TEST_SEED"]!
-        let publicKey = env["CARDANO_TEST_PUBLIC_KEY"]!
-        let chainCode = env["CARDANO_TEST_CHAIN_CODE"]!
+        let seed = env["AVALANCHE_TEST_SEED"]!
+        let publicKey = env["AVALANCHE_TEST_PUBLIC_KEY"]!
+        let chainCode = env["AVALANCHE_TEST_CHAIN_CODE"]!
         return Self(
             seed: Data(hex: seed),
             publicKey: Data(hex: publicKey),
