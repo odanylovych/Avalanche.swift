@@ -12,9 +12,7 @@ final class KeystoreTests: AvalancheTestCase {
     let username = String("testuser") + String(UInt64.random(in: 0..<UInt64.max))
     let password = "p@@@$$$123#$%" //Mmm... Secure!
         
-    override func setUp() {
-        super.setUp()
-        
+    private func createUser() {
         let expectation = self.expectation(description: "setup")
         
         ava.keystore.createUser(username: username, password: password) { result in
@@ -25,7 +23,7 @@ final class KeystoreTests: AvalancheTestCase {
         self.waitForExpectations(timeout: 10, handler: nil)
     }
     
-    override func tearDown() {
+    private func deleteUser() {
         let expectation = self.expectation(description: "setup")
         
         ava.keystore.deleteUser(username: username, password: password) { result in
@@ -34,11 +32,11 @@ final class KeystoreTests: AvalancheTestCase {
         }
         
         self.waitForExpectations(timeout: 10, handler: nil)
-        
-        super.tearDown()
     }
     
     func testListUsers() {
+        createUser()
+        
         let expectation = self.expectation(description: "keystore.listUsers")
         
         let ava = self.ava!
@@ -53,9 +51,13 @@ final class KeystoreTests: AvalancheTestCase {
         }
 
         waitForExpectations(timeout: 10, handler: nil)
+        
+        deleteUser()
     }
     
     func testExImDeleteUser() {
+        createUser()
+        
         let expectationExportDefEnc = self.expectation(description: "keystore.exportUserDefEnc")
         
         let ava = self.ava!
@@ -92,5 +94,7 @@ final class KeystoreTests: AvalancheTestCase {
         }
 
         waitForExpectations(timeout: 10, handler: nil)
+        
+        deleteUser()
     }
 }

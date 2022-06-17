@@ -33,7 +33,6 @@ class AvalancheTestCase: XCTestCase {
          test(IPCTests.self, enabled: privateNodeApisEnabled),
          test(KeystoreTests.self, enabled: privateNodeApisEnabled),
          test(MetricsTests.self, enabled: privateNodeApisEnabled),
-         test(TransactionsTests.self, enabled: true),
         ]
     }
     
