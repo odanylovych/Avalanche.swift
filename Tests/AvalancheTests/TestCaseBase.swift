@@ -9,6 +9,9 @@ import XCTest
 import Avalanche
 
 class AvalancheTestCase: XCTestCase {
+    private static let env = ProcessInfo.processInfo.environment
+    private static let privateNodeApisEnabled = Bool(env["AVALANCHE_PRIVATE_NODE_APIS_ENABLED"] ?? "false")!
+    
     private static func test(_ test: AvalancheTestCase.Type, enabled: Bool) -> (AvalancheTestCase.Type, Bool) {
         (test, enabled)
     }
@@ -23,13 +26,13 @@ class AvalancheTestCase: XCTestCase {
     
     static let registry = _registry {
         [
-         test(AdminTests.self, enabled: true),
-         test(AuthTests.self, enabled: false), //reenable with the node that supports the API
-         test(HealthTests.self, enabled: true),
-         test(InfoTests.self, enabled: true),
-         test(IPCTests.self, enabled: false), //reenable with the node that supports the API
-         test(KeystoreTests.self, enabled: true),
-         test(MetricsTests.self, enabled: false), //reenable with the node that supports the API
+         test(AdminTests.self, enabled: privateNodeApisEnabled),
+         test(AuthTests.self, enabled: privateNodeApisEnabled),
+         test(HealthTests.self, enabled: privateNodeApisEnabled),
+         test(InfoTests.self, enabled: privateNodeApisEnabled),
+         test(IPCTests.self, enabled: privateNodeApisEnabled),
+         test(KeystoreTests.self, enabled: privateNodeApisEnabled),
+         test(MetricsTests.self, enabled: privateNodeApisEnabled),
          test(TransactionsTests.self, enabled: true),
         ]
     }
