@@ -10,7 +10,7 @@ import XCTest
 @testable import Avalanche
 import web3swift
 
-final class TransactionsTests: AvalancheTestCase {
+final class TransactionsTests: XCTestCase {
     private static let hrp = "avax"
     private static let chainId = "X"
     
