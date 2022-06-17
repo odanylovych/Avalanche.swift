@@ -221,7 +221,7 @@ final class TransactionsTests: XCTestCase {
         context: AvalancheDecoderContext = xChainDecoderContext
     ) throws {
         let encoded = Array(try DefaultAvalancheEncoder().encode(value).output)
-        XCTAssertEqual(encoded, bytes)
+        XCTAssertEqual(encoded, value is UnsignedAvalancheTransaction ? [0x00, 0x00] + bytes : bytes)
         let decoded = try DefaultAvalancheDecoder(context: context, data: Data(bytes)).decode(T.self)
         XCTAssertEqual(decoded, value)
     }
