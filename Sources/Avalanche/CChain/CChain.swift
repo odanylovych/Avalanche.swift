@@ -26,7 +26,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     public let utxoProvider: AvalancheUtxoProvider
     public let signer: AvalancheSignatureProvider?
     public let encoderDecoderProvider: AvalancheEncoderDecoderProvider
-    private let addressManager: AvalancheCChainAddressManager?
+    private let addressManager: AvalancheAddressManager?
     private let service: Client
     private let vmService: Client
     
@@ -68,8 +68,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         utxoProvider = avalanche.settings.utxoProvider
         signer = avalanche.signatureProvider
         encoderDecoderProvider = avalanche.settings.encoderDecoderProvider
-        let addressManager = avalanche.settings.addressManagerProvider.manager(ava: avalanche)
-        self.addressManager = addressManager.map(AvalancheCChainAddressManager.init)
+        addressManager = avalanche.settings.addressManagerProvider.manager(ava: avalanche)
         service = avalanche.connectionProvider.rpc(api: .cChain(chainID: chainID))
         if let subscribable = avalanche.connectionProvider.subscribableRPC(api: .cChainVM(chainID: chainID)) {
             vmService = subscribable
@@ -112,7 +111,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
                         web3Provider = Web3NetworkProvider(network: network, url: url, service: this.vmService)
                     }
                     var web3Signer: SignatureProvider? = nil
-                    if let signer = this.signer, let manager = addressManager {
+                    if let signer = this.signer, let manager = this.addressManager {
                         web3Signer = Web3SignatureProvider(chainID: chainID, signer: signer, manager: manager)
                     }
                     return web3swift.web3(provider: web3Provider, signer: web3Signer)

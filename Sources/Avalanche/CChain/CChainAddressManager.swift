@@ -6,47 +6,32 @@
 //
 
 import Foundation
+import web3swift
 
-public class AvalancheCChainAddressManager {
+public struct AvalancheCChainApiAddressManager: AvalancheApiAddressManager {
     public typealias Acct = EthAccount
     
-    private let queue: DispatchQueue
     public let manager: AvalancheAddressManager
-    private var extended: [Acct.Addr: Acct.Addr.Extended]
+    public let api: AvalancheCChainApi
     
-    public init(manager: AvalancheAddressManager) {
+    public init(manager: AvalancheAddressManager, api: AvalancheCChainApi) {
         self.manager = manager
-        self.extended = [:]
-        self.queue = DispatchQueue(
-            label: "cchain.address.manager.internal.sync.queue",
-            target: .global()
-        )
+        self.api = api
     }
     
-    public func get(api: AvalancheCChainApi, for account: Acct) throws -> Acct.Addr {
+    public func fetchedAccounts() -> [Acct] {
+        manager.fetchedAccounts().ethereum
+    }
+    
+    public func get(for account: Acct) throws -> Acct.Addr {
         try account.avalancheAddress(hrp: api.networkID.hrp, chainId: api.chainID.value)
     }
     
-    public func accounts(api: AvalancheCChainApi,
-                         result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void) {
+    public func accounts(result: @escaping (AvalancheSignatureProviderResult<[EthAccount]>) -> Void) {
         manager.accounts(type: .ethereumOnly) { res in
             switch res {
             case .success(let accounts):
-                let accounts = accounts.ethereum
-                let extended: [Acct.Addr: Acct.Addr.Extended]
-                do {
-                    extended = try Dictionary(uniqueKeysWithValues: accounts.map {
-                        let address = try self.get(api: api, for: $0)
-                        return (address, try address.extended(path: $0.path))
-                    })
-                } catch {
-                    result(.failure(.addressCreationFailed(error: error)))
-                    return
-                }
-                self.queue.sync {
-                    self.extended = extended
-                }
-                result(.success(accounts))
+                result(.success(accounts.ethereum))
             case .failure(let error):
                 result(.failure(error))
             }
@@ -54,37 +39,9 @@ public class AvalancheCChainAddressManager {
     }
     
     public func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended] {
-        try addresses.map { address in
-            try queue.sync {
-                guard let extended = extended[address] else {
-                    throw AvalancheAddressManagerError.addressNotFound(address: address.bech)
-                }
-                return extended
-            }
+        let mapped = addresses.map { EthereumAddress($0.rawAddress, type: .normal)! }
+        return try zip(addresses, manager.extended(eth: mapped)).map {
+            try ExtendedAddress(address: $0.0, path: $0.1.path)
         }
-    }
-}
-
-public struct AvalancheCChainApiAddressManager: AvalancheApiAddressManager {
-    public typealias Acct = EthAccount
-    
-    public let manager: AvalancheCChainAddressManager
-    public let api: AvalancheCChainApi
-    
-    public init(manager: AvalancheCChainAddressManager, api: AvalancheCChainApi) {
-        self.manager = manager
-        self.api = api
-    }
-    
-    public func get(for account: Acct) throws -> Acct.Addr {
-        try manager.get(api: api, for: account)
-    }
-    
-    public func accounts(result: @escaping (AvalancheSignatureProviderResult<[EthAccount]>) -> Void) {
-        manager.accounts(api: api, result: result)
-    }
-    
-    public func extended(for addresses: [Address]) throws -> [ExtendedAddress] {
-        try manager.extended(for: addresses)
     }
 }

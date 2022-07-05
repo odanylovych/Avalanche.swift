@@ -6,9 +6,7 @@
 //
 
 import Foundation
-#if !COCOAPODS
 import web3swift
-#endif
 
 public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, Hashable {
     public typealias Addr = Address

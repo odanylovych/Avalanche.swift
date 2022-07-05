@@ -80,7 +80,7 @@ ava.info.getNetworkID { result in
 
 Avalanche.swift comes with its own In-App Bip44 Keychain. This KeyChain is used in the functions of the API, enabling them to sign using keys it's registered. It can be accessed by adding dependency to the `AvalancheKeychain` in case of SPM or enabling `Avalanche/Keychain` feature in case of CocoaPods.
 
-The first step in this process is to create an instance of `AvalancheBip44Keychain` and pass it to `Avalanche` constructor.
+The first step in this process is to create an instance of `AvalancheBip44Keychain` and pass it to the `Avalanche` constructor.
 
 ```Swift
 import Avalanche
@@ -106,17 +106,17 @@ keychain.addAvalancheAccount(index: 0)
 Before using APIs we have to retreive used addresses for registered accounts. It can be done through API keychains.
 
 ```Swift
-ava.xChain.keychain.fetch() { _ in
-    let accounts = ava.xChain.keychain.fetchedAccounts()
+ava.xChain.keychain!.fetch() { _ in
+    let accounts = ava.xChain.keychain!.fetchedAccounts()
     print("xChain fetched addresses: \(ava.xChain.keychain.get(cached: accounts[0]))")
 }
-ava.pChain.keychain.fetch() { _ in 
-    let accounts = ava.pChain.keychain.fetchedAccounts()
+ava.pChain.keychain!.fetch() { _ in 
+    let accounts = ava.pChain.keychain!.fetchedAccounts()
     print("pChain fetched addresses: \(ava.pChain.keychain.get(cached: accounts[0]))")
 }
 ```
 
-### Performing transaction
+### Performing transactions
 
 #### Sending transactions with helper methods
 
@@ -125,7 +125,7 @@ For convenience we provided a set of the helper methods for creating and signing
 ```Swift
 
 // Get our account from keychain
-let from = ava.xChain.keychain.fetchedAccounts()[0]
+let from = ava.xChain.keychain!.fetchedAccounts()[0]
 
 // Asset ID
 let assetId = AssetID(cb58: "23wKfz3viWLmjWo2UZ7xWegjvnZFenGAVkouwQCeB9ubPXodG6")!
@@ -134,7 +134,7 @@ let assetId = AssetID(cb58: "23wKfz3viWLmjWo2UZ7xWegjvnZFenGAVkouwQCeB9ubPXodG6"
 let friendsAddress = Address(bech: "X-avax1k26jvfdzyukms95puxcceyzsa3lzwf5ftt0fjk")
 
 ava.xChain.send(amount: 1000, assetID: assetId, to: friendsAddress, credentials: .account(from)) { res in
-    print("Resul: \(res)")
+    print("Result: \(res)")
 }
 ```
 
@@ -143,7 +143,51 @@ ava.xChain.send(amount: 1000, assetID: assetId, to: friendsAddress, credentials:
 
 #### C-Chain support
 
-Ethereum C-Chain APIs implemented with 
+Ethereum C-Chain APIs implemented with [skywinder's web3swift](https://github.com/skywinder/web3swift) library. Check it's documentation for Ethereum call examples.
+
+##### C-Chain export/import methods
+
+You can use helper methods to create import/export transactions.
+
+**Import**:
+
+```Swift
+
+// Get our xChain account from keychain
+let xChainAccount = ava.xChain.keychain!.fetchedAccounts()[0]
+
+// Get Ethereum address from keychain
+let cChainAccount = ava.cChain.keychain!.fetchedAccounts()[0]
+let cChainAddress = ava.cChain.keychain!.get(for: cChainAccount)
+
+ava.cChain.import(to: cChainAddress, source: ava.xChain, credentials: .account(xChainAccount)) { res in
+  print("Result: \(res)")
+}
+```
+
+**Export**:
+```Swift
+
+// Our export asset ID
+let assetID = try! AssetID(cb58: "2nzgmhZLuVq8jc7NNu2eahkKwoJcbFWXWJCxHBVWAJEZkhquoK")
+
+// Get our cChain account from keychain
+let cChainAccount = ava.cChain.keychain!.fetchedAccounts()[0]
+
+// Get xChain Address
+let xChainAccount = ava.cChain.keychain!.fetchedAccounts()[0]
+let xChainAddress =  ava.xChain.keychain!.get(cached: xChainAccount)[0]
+
+ava.cChain.export(to: xChainAddress, amount: 1000, assetID: assetID,credentials: .account(cChainAccount)) { res in
+  print("Result: \(res)")
+}
+```
+
+## Roadmap
+
+* Move from callbacks to Swift 5.5 with async/await support.
+* Merge our changes to Web3 library.
+* Move networking to own Swift target.
 
 ## License
 

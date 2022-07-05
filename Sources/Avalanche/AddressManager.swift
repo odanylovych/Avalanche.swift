@@ -6,9 +6,7 @@
 //
 
 import Foundation
-#if !COCOAPODS
 import web3swift
-#endif
 
 public protocol AddressManagerProvider {
     func manager(ava: AvalancheCore) -> AvalancheAddressManager?
@@ -96,6 +94,7 @@ extension AvalancheAddressManager {
 public protocol AvalancheApiAddressManager {
     associatedtype Acct: AccountProtocol
     
+    func fetchedAccounts() -> [Acct]
     func accounts(result: @escaping (AvalancheSignatureProviderResult<[Acct]>) -> Void)
     func extended(for addresses: [Acct.Addr]) throws -> [Acct.Addr.Extended]
 }
@@ -111,8 +110,6 @@ public protocol AvalancheApiUTXOAddressManager: AvalancheApiAddressManager {
     
     func fetch(for accounts: [Acct], source chain: BlockchainID?, _ cb: @escaping (Result<Void, Error>) -> Void)
     func fetch(source chain: BlockchainID?, _ cb: @escaping (Result<Void, Error>) -> Void)
-    
-    func fetchedAccounts() -> [Acct]
 }
 
 public extension AvalancheApiUTXOAddressManager {
