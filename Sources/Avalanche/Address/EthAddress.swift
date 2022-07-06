@@ -35,8 +35,12 @@ public struct EthAccount: AccountProtocol, ExtendedAddressProtocol, Equatable, H
         self.pubKey = pubKey
     }
     
-    public func avalancheAddress(hrp: String, chainId: String) throws -> Address {
+    public func address(hrp: String, chainId: String) throws -> Address {
         try Address(pubKey: pubKey, hrp: hrp, chainId: chainId)
+    }
+    
+    public func address(api: AvalancheCChainApi) throws -> Address {
+        try address(hrp: api.networkID.hrp, chainId: api.chainID.value)
     }
 }
 

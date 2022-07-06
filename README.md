@@ -9,7 +9,7 @@
 
 ## Overview 
 
-Avalanche.swift is a Swift Library for interfacing with the Avalanche Platform. The library allows one to issue commands to the Avalanche node APIs. 
+Avalanche.swift is a Swift library for interfacing with the Avalanche Platform. The library allows one to issue commands to the Avalanche node APIs. 
 
 The APIs currently supported are:
 
@@ -24,7 +24,7 @@ The APIs currently supported are:
  * [x] Metrics API
  * [x] PlatformVM API (P-Chain)
 
-We built Avalanche.swift with ease of use in mind. With this library, any Swift developer is able to interact with a node on the Avalanche Platform who has enabled their API endpoints for the developer's consumption. We keep the library up-to-date with the latest changes in the [Avalanche Platform Specification](https://docs.avax.network). 
+We built Avalanche.swift with ease of use in mind. With this library, any Swift developer can interact with a node on the Avalanche Platform that has enabled their API endpoints for the developer's consumption. We keep the library up-to-date with the latest changes in the [Avalanche Platform Specification](https://docs.avax.network). 
 
   Using Avalanche.swift, developers can:
 
@@ -36,7 +36,7 @@ We built Avalanche.swift with ease of use in mind. With this library, any Swift 
   * Create a Subnetwork
   * Administer a local node
   * Retrieve Avalanche network information from a node
-  * Call smart-contracts on C-Chain
+  * Call smart contracts on C-Chain
 
 ### Requirements
 
@@ -61,7 +61,7 @@ Avalanche.swift deploys to macOS 10.12+, iOS 11+ and requires Swift 5.4 or highe
 
 ### Calling APIs
 
-The APIs are accessible fields on an Avalanche instance (info, health, etc.). Here is an example for a `info.getNetworkID` method call. The methods in the library are identical to the methods described in the main API [documentation](https://docs.avax.network/build/avalanchego-apis):
+The APIs are accessible fields on an Avalanche instance (info, health, etc.). Here is an example of an `info.getNetworkID` method call. The methods in the library are identical to the methods described in the main API [documentation](https://docs.avax.network/build/avalanchego-apis):
 
 ```Swift
 let ava = Avalanche(url: URL(string: "https://api.avax-test.network")!, networkID: .test)
@@ -78,7 +78,7 @@ ava.info.getNetworkID { result in
 
 ### Managing Private Keys
 
-Avalanche.swift comes with its own In-App Bip44 Keychain. This KeyChain is used in the functions of the API, enabling them to sign using keys it's registered. It can be accessed by adding dependency to the `AvalancheKeychain` in case of SPM or enabling `Avalanche/Keychain` feature in case of CocoaPods.
+Avalanche.swift comes with In-App Bip44 Keychain. This KeyChain is used in the functions of the API, enabling them to sign using keys registered in Keychain. It can be accessed by adding a dependency to the `AvalancheKeychain` in the case of SPM or enabling the `Avalanche/Keychain` feature in the case of CocoaPods.
 
 The first step in this process is to create an instance of `AvalancheBip44Keychain` and pass it to the `Avalanche` constructor.
 
@@ -103,16 +103,16 @@ keychain.addAvalancheAccount(index: 0)
 
 ### Retrieving addresses from blockchain
 
-Before using APIs we have to retreive used addresses for registered accounts. It can be done through API keychains.
+Avalanche uses UTXO model, and we have to synchronize with chain to retrieve used addresses and UTXOs for registered accounts. Keychains for UTXO based chains have `fetch()` method for synchronization.
 
-```Swift
+```swift
 ava.xChain.keychain!.fetch() { _ in
-    let accounts = ava.xChain.keychain!.fetchedAccounts()
-    print("xChain fetched addresses: \(ava.xChain.keychain.get(cached: accounts[0]))")
+    let account = ava.xChain.keychain!.fetchedAccounts().first!
+    print("xChain fetched addresses: \(ava.xChain.keychain!.get(cached: account))")
 }
 ava.pChain.keychain!.fetch() { _ in 
-    let accounts = ava.pChain.keychain!.fetchedAccounts()
-    print("pChain fetched addresses: \(ava.pChain.keychain.get(cached: accounts[0]))")
+    let accounts = ava.pChain.keychain!.fetchedAccounts().first!
+    print("pChain fetched addresses: \(ava.pChain.keychain!.get(cached: account))")
 }
 ```
 
@@ -120,12 +120,11 @@ ava.pChain.keychain!.fetch() { _ in
 
 #### Sending transactions with helper methods
 
-For convenience we provided a set of the helper methods for creating and signing transactions. This methods allow you to pass account or username and password and will create transaction for you in case of account.
+For convenience, we provided a set of helper methods for creating and signing transactions. This methods allow you to pass an account or username and password pair. If you want to use local keychain you should provide an account. For in-node wallet you can provide username and password. Library will call sign method automatically if you use account.
 
-```Swift
-
+```swift
 // Get our account from keychain
-let from = ava.xChain.keychain!.fetchedAccounts()[0]
+let from = ava.xChain.keychain!.fetchedAccounts().first!
 
 // Asset ID
 let assetId = AssetID(cb58: "23wKfz3viWLmjWo2UZ7xWegjvnZFenGAVkouwQCeB9ubPXodG6")!
@@ -138,27 +137,24 @@ ava.xChain.send(amount: 1000, assetID: assetId, to: friendsAddress, credentials:
 }
 ```
 
-#### Building transaction manually
-
-
 #### C-Chain support
 
-Ethereum C-Chain APIs implemented with [skywinder's web3swift](https://github.com/skywinder/web3swift) library. Check it's documentation for Ethereum call examples.
+Ethereum C-Chain APIs implemented with [skywinder's web3swift](https://github.com/skywinder/web3swift) library. Check its documentation for Ethereum call examples.
 
 ##### C-Chain export/import methods
 
 You can use helper methods to create import/export transactions.
 
 **Import**:
-
-```Swift
+```swift
 
 // Get our xChain account from keychain
-let xChainAccount = ava.xChain.keychain!.fetchedAccounts()[0]
+let xChainAccount = ava.xChain.keychain!.fetchedAccounts().first!
 
 // Get Ethereum address from keychain
-let cChainAccount = ava.cChain.keychain!.fetchedAccounts()[0]
-let cChainAddress = ava.cChain.keychain!.get(for: cChainAccount)
+let cChainAccount = ava.cChain.keychain!.fetchedAccounts().first!
+// This will create Avalanche C-Chain address for account. Not an Ethereum one.
+let cChainAddress = cChainAccount.address(api: ava.cChain)
 
 ava.cChain.import(to: cChainAddress, source: ava.xChain, credentials: .account(xChainAccount)) { res in
   print("Result: \(res)")
@@ -166,19 +162,19 @@ ava.cChain.import(to: cChainAddress, source: ava.xChain, credentials: .account(x
 ```
 
 **Export**:
-```Swift
+```swift
 
 // Our export asset ID
 let assetID = try! AssetID(cb58: "2nzgmhZLuVq8jc7NNu2eahkKwoJcbFWXWJCxHBVWAJEZkhquoK")
 
 // Get our cChain account from keychain
-let cChainAccount = ava.cChain.keychain!.fetchedAccounts()[0]
+let cChainAccount = ava.cChain.keychain!.fetchedAccounts().first!
 
 // Get xChain Address
-let xChainAccount = ava.cChain.keychain!.fetchedAccounts()[0]
-let xChainAddress =  ava.xChain.keychain!.get(cached: xChainAccount)[0]
+let xChainAccount = ava.cChain.keychain!.fetchedAccounts().first!
+let xChainAddress =  ava.xChain.keychain!.get(cached: xChainAccount).first!
 
-ava.cChain.export(to: xChainAddress, amount: 1000, assetID: assetID,credentials: .account(cChainAccount)) { res in
+ava.cChain.export(to: xChainAddress, amount: 1000, assetID: assetID, credentials: .account(cChainAccount)) { res in
   print("Result: \(res)")
 }
 ```
@@ -186,9 +182,9 @@ ava.cChain.export(to: xChainAddress, amount: 1000, assetID: assetID,credentials:
 ## Roadmap
 
 * Move from callbacks to Swift 5.5 with async/await support.
-* Merge our changes to Web3 library.
+* Merge our changes to the Web3 library.
 * Move networking to own Swift target.
 
 ## License
 
-Avalanche.swift can be used, distributed and modified under [the Apache 2.0 license](LICENSE).
+Avalanche.swift can be used, distributed, and modified under [the Apache 2.0 license](LICENSE).

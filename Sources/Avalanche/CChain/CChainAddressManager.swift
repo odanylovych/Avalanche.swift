@@ -24,7 +24,7 @@ public struct AvalancheCChainApiAddressManager: AvalancheApiAddressManager {
     }
     
     public func get(for account: Acct) throws -> Acct.Addr {
-        try account.avalancheAddress(hrp: api.networkID.hrp, chainId: api.chainID.value)
+        try account.address(api: api)
     }
     
     public func accounts(result: @escaping (AvalancheSignatureProviderResult<[EthAccount]>) -> Void) {
