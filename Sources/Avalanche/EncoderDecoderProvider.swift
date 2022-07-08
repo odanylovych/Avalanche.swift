@@ -10,6 +10,7 @@ import Foundation
 public protocol AvalancheEncoderDecoderProvider {
     func encoder() -> AvalancheEncoder
     func decoder(context: AvalancheDecoderContext, data: Data) -> AvalancheDecoder
+    func dataCoder() -> DataCoder
 }
 
 public struct DefaultAvalancheEncoderDecoderProvider: AvalancheEncoderDecoderProvider {
@@ -22,5 +23,9 @@ public struct DefaultAvalancheEncoderDecoderProvider: AvalancheEncoderDecoderPro
     
     public func decoder(context: AvalancheDecoderContext, data: Data) -> AvalancheDecoder {
         DefaultAvalancheDecoder(context: context, data: data)
+    }
+    
+    public func dataCoder() -> DataCoder {
+        HexNCDataCoder()
     }
 }

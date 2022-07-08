@@ -45,10 +45,8 @@ public enum ApiDataEncoding: String, Encodable, Decodable {
     
     case cb58 = "cb58"
     case hex = "hex"
-}
-
-public enum GetTxEncoding: String, Codable {
-    case hex = "hex"
+    case hexc = "hexc"
+    case hexnc = "hexnc"
     case json = "json"
 }
 
