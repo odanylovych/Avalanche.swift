@@ -291,7 +291,6 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         UInt32?,
         UTXOIndex?,
         BlockchainID?,
-        AvalancheEncoding?,
         @escaping ApiCallback<(
             fetched: UInt32,
             utxos: [UTXO],
@@ -341,7 +340,6 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         limit: UInt32?,
         startIndex: UTXOIndex?,
         sourceChain: BlockchainID?,
-        encoding: AvalancheEncoding?,
         _ cb: @escaping ApiCallback<(
             fetched: UInt32,
             utxos: [UTXO],
@@ -349,7 +347,7 @@ struct AvalancheVMApiMock: AvalancheVMApi {
             encoding: AvalancheEncoding
         )>
     ) {
-        getUTXOsMock!(addresses, limit, startIndex, sourceChain, encoding, cb)
+        getUTXOsMock!(addresses, limit, startIndex, sourceChain, cb)
     }
     
     func issueTx(tx: String, encoding: AvalancheEncoding?, _ cb: @escaping ApiCallback<TransactionID>) {

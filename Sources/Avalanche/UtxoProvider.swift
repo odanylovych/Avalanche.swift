@@ -60,8 +60,7 @@ public class AvalancheDefaultUtxoProvider: AvalancheUtxoProvider {
                 addresses: addresses,
                 limit: limit,
                 startIndex: index,
-                sourceChain: sourceChain,
-                encoding: AvalancheEncoding.cb58
+                sourceChain: sourceChain
             ) { res in
                 result(res.map {
                     let isMore = $0.fetched == limit ?? defaultLimit || $0.fetched == defaultLimit

@@ -382,7 +382,6 @@ extension AvalancheXChainApi {
         assetID: AssetID,
         payload: String,
         to: Address,
-        encoding: AvalancheEncoding? = nil,
         from: [Address]? = nil,
         change: Address? = nil,
         memo: Data = Data(),

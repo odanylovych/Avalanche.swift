@@ -105,9 +105,8 @@ final class UtxoProviderTests: XCTestCase {
             address: testAddresses[1].bech,
             utxo: try! avalanche.settings.encoderDecoderProvider.encoder().encode(testUtxos[1]).output.hex()
         )
-        api.getUTXOsMock = { addresses, limit, startIndex, sourceChain, encoding, cb in
-            guard addresses == testAddresses,
-                  encoding == AvalancheEncoding.cb58 else {
+        api.getUTXOsMock = { addresses, limit, startIndex, sourceChain, cb in
+            guard addresses == testAddresses else {
                 XCTFail("getUTXOs")
                 return
             }
@@ -116,21 +115,21 @@ final class UtxoProviderTests: XCTestCase {
                     fetched: 1,
                     utxos: [testUtxos[0]],
                     endIndex: endIndex1,
-                    encoding: AvalancheEncoding.cb58
+                    encoding: AvalancheEncoding.hex
                 )))
             } else if startIndex == endIndex1 {
                 cb(.success((
                     fetched: 1,
                     utxos: [testUtxos[1]],
                     endIndex: endIndex2,
-                    encoding: AvalancheEncoding.cb58
+                    encoding: AvalancheEncoding.hex
                 )))
             } else if startIndex == endIndex2 {
                 cb(.success((
                     fetched: 0,
                     utxos: [],
                     endIndex: endIndex2,
-                    encoding: AvalancheEncoding.cb58
+                    encoding: AvalancheEncoding.hex
                 )))
             } else {
                 XCTFail("Wrong startIndex")

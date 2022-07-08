@@ -34,7 +34,6 @@ public protocol AvalancheVMApi: AvalancheApi {
         limit: UInt32?,
         startIndex: UTXOIndex?,
         sourceChain: BlockchainID?,
-        encoding: AvalancheEncoding?,
         _ cb: @escaping ApiCallback<(
             fetched: UInt32,
             utxos: [UTXO],
