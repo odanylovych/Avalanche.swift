@@ -295,10 +295,10 @@ struct AvalancheVMApiMock: AvalancheVMApi {
             fetched: UInt32,
             utxos: [UTXO],
             endIndex: UTXOIndex,
-            encoding: AvalancheEncoding
+            encoding: ApiDataEncoding
         )>
     ) -> Void)?
-    var issueTxMock: ((String, AvalancheEncoding?, @escaping ApiCallback<TransactionID>) -> Void)?
+    var issueTxMock: ((String, ApiDataEncoding?, @escaping ApiCallback<TransactionID>) -> Void)?
     
     typealias Keychain = AvalancheApiUTXOAddressManagerMock
     
@@ -344,13 +344,13 @@ struct AvalancheVMApiMock: AvalancheVMApi {
             fetched: UInt32,
             utxos: [UTXO],
             endIndex: UTXOIndex,
-            encoding: AvalancheEncoding
+            encoding: ApiDataEncoding
         )>
     ) {
         getUTXOsMock!(addresses, limit, startIndex, sourceChain, cb)
     }
     
-    func issueTx(tx: String, encoding: AvalancheEncoding?, _ cb: @escaping ApiCallback<TransactionID>) {
+    func issueTx(tx: String, encoding: ApiDataEncoding?, _ cb: @escaping ApiCallback<TransactionID>) {
         issueTxMock!(tx, encoding, cb)
     }
 }

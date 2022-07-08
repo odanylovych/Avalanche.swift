@@ -47,6 +47,11 @@ public enum ApiDataEncoding: String, Encodable, Decodable {
     case hex = "hex"
 }
 
+public enum GetTxEncoding: String, Codable {
+    case hex = "hex"
+    case json = "json"
+}
+
 public struct UTXOIndex: Codable, Equatable {
     public let address: String
     public let utxo: String

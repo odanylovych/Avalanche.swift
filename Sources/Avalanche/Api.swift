@@ -38,7 +38,7 @@ public protocol AvalancheVMApi: AvalancheApi {
             fetched: UInt32,
             utxos: [UTXO],
             endIndex: UTXOIndex,
-            encoding: AvalancheEncoding
+            encoding: ApiDataEncoding
         )>
     )
 }

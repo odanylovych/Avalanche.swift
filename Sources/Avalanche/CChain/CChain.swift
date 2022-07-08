@@ -198,11 +198,12 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     
     public struct GetAtomicTxParams: Encodable {
         public let txID: String
+        public let encoding: ApiDataEncoding?
     }
     
     public struct GetAtomicTxResponse: Decodable {
         public let tx: String
-        public let encoding: AvalancheEncoding
+        public let encoding: ApiDataEncoding
         public let blockHeight: String
     }
     
@@ -211,7 +212,8 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         _ cb: @escaping ApiCallback<(tx: SignedAvalancheTransaction, blockHeight: UInt64)>
     ) {
         let params = GetAtomicTxParams(
-            txID: id.cb58()
+            txID: id.cb58(),
+            encoding: .hex
         )
         service.call(
             method: "avax.getAtomicTx",
@@ -221,8 +223,12 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         ) { res in
             switch res {
             case .success(let response):
+                guard case .hex = response.encoding else {
+                    self.handleError(.unsupportedEncoding(encoding: response.encoding.rawValue), cb)
+                    return
+                }
                 guard let transactionData = Data(hex: response.tx) else {
-                    self.handleError(.custom(description: "Cannot decode transaction", cause: nil), cb)
+                    self.handleError(.custom(description: "Cannot decode transaction data", cause: nil), cb)
                     return
                 }
                 let decoder = self.encoderDecoderProvider.decoder(
@@ -264,7 +270,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         public let numFetched: String
         public let utxos: [String]
         public let endIndex: UTXOIndex
-        public let encoding: AvalancheEncoding
+        public let encoding: ApiDataEncoding
     }
     
     public func getUTXOs(
@@ -276,7 +282,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
             fetched: UInt32,
             utxos: [UTXO],
             endIndex: UTXOIndex,
-            encoding: AvalancheEncoding
+            encoding: ApiDataEncoding
         )>
     ) {
         let params = GetUTXOsParams(
@@ -291,23 +297,27 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
             GetUTXOsResponse.self,
             SerializableValue.self
         ) { res in
-            cb(res
-                .mapError(AvalancheApiError.init)
-                .map {
-                    return (
-                        fetched: UInt32($0.numFetched)!,
-                        utxos: $0.utxos.map {
-                            let decoder = self.encoderDecoderProvider.decoder(
-                                context: self.context,
-                                data: Data(hex: $0)!
-                            )
-                            return try! decoder.decode()
-                        },
-                        endIndex: $0.endIndex,
-                        encoding: $0.encoding
-                    )
+            switch res {
+            case .success(let response):
+                guard case .hex = response.encoding else {
+                    self.handleError(.unsupportedEncoding(encoding: response.encoding.rawValue), cb)
+                    return
                 }
-            )
+                cb(.success((
+                    fetched: UInt32(response.numFetched)!,
+                    utxos: response.utxos.map {
+                        let decoder = self.encoderDecoderProvider.decoder(
+                            context: self.context,
+                            data: Data(hex: $0)!
+                        )
+                        return try! decoder.decode()
+                    },
+                    endIndex: response.endIndex,
+                    encoding: response.encoding
+                )))
+            case .failure(let error):
+                self.handleError(.init(request: error), cb)
+            }
         }
     }
     
@@ -431,6 +441,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     
     public struct IssueTxParams: Encodable {
         public let tx: String
+        public let encoding: ApiDataEncoding?
     }
     
     public struct IssueTxResponse: Decodable {
@@ -438,11 +449,12 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
     }
     
     public func issueTx(
-        tx: String,
+        tx: Data,
         _ cb: @escaping ApiCallback<TransactionID>
     ) {
         let params = IssueTxParams(
-            tx: tx
+            tx: tx.hex(),
+            encoding: .hex
         )
         service.call(
             method: "avax.issueTx",

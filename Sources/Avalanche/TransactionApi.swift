@@ -18,8 +18,7 @@ public protocol AvalancheTransactionApi: AvalancheVMApi {
     
     func getBlockchainID(_ cb: @escaping ApiCallback<BlockchainID>)
     func getAvaxAssetID(_ cb: @escaping ApiCallback<AssetID>)
-    func issueTx(tx: String,
-                 _ cb: @escaping ApiCallback<TransactionID>)
+    func issueTx(tx: Data, _ cb: @escaping ApiCallback<TransactionID>)
 }
 
 extension AvalancheTransactionApi {
@@ -103,9 +102,9 @@ extension AvalancheTransactionApi {
     
     public func issueTransaction(_ transaction: SignedAvalancheTransaction,
                                  _ cb: @escaping ApiCallback<TransactionID>) {
-        let encoded: String
+        let encoded: Data
         do {
-            encoded = try encoderDecoderProvider.encoder().encode(transaction).output.hex()
+            encoded = try encoderDecoderProvider.encoder().encode(transaction).output
         } catch {
             handleError(error, cb)
             return
