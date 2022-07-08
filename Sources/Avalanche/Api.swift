@@ -37,8 +37,7 @@ public protocol AvalancheVMApi: AvalancheApi {
         _ cb: @escaping ApiCallback<(
             fetched: UInt32,
             utxos: [UTXO],
-            endIndex: UTXOIndex,
-            encoding: ApiDataEncoding
+            endIndex: UTXOIndex
         )>
     )
 }

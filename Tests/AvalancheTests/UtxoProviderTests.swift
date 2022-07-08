@@ -114,22 +114,19 @@ final class UtxoProviderTests: XCTestCase {
                 cb(.success((
                     fetched: 1,
                     utxos: [testUtxos[0]],
-                    endIndex: endIndex1,
-                    encoding: .hex
+                    endIndex: endIndex1
                 )))
             } else if startIndex == endIndex1 {
                 cb(.success((
                     fetched: 1,
                     utxos: [testUtxos[1]],
-                    endIndex: endIndex2,
-                    encoding: .hex
+                    endIndex: endIndex2
                 )))
             } else if startIndex == endIndex2 {
                 cb(.success((
                     fetched: 0,
                     utxos: [],
-                    endIndex: endIndex2,
-                    encoding: .hex
+                    endIndex: endIndex2
                 )))
             } else {
                 XCTFail("Wrong startIndex")

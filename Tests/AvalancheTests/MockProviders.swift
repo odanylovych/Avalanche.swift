@@ -294,8 +294,7 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         @escaping ApiCallback<(
             fetched: UInt32,
             utxos: [UTXO],
-            endIndex: UTXOIndex,
-            encoding: ApiDataEncoding
+            endIndex: UTXOIndex
         )>
     ) -> Void)?
     var issueTxMock: ((String, ApiDataEncoding?, @escaping ApiCallback<TransactionID>) -> Void)?
@@ -343,8 +342,7 @@ struct AvalancheVMApiMock: AvalancheVMApi {
         _ cb: @escaping ApiCallback<(
             fetched: UInt32,
             utxos: [UTXO],
-            endIndex: UTXOIndex,
-            encoding: ApiDataEncoding
+            endIndex: UTXOIndex
         )>
     ) {
         getUTXOsMock!(addresses, limit, startIndex, sourceChain, cb)

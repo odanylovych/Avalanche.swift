@@ -281,8 +281,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
         _ cb: @escaping ApiCallback<(
             fetched: UInt32,
             utxos: [UTXO],
-            endIndex: UTXOIndex,
-            encoding: ApiDataEncoding
+            endIndex: UTXOIndex
         )>
     ) {
         let params = GetUTXOsParams(
@@ -312,8 +311,7 @@ public class AvalancheCChainApi: AvalancheTransactionApi {
                         )
                         return try! decoder.decode()
                     },
-                    endIndex: response.endIndex,
-                    encoding: response.encoding
+                    endIndex: response.endIndex
                 )))
             case .failure(let error):
                 self.handleError(.init(request: error), cb)
